@@ -174,7 +174,7 @@ def ambient(seconds, seed=3):
         out[a:b] += (sig * env).astype(np.float32)
     out /= max(1e-6, np.abs(out).max())
     fade = np.minimum(1, np.minimum(t / 2, (seconds - t) / 3))
-    return out * fade
+    return (out * fade).astype(np.float32)
 
 
 # ==================================================================== SFX

@@ -157,7 +157,7 @@ def wrap_text(d, s, f, maxw):
     words, lines, cur = s.split(), [], ""
     for w in words:
         t = (cur + " " + w).strip()
-        if d.textlength(t, font=f) <= maxw:
+        if d.textlength(t, font=f) <= maxw or not cur:
             cur = t
         else:
             lines.append(cur)

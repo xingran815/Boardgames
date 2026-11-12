@@ -56,16 +56,18 @@ def stones_in(board, animal):
 
 def animal_score(board, animal):
     s = board[animal]
+    same = lambda xs: len(set(xs)) <= 1
     if animal == "rabbit":
-        pts = 6 if len(s) == 3 else 0
+        pts = 6 if len(s) == 3 and len(set(s)) == 3 else 0
     elif animal == "turtle":
-        pts = TURTLE_PTS[len(s)]
+        pts = TURTLE_PTS[len(s)] if same(s) else 0
     elif animal == "salmon":
-        pts = SALMON_PTS[len(s)]
+        pts = SALMON_PTS[len(s)] if len(set(s)) == len(s) else 0
     elif animal == "owl":
-        pts = OWL_POINTS * sum(1 for p in s if len(p) == 2)
+        pts = OWL_POINTS * sum(1 for p in s if len(p) == 2 and same(p))
     else:
-        t, p = len(s["triple"]) == 3, len(s["pair"]) == 2
+        t = len(s["triple"]) == 3 and same(s["triple"])
+        p = len(s["pair"]) == 2 and same(s["pair"])
         pts = (5 if t else 0) + (2 if p else 0) + (7 if t and p else 0)
     return pts * (2 if board["bonus"][animal] else 1)
 
@@ -456,7 +458,7 @@ class Game:
             for a in ANIMALS:
                 if b["bonus"][a] or a == self.blocked(p):
                     continue
-                for c in set(stones_in(b, a)):
+                for c in sorted(set(stones_in(b, a))):
                     b2 = copy.deepcopy(b)
                     remove(b2, a, c)
                     loss = base - potential(b2)

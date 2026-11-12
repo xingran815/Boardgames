@@ -4,3 +4,4 @@ __pycache__/
 *.pyc
 node_modules/
 tools/voices/*.bin
+.pytest_cache/
