@@ -139,7 +139,6 @@ def potential(board):
     """Score plus partial credit for unfinished sets (AI evaluation only)."""
     v = total_score(board)
     for a in ANIMALS:
-        mult = 2 if board["bonus"][a] else 1
         s = board[a]
         if board["bonus"][a]:
             continue
@@ -155,7 +154,6 @@ def potential(board):
                 v += 0.7 * p
         elif a == "turtle" and 0 < len(s) < 5:
             v += 0.8  # room to grow
-        v += 0 * mult
     return v
 
 
@@ -172,7 +170,7 @@ def clear_value(board, animal):
     return cur - 1.8 * room
 
 
-def best_placement(board, color, blocked):
+def best_placement(board, color, blocked, pref=None):
     opts = placements(board, color, blocked)
     if not opts:
         return None, -99
@@ -184,7 +182,7 @@ def best_placement(board, color, blocked):
         else:
             b2 = copy.deepcopy(board)
             place(b2, color, w)
-            v = potential(b2) - base
+            v = potential(b2) - base + (pref or {}).get(w[0], 0)
         if v > bv:
             best, bv = w, v
     return best, bv
@@ -206,6 +204,8 @@ class Game:
     turn_no: int = 0
     log: list = field(default_factory=list)
     names: tuple = ("Ana", "Ben")
+    # mild per-player taste so the demo game uses every animal
+    prefs: tuple = ({"salmon": 1.4, "beaver": 0.6}, {"beaver": 1.4, "salmon": 0.4})
 
     def __post_init__(self):
         self.rng = random.Random(self.seed)
@@ -256,6 +256,29 @@ class Game:
         return 8 - self.bag.count(CLEAR)
 
     # ------------------------------------------------------- stone choices
+    def place_both(self, board, stones, blocked):
+        """Ram: place as many of the drawn stones as possible (both if at all
+        possible), preferring the best-valued combination."""
+        best, key = None, None
+        orders = [stones, stones[::-1]] if len(stones) == 2 else [stones]
+        for order in orders:
+            def rec(b, rest, acc):
+                nonlocal best, key
+                if not rest:
+                    k = (sum(1 for _, w in acc if w), potential(b))
+                    if key is None or k > key:
+                        best, key = list(acc), k
+                    return
+                c = rest[0]
+                opts = placements(b, c, blocked) or [None]
+                for w in opts:
+                    b2 = copy.deepcopy(b)
+                    if w:
+                        place(b2, c, w)
+                    rec(b2, rest[1:], acc + [(c, w)])
+            rec(copy.deepcopy(board), order, [])
+        return best
+
     def pick_from_bowl(self, p, k=1, exclude_clear=False):
         """Pick up to k stones from the bowl and place them. Returns list of
         (color, placement or None)."""
@@ -267,12 +290,12 @@ class Game:
             for i, c in enumerate(self.bowl):
                 if exclude_clear and c == CLEAR:
                     continue
-                w, v = best_placement(self.boards[p], c, self.blocked(p))
+                w, v = best_placement(self.boards[p], c, self.blocked(p), self.prefs[p])
                 if w is not None and v > bv:
                     best, bv, bi = w, v, i
             if bi is None:
-                # nothing placeable: take any stone, put it back (legal but useless)
-                c = self.bowl[0]
+                # nothing placeable: the taken stone goes straight back to the bowl
+                c = self.bowl[len(res) % len(self.bowl)]
                 res.append((c, None))
                 continue
             c = self.bowl.pop(bi)
@@ -281,7 +304,7 @@ class Game:
         return res
 
     def bowl_value(self, p):
-        vals = sorted((best_placement(self.boards[p], c, self.blocked(p))[1]
+        vals = sorted((best_placement(self.boards[p], c, self.blocked(p), self.prefs[p])[1]
                        for c in self.bowl), reverse=True)
         return vals
 
@@ -290,7 +313,7 @@ class Game:
         b = self.boards[opp]
         best, bv = None, -1e9
         for a in ANIMALS:
-            if b["bonus"][a]:
+            if b["bonus"][a] or self.coyote == (opp, a):
                 continue
             # block the section where the opponent can gain the most
             n = len(stones_in(b, a))
@@ -359,16 +382,18 @@ class Game:
             self.step(ev, ("draw", d))
             tgt = self.coyote_target(p)
             if tgt:
+                was = self.coyote
                 self.coyote = (1 - p, tgt)
-                self.step(ev, ("coyote", 1 - p, tgt))
+                self.step(ev, ("coyote", 1 - p, tgt, was))
         extra = False
         if act is not None and act != SPIRIT:
             self.cards[p][act] = False
             if act in (TAKE1A, TAKE1B) and not self.cards[p][TAKE1A] and not self.cards[p][TAKE1B]:
                 tgt = self.coyote_target(p)
-                if tgt and not (self.coyote == (1 - p, tgt)):
+                if tgt:
+                    was = self.coyote
                     self.coyote = (1 - p, tgt)
-                    self.step(ev, ("coyote_half", 1 - p, tgt))
+                    self.step(ev, ("coyote_half", 1 - p, tgt, was))
         if act == SPIRIT:
             extra = self.do_spirit(p, ev)
             for c in CARD_ORDER:
@@ -414,15 +439,12 @@ class Game:
             self.step(ev, ("take", self.pick_from_bowl(p, 1)))
         elif card == "ram":
             d = self.draw(2)
-            res = []
-            for c in d:
-                w, _ = best_placement(b, c, self.blocked(p))
+            res = self.place_both(b, d, self.blocked(p))
+            for c, w in res:
                 if w is None:
                     self.bowl.append(c)
-                    res.append((c, None))
                 else:
                     place(b, c, w)
-                    res.append((c, w))
             self.step(ev, ("ram", res))
         elif card == "eagle":
             self.step(ev, ("take", self.pick_from_bowl(p, 1)))
@@ -451,7 +473,7 @@ class Game:
             self.step(ev, ("draw", d))
             self.step(ev, ("take", self.pick_from_bowl(p, 1)))
             if self.bowl:
-                # return a Spirit Stone if that keeps us under 5, else a random one
+                # prefer returning a Spirit Stone (delays the end), else a random one
                 c = CLEAR if CLEAR in self.bowl else self.rng.choice(self.bowl)
                 self.bowl.remove(c)
                 self.bag.append(c)
