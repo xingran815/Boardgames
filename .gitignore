@@ -1,0 +1,5 @@
+tools/voices/*.onnx
+tools/voices/*.onnx.json
+__pycache__/
+*.pyc
+node_modules/
