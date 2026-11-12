@@ -7,6 +7,7 @@ English rules, cheat sheets and narrated how-to-play videos for board games.
 | What | File |
 |---|---|
 | Full English manual | [docs/spirits-of-the-wild/manual.md](docs/spirits-of-the-wild/manual.md) · [PDF](docs/spirits-of-the-wild/manual.pdf) |
+| Illustrated full-colour manual (A4, print double-sided; score sheet + quick reference) | [manual-color.pdf](docs/spirits-of-the-wild/manual-color.pdf) · rebuild: `python3 tools/build_color_manual.py` |
 | One-page cheat sheet | [docs/spirits-of-the-wild/quick-reference.md](docs/spirits-of-the-wild/quick-reference.md) |
 | Videos (with .srt subtitles) | [docs/spirits-of-the-wild/videos/](docs/spirits-of-the-wild/videos/) |
 
