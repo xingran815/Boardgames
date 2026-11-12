@@ -64,6 +64,23 @@ def new_canvas():
     return im, d
 
 
+# Layout registry: every stone drawn on a board or in the bowl is recorded
+# with a stable key so animations can move stones between frames.
+CTX = {"reg": {}, "hide": set(), "player": None, "coyote": None}
+BAG_XY = (210, 470)
+
+
+def bstone(d, key, cx, cy, r, color, outline=None, empty_ring=True):
+    full = (("b", CTX["player"]) + tuple(key)) if key[0] != "bowl" else tuple(key)
+    if color is not None:
+        CTX["reg"][full] = (cx, cy, r, color)
+    if color is not None and full in CTX["hide"]:
+        if empty_ring:
+            stone(d, cx, cy, r, None)
+        return
+    stone(d, cx, cy, r, color, outline=outline)
+
+
 def stone(d, cx, cy, r, color, outline=None):
     if color is None:
         d.ellipse((cx - r, cy - r, cx + r, cy + r), outline=(80, 96, 140), width=3)
@@ -115,7 +132,7 @@ def draw_section(d, x, y, w, h, board, animal, blocked=False, hl=False,
     # bonus space
     bx, by, br = x + w - 34, y + 30, 20
     if board["bonus"][animal]:
-        stone(d, bx, by, br, "clear")
+        bstone(d, (animal, "bonus", 0), bx, by, br, "clear")
     else:
         d.ellipse((bx - br, by - br, bx + br, by + br), outline=(160, 200, 230), width=2)
         text_center(d, (bx, by - 12), "x2", F["xsb"], fill=(160, 200, 230))
@@ -125,30 +142,32 @@ def draw_section(d, x, y, w, h, board, animal, blocked=False, hl=False,
     if animal in ("rabbit", "turtle"):
         n = 3 if animal == "rabbit" else 5
         for i in range(n):
-            stone(d, x + 34 + i * 48, cy0, r, s[i] if i < len(s) else None)
+            bstone(d, (animal, "s", i), x + 34 + i * 48, cy0, r, s[i] if i < len(s) else None)
     elif animal == "salmon":
         for i in range(6):
-            stone(d, x + 34 + (i % 3) * 48, cy0 + (i // 3) * 46, r,
-                  s[i] if i < len(s) else None)
+            bstone(d, (animal, "s", i), x + 34 + (i % 3) * 48, cy0 + (i // 3) * 46, r,
+                   s[i] if i < len(s) else None)
     elif animal == "owl":
         for i in range(E.OWL_PAIRS):
             px = x + 32 + i * 88
             pr = s[i] if i < len(s) else []
             d.rounded_rectangle((px - 22, cy0 - 22, px + 62, cy0 + 22), 22,
                                 outline=(70, 90, 150), width=2)
-            stone(d, px, cy0, 17, pr[0] if len(pr) > 0 else None)
-            stone(d, px + 40, cy0, 17, pr[1] if len(pr) > 1 else None)
+            bstone(d, (animal, f"p{i}", 0), px, cy0, 17, pr[0] if len(pr) > 0 else None)
+            bstone(d, (animal, f"p{i}", 1), px + 40, cy0, 17, pr[1] if len(pr) > 1 else None)
     elif animal == "beaver":
         t, p = s["triple"], s["pair"]
         for i in range(3):
-            stone(d, x + 34 + i * 48, cy0, r, t[i] if i < len(t) else None)
+            bstone(d, (animal, "triple", i), x + 34 + i * 48, cy0, r, t[i] if i < len(t) else None)
         for i in range(2):
-            stone(d, x + 34 + i * 48, cy0 + 46, r, p[i] if i < len(p) else None)
+            bstone(d, (animal, "pair", i), x + 34 + i * 48, cy0 + 46, r, p[i] if i < len(p) else None)
         d.text((x + 34 + 3 * 48 - 10, cy0 - 12), "×3", font=F["xs"], fill=MUTED)
         d.text((x + 34 + 2 * 48 - 10, cy0 + 34), "×2", font=F["xs"], fill=MUTED)
     if blocked:
         d.rounded_rectangle((x, y, x + w, y + h), 16, outline=COYOTE, width=6)
-        draw_coyote(d, x + w - 98, y + 6, 0.8)
+        CTX["coyote"] = (x + w - 98, y + 6, 0.8)
+        if "coyote" not in CTX["hide"]:
+            draw_coyote(d, x + w - 98, y + 6, 0.8)
         text_center(d, (x + w / 2 + 40, y + h - 70), "BLOCKED", F["xsb"], fill=COYOTE)
 
 
@@ -230,7 +249,8 @@ def draw_middle(d, y, st, hl=None, drawn=None):
         rowsz = min(9, n - row * 9)
         cx = bx + 310 + (col - (rowsz - 1) / 2) * 56
         cy = by + 105 + (row - ((n - 1) // 9) / 2) * 52
-        stone(d, cx, cy, 23, c, outline=HL if drawn and i >= n - drawn else None)
+        bstone(d, ("bowl", i), cx, cy, 23, c, outline=HL if drawn and i >= n - drawn else None,
+               empty_ring=False)
     # spirit piles
     sx = 1110
     d.text((sx, y - 34), "SPIRIT POWER CARDS (top = available)", font=F["xsb"], fill=MUTED)
@@ -248,7 +268,9 @@ def draw_middle(d, y, st, hl=None, drawn=None):
                 text_center(d, (px + 110, y + 70 + j * 28), ln, F["xs"], fill=MUTED)
     # coyote parking
     if st["coyote"] is None:
-        draw_coyote(d, 1650, y + 60, 1.3)
+        CTX["coyote"] = (1650, y + 60, 1.3)
+        if "coyote" not in CTX["hide"]:
+            draw_coyote(d, 1650, y + 60, 1.3)
         text_center(d, (1685, y + 160), "Coyote (aside)", F["xs"], fill=MUTED)
 
 
@@ -278,10 +300,11 @@ def caption(d, text, y=H - 128):
         text_center(d, (W / 2, y + 18 + i * 48 + (24 if len(lines) == 1 else 0)), ln, F["cap"])
 
 
-def table(st, names=("Ana", "Ben"), cap=None, hl=None, label=None):
+def table(st, names=("Ana", "Ben"), cap=None, hl=None, label=None, hide=None):
     """Full table view from a snapshot. hl: dict with optional keys
     card=(player, card), sections=(player, [animals]), mid=..., drawn=n"""
     hl = hl or {}
+    CTX["reg"], CTX["hide"], CTX["coyote"] = {}, set(hide or ()), None
     im, d = new_canvas()
     cur = st["current"]
     coy = st["coyote"]
@@ -290,6 +313,7 @@ def table(st, names=("Ana", "Ben"), cap=None, hl=None, label=None):
         draw_cards(d, 14, y + 12, st["cards"][p],
                    hl=hl.get("card", (None, None))[1] if hl.get("card", (None,))[0] == p else None)
         secs = hl.get("sections")
+        CTX["player"] = p
         draw_board(d, 426, y, st["boards"][p], names[p], st["scores"][p],
                    coyote_animal=coy[1] if coy and coy[0] == p else None,
                    hl=secs[1] if secs and secs[0] == p else None,
