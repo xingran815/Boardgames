@@ -1268,8 +1268,9 @@ def featured(turns):
 SKIP_LINES = ["A few quick turns.", "Let's skip ahead.", "Fast forward.", "Quick turns now."]
 
 
-def tiling_words(res, detail):
-    """Narration for one player's wall moves. detail=True: one tile per sentence."""
+def tiling_words(res, detail, best=None):
+    """Narration for one player's wall moves. detail=True: one tile per sentence.
+    best: a placement to call out ('scores N by itself')."""
     p = res["player"]
     who, pr = NAMES[p], PRON[p]
     out = []
@@ -1286,8 +1287,7 @@ def tiling_words(res, detail):
             out.append(f"{who} moves {tiles_word(len(pl))} to {pr['p']} wall, for {points(tot)}.")
         else:
             out.append(f"{who} has no complete lines this round.")
-        best = max(pl, key=lambda x: x["points"], default=None)
-        if best and best["points"] >= 6 and len(pl) > 1:
+        if best:
             out.append(f"The {best['colour']} tile scores {num(best['points'])} by itself, "
                        "across and down.")
     if res["floor_items"]:
@@ -1315,6 +1315,11 @@ def sample_game():
     g, log = sample_log()
     turns = [e for e in log if e["type"] == "turn"]
     feat = featured(turns)
+    # the single best wall tile of the game gets its own sentence
+    places = [(x["points"], e["round"], r["player"], x["row"]) for e in log if e["type"] == "tiling"
+              for r in e["results"] for x in r["placements"]]
+    best = max(places, key=lambda t: t[0])
+    top = best[1:] if best[0] >= 6 else None
     S = [title(11, "Ana vs Ben · the highlights",
                "Now let's watch Ana and Ben play a whole game. We'll slow down for the big "
                "moments, and skip through the rest.")]
@@ -1349,7 +1354,7 @@ def sample_game():
                     skip_i += 1
                 in_skip = True
                 S.append(seg(text, e["post"], prev, cam=FULL, ticker=True, bar=label, active=p,
-                             fast=True, hold=0.25, pause=0.1))
+                             fast=True, hold=0.12, pause=0.1))
             prev = e["post"]
             ti += 1
         elif e["type"] == "tiling":
@@ -1372,13 +1377,24 @@ def sample_game():
                     pops.append(floor_pop(p, res["floor_penalty"]))
                     close[p].append(floor_pop(p, res["floor_penalty"]))
             ended = any(E.complete_rows(b["wall"]) for b in st["boards"])
+            callout = lambda res: next((x for x in res["placements"] if (rnd, res["player"], x["row"])
+                                        == top), None)
+            if rnd > 1 and not ended:
+                # routine rounds: one wide shot, one summary sentence per player
+                S.append(seg("Wall-tiling time. " + " ".join(tiling_words(r, False, callout(r))
+                                                             for r in e["results"]),
+                             st, prev, cam=FULL, ticker=True, bar=label, pops=pops, fast=True,
+                             hold=0.8, pause=0.4))
+                prev = st
+                continue
             intro = "All tiles are taken. Time to move tiles to the walls." if rnd == 1 else \
                 "Wall-tiling time."
             S.append(seg(intro, st, prev, cam=FULL, ticker=True, bar=label, pops=pops, fast=rnd > 1,
                          hold=0.8, say_after=False, pause=0.3))
             for res in e["results"]:
                 p = res["player"]
-                S.append(seg(tiling_words(res, detail=(rnd == 1 and p == 0)), st, cam=cam_board(p), ticker=True,
+                S.append(seg(tiling_words(res, detail=(rnd == 1 and p == 0), best=callout(res)), st,
+                             cam=cam_board(p), ticker=True,
                              bar=label, pops=close[p],
                              claim={p: sum(x["points"] for x in res["placements"]),
                                     **({"floor": res["floor_penalty"]} if res["floor_items"] else {})},

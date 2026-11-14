@@ -1,0 +1,279 @@
+1
+00:00:00,200 --> 00:00:02,930
+Now let's watch Ana and Ben play a whole game.
+
+2
+00:00:03,250 --> 00:00:06,514
+We'll slow down for the big moments, and skip through the rest.
+
+3
+00:00:07,533 --> 00:00:08,941
+Ana is on the left.
+
+4
+00:00:09,261 --> 00:00:10,541
+Ben is on the right.
+
+5
+00:00:10,861 --> 00:00:12,610
+Ana is the starting player.
+
+6
+00:00:12,930 --> 00:00:15,874
+The marker is in the centre, and Ana goes first.
+
+7
+00:00:17,916 --> 00:00:20,775
+Ana takes one black tile from a factory display.
+
+8
+00:00:21,095 --> 00:00:22,631
+She puts it in line one.
+
+9
+00:00:22,951 --> 00:00:25,234
+Three tiles slide into the centre.
+
+10
+00:00:27,116 --> 00:00:30,103
+Ben takes one white tile from a factory display.
+
+11
+00:00:30,423 --> 00:00:31,959
+He puts it in line one.
+
+12
+00:00:32,279 --> 00:00:34,561
+Three tiles slide into the centre.
+
+13
+00:00:35,233 --> 00:00:36,555
+A few quick turns.
+
+14
+00:00:38,683 --> 00:00:41,179
+Ana takes two blue tiles from the centre.
+
+15
+00:00:41,499 --> 00:00:43,056
+She puts them in line two.
+
+16
+00:00:43,376 --> 00:00:46,171
+First from the centre, so the marker comes too.
+
+17
+00:00:46,833 --> 00:00:48,070
+Let's skip ahead.
+
+18
+00:00:51,933 --> 00:00:53,426
+All tiles are taken.
+
+19
+00:00:53,746 --> 00:00:55,602
+Time to move tiles to the walls.
+
+20
+00:00:56,533 --> 00:00:59,562
+Ana's line one: black to the wall, one point.
+
+21
+00:00:59,882 --> 00:01:02,293
+Line two: blue to the wall, one point.
+
+22
+00:01:02,613 --> 00:01:05,087
+Line three: red to the wall, one point.
+
+23
+00:01:05,408 --> 00:01:07,946
+Line four: white to the wall, one point.
+
+24
+00:01:08,266 --> 00:01:10,335
+Her floor line costs one point.
+
+25
+00:01:10,966 --> 00:01:14,123
+Ben moves three tiles to his wall, for four points.
+
+26
+00:01:14,733 --> 00:01:15,757
+Round two.
+
+27
+00:01:16,077 --> 00:01:18,253
+Ana has the marker, so she starts.
+
+28
+00:01:18,966 --> 00:01:20,097
+Fast forward.
+
+29
+00:01:26,883 --> 00:01:29,400
+Ben takes three white tiles from the centre.
+
+30
+00:01:29,720 --> 00:01:31,832
+He puts them straight on his floor line.
+
+31
+00:01:32,500 --> 00:01:33,822
+Wall-tiling time.
+
+32
+00:01:34,142 --> 00:01:37,342
+Ana moves three tiles to her wall, for seven points.
+
+33
+00:01:37,662 --> 00:01:40,841
+Ben moves three tiles to his wall, for five points.
+
+34
+00:01:41,161 --> 00:01:43,145
+His floor line costs six points.
+
+35
+00:01:43,766 --> 00:01:44,790
+Round three.
+
+36
+00:01:45,110 --> 00:01:47,244
+Ben has the marker, so he starts.
+
+37
+00:01:47,966 --> 00:01:49,161
+Quick turns now.
+
+38
+00:01:53,216 --> 00:01:55,755
+Ana takes two black tiles from the centre.
+
+39
+00:01:56,075 --> 00:01:57,632
+One goes in line five.
+
+40
+00:01:57,952 --> 00:02:00,342
+One extra tile falls to the floor line.
+
+41
+00:02:01,000 --> 00:02:02,322
+A few quick turns.
+
+42
+00:02:05,700 --> 00:02:07,022
+Wall-tiling time.
+
+43
+00:02:07,342 --> 00:02:10,564
+Ana moves three tiles to her wall, for fifteen points.
+
+44
+00:02:10,884 --> 00:02:13,145
+Her floor line costs eleven points.
+
+45
+00:02:13,465 --> 00:02:16,580
+Ben moves four tiles to his wall, for nine points.
+
+46
+00:02:16,900 --> 00:02:18,884
+His floor line costs one point.
+
+47
+00:02:19,500 --> 00:02:20,524
+Round four.
+
+48
+00:02:20,844 --> 00:02:23,020
+Ana has the marker, so she starts.
+
+49
+00:02:23,733 --> 00:02:24,970
+Let's skip ahead.
+
+50
+00:02:31,766 --> 00:02:33,089
+Wall-tiling time.
+
+51
+00:02:33,409 --> 00:02:36,758
+Ana moves three tiles to her wall, for seventeen points.
+
+52
+00:02:37,078 --> 00:02:39,147
+Her floor line costs one point.
+
+53
+00:02:39,467 --> 00:02:42,710
+Ben moves three tiles to his wall, for eleven points.
+
+54
+00:02:43,030 --> 00:02:45,057
+His floor line costs four points.
+
+55
+00:02:45,666 --> 00:02:46,690
+Round five.
+
+56
+00:02:47,010 --> 00:02:49,143
+Ben has the marker, so he starts.
+
+57
+00:02:49,866 --> 00:02:50,997
+Fast forward.
+
+58
+00:02:57,966 --> 00:02:59,289
+Wall-tiling time.
+
+59
+00:03:01,033 --> 00:03:04,318
+Ana moves three tiles to her wall, for thirteen points.
+
+60
+00:03:04,933 --> 00:03:08,346
+Ben moves four tiles to his wall, for twenty eight points.
+
+61
+00:03:08,666 --> 00:03:12,143
+The blue tile scores eight by itself, across and down.
+
+62
+00:03:12,463 --> 00:03:14,533
+His floor line costs eight points.
+
+63
+00:03:15,133 --> 00:03:17,330
+Both players now have a complete row.
+
+64
+00:03:17,650 --> 00:03:19,762
+So the game ends after this round.
+
+65
+00:03:20,433 --> 00:03:23,249
+Ana's bonus: one row and one column.
+
+66
+00:03:23,569 --> 00:03:24,849
+Plus nine points.
+
+67
+00:03:25,499 --> 00:03:28,209
+Ben's bonus: two rows and one column.
+
+68
+00:03:28,529 --> 00:03:29,873
+Plus eleven points.
+
+69
+00:03:30,533 --> 00:03:33,861
+Final score: Ana wins, fifty two to forty nine!
+
+70
+00:03:34,181 --> 00:03:35,546
+Thanks for watching.

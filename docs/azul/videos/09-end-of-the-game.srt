@@ -1,0 +1,139 @@
+1
+00:00:00,200 --> 00:00:01,629
+How does the game end?
+
+2
+00:00:01,949 --> 00:00:02,994
+And who wins?
+
+3
+00:00:03,314 --> 00:00:04,509
+Let's find out.
+
+4
+00:00:06,750 --> 00:00:09,928
+Ana's yellow tile fills the last space in row two.
+
+5
+00:00:10,248 --> 00:00:11,763
+It scores seven points.
+
+6
+00:00:12,866 --> 00:00:14,487
+That's five tiles across.
+
+7
+00:00:14,807 --> 00:00:16,429
+It's called a complete row.
+
+8
+00:00:17,533 --> 00:00:19,389
+A complete row ends the game.
+
+9
+00:00:19,709 --> 00:00:23,015
+But first, everyone finishes moving tiles to their wall.
+
+10
+00:00:24,133 --> 00:00:25,583
+Then the game is over.
+
+11
+00:00:25,903 --> 00:00:27,333
+No new round starts.
+
+12
+00:00:28,466 --> 00:00:30,663
+A full column does not end the game.
+
+13
+00:00:30,983 --> 00:00:32,541
+Only a full row does.
+
+14
+00:00:33,666 --> 00:00:35,778
+Now everyone adds bonus points.
+
+15
+00:00:36,098 --> 00:00:37,911
+A bonus is extra points.
+
+16
+00:00:38,231 --> 00:00:40,215
+Let's look at Ana's final wall.
+
+17
+00:00:41,333 --> 00:00:43,658
+Each complete row: plus two points.
+
+18
+00:00:43,978 --> 00:00:45,066
+Ana has one.
+
+19
+00:00:46,199 --> 00:00:48,738
+Each complete column: plus seven points.
+
+20
+00:00:49,058 --> 00:00:50,210
+Ana has two.
+
+21
+00:00:50,530 --> 00:00:51,639
+That's fourteen.
+
+22
+00:00:52,766 --> 00:00:56,478
+Each colour with all five tiles on your wall: plus ten points.
+
+23
+00:00:56,798 --> 00:00:58,867
+Ana has all five blue tiles.
+
+24
+00:01:00,000 --> 00:01:03,349
+Ana's bonus: two plus seven plus seven plus ten.
+
+25
+00:01:03,669 --> 00:01:05,205
+That's twenty six points!
+
+26
+00:01:06,333 --> 00:01:08,338
+The player with the most points wins.
+
+27
+00:01:09,166 --> 00:01:11,747
+A tie means two players have the same points.
+
+28
+00:01:12,067 --> 00:01:14,542
+Then the one with more complete rows wins.
+
+29
+00:01:15,666 --> 00:01:16,733
+Still tied?
+
+30
+00:01:17,053 --> 00:01:18,354
+Then they share the win.
+
+31
+00:01:19,466 --> 00:01:20,362
+Remember.
+
+32
+00:01:20,682 --> 00:01:24,373
+A complete row ends the game, after that round's wall moves.
+
+33
+00:01:24,693 --> 00:01:29,514
+Then add bonuses: two per row, seven per column, and ten per full colour.
+
+34
+00:01:29,834 --> 00:01:32,031
+A tie goes to more complete rows.
+
+35
+00:01:32,351 --> 00:01:34,271
+Next: the grey wall variant.

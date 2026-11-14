@@ -54,13 +54,15 @@ node tools/build_manual_pdf.js          # manual.md -> manual.pdf
 
 ## Azul (2–4 players, ~30–45 min)
 
-Work in progress: rules, cheat sheet and rules engine are done; colour manual, HTML pages and videos come next.
 Rules follow the photographed German rulebook (2018), which matches the published English rules on every number.
 
 | What | File |
 |---|---|
 | Full English manual (with German → English glossary) | [docs/azul/manual.md](docs/azul/manual.md) · [PDF](docs/azul/manual.pdf) |
+| Illustrated full-colour manual (A4, print double-sided; score sheet + quick reference) | [manual-color.pdf](docs/azul/manual-color.pdf) |
 | One-page cheat sheet | [docs/azul/quick-reference.md](docs/azul/quick-reference.md) |
+| Learning page: 8 hands-on lessons, 7 scoring puzzles, quick-fire practice | [docs/azul/learn.html](docs/azul/learn.html) |
+| Beginner video series (11 episodes, with .srt subtitles) | [docs/azul/videos/](docs/azul/videos/) |
 | Rules engine + seeded AI (source of truth for every point value) | [tools/azul/engine.py](tools/azul/engine.py) · tests: `tests/test_azul_engine.py` |
 
 ### Rebuilding
@@ -68,5 +70,8 @@ Rules follow the photographed German rulebook (2018), which matches the publishe
 ```bash
 node tools/build_manual_pdf.js azul          # docs/azul/manual.md -> docs/azul/manual.pdf
 python3 tools/azul/engine.py 1 2             # print a seeded AI game: seed 1, 2 players
-python3 -m pytest tests/test_azul_engine.py
+python3 tools/build_azul_color_manual.py     # docs/azul/manual-color.pdf
+bash tools/azul/learn/build.sh               # docs/azul/learn.html from tools/azul/learn/parts
+AZUL_WORK=/tmp/azul-build python3 tools/azul/videos.py [episode ...]   # videos (~30 min for all 11)
+python3 -m pytest tests/ -k azul
 ```

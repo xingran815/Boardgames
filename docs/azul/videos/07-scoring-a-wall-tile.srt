@@ -1,0 +1,175 @@
+1
+00:00:00,200 --> 00:00:02,738
+Every new wall tile scores points right away.
+
+2
+00:00:03,058 --> 00:00:04,466
+Let's learn to count them.
+
+3
+00:00:05,466 --> 00:00:06,831
+Here is Ana's wall.
+
+4
+00:00:07,152 --> 00:00:08,538
+A row goes across.
+
+5
+00:00:09,666 --> 00:00:11,096
+A column goes down.
+
+6
+00:00:11,899 --> 00:00:13,777
+Let's start with an empty wall.
+
+7
+00:00:15,149 --> 00:00:17,091
+A new tile lands in row two.
+
+8
+00:00:17,411 --> 00:00:18,712
+It has no neighbours.
+
+9
+00:00:19,833 --> 00:00:24,206
+A neighbour is a tile right beside it: left, right, above or below.
+
+10
+00:00:24,526 --> 00:00:25,614
+No neighbours?
+
+11
+00:00:25,934 --> 00:00:27,342
+It scores one point.
+
+12
+00:00:29,549 --> 00:00:32,451
+This tile touches the first one only at a corner.
+
+13
+00:00:32,771 --> 00:00:34,115
+Corners don't count.
+
+14
+00:00:34,435 --> 00:00:36,163
+So it scores one point again.
+
+15
+00:00:37,266 --> 00:00:38,162
+New wall.
+
+16
+00:00:38,482 --> 00:00:41,128
+Two tiles sit side by side in row two.
+
+17
+00:00:42,916 --> 00:00:45,156
+The new tile lands right beside them.
+
+18
+00:00:45,476 --> 00:00:48,441
+Count the unbroken line across: three tiles.
+
+19
+00:00:49,566 --> 00:00:51,145
+So it scores three points.
+
+20
+00:00:51,465 --> 00:00:54,153
+Unbroken means no empty space in between.
+
+21
+00:00:56,349 --> 00:00:57,245
+New wall.
+
+22
+00:00:57,565 --> 00:01:00,445
+This time, the new tile lands right below a tile.
+
+23
+00:01:00,765 --> 00:01:02,515
+Count down: two tiles.
+
+24
+00:01:02,835 --> 00:01:03,795
+Two points.
+
+25
+00:01:04,899 --> 00:01:05,795
+New wall.
+
+26
+00:01:06,115 --> 00:01:07,267
+Look at row one.
+
+27
+00:01:07,587 --> 00:01:10,041
+There is an empty space between these tiles.
+
+28
+00:01:11,849 --> 00:01:13,876
+The new tile lands at the left end.
+
+29
+00:01:14,196 --> 00:01:16,095
+An empty space stops the count.
+
+30
+00:01:16,415 --> 00:01:18,740
+Only two tiles count: two points.
+
+31
+00:01:19,866 --> 00:01:20,826
+The big one.
+
+32
+00:01:21,146 --> 00:01:23,898
+This new tile will have neighbours across and down.
+
+33
+00:01:25,683 --> 00:01:27,560
+Count across: four tiles.
+
+34
+00:01:27,880 --> 00:01:29,651
+Count down: three tiles.
+
+35
+00:01:30,766 --> 00:01:32,515
+Add them: four plus three.
+
+36
+00:01:32,835 --> 00:01:33,966
+Seven points!
+
+37
+00:01:34,286 --> 00:01:36,355
+The new tile counts in both lines.
+
+38
+00:01:37,466 --> 00:01:40,069
+Tip: tiles next to other tiles score more.
+
+39
+00:01:40,389 --> 00:01:42,095
+So build your wall in groups.
+
+40
+00:01:43,199 --> 00:01:44,095
+Remember.
+
+41
+00:01:44,415 --> 00:01:47,061
+A tile with no neighbours scores one point.
+
+42
+00:01:47,381 --> 00:01:51,925
+Otherwise, count the unbroken line across, and the unbroken line down.
+
+43
+00:01:52,245 --> 00:01:53,525
+Add them together.
+
+44
+00:01:53,845 --> 00:01:55,423
+Next: the next round.

@@ -1,0 +1,115 @@
+1
+00:00:00,200 --> 00:00:03,080
+When all the tiles are taken, collecting is over.
+
+2
+00:00:03,399 --> 00:00:05,085
+Now tiles move to your wall.
+
+3
+00:00:06,100 --> 00:00:09,129
+Every factory display and the centre are empty.
+
+4
+00:00:09,449 --> 00:00:10,772
+Collecting is over.
+
+5
+00:00:11,899 --> 00:00:15,675
+Now everyone moves tiles to their wall, all at the same time.
+
+6
+00:00:16,800 --> 00:00:19,445
+Go through your pattern lines from top to bottom.
+
+7
+00:00:21,649 --> 00:00:23,164
+Line one is complete.
+
+8
+00:00:23,484 --> 00:00:26,791
+Its tile moves to the yellow space in the row beside it.
+
+9
+00:00:27,899 --> 00:00:29,307
+It scores one point.
+
+10
+00:00:29,628 --> 00:00:31,803
+The next video shows how to count points.
+
+11
+00:00:34,149 --> 00:00:35,878
+Line two is complete too.
+
+12
+00:00:36,198 --> 00:00:39,739
+Its rightmost tile moves to the red space, for one point.
+
+13
+00:00:40,059 --> 00:00:42,533
+The other red tile goes in the box lid.
+
+14
+00:00:43,666 --> 00:00:45,522
+Line three is not complete.
+
+15
+00:00:45,842 --> 00:00:48,488
+Its tiles stay where they are, for the next round.
+
+16
+00:00:51,150 --> 00:00:52,771
+Line four is complete.
+
+17
+00:00:53,091 --> 00:00:55,694
+One blue tile moves over, for one point.
+
+18
+00:00:56,014 --> 00:00:57,976
+The other three go in the box lid.
+
+19
+00:00:59,100 --> 00:01:02,065
+Line five is empty, so nothing happens there.
+
+20
+00:01:03,950 --> 00:01:05,421
+Last, the floor line.
+
+21
+00:01:05,742 --> 00:01:09,368
+Ana loses one point, and the tile goes in the box lid.
+
+22
+00:01:12,383 --> 00:01:14,260
+Ben does the same on his board.
+
+23
+00:01:14,580 --> 00:01:17,524
+He had the marker on his floor line, so he keeps it.
+
+24
+00:01:18,633 --> 00:01:21,833
+Tiles on the wall stay there until the end of the game.
+
+25
+00:01:22,966 --> 00:01:23,862
+Remember.
+
+26
+00:01:24,182 --> 00:01:27,809
+Each complete line moves one tile to the wall, and scores.
+
+27
+00:01:28,129 --> 00:01:30,689
+The rest of that line goes in the box lid.
+
+28
+00:01:31,009 --> 00:01:33,846
+Lines that aren't complete wait for the next round.
+
+29
+00:01:34,166 --> 00:01:36,129
+Next: scoring a wall tile.
