@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 // Render a Markdown manual to a styled, printable PDF.
-// Usage: node tools/build_manual_pdf.js [input.md] [output.pdf]
-// Default: docs/spirits-of-the-wild/manual.md -> docs/spirits-of-the-wild/manual.pdf
+// Usage: node tools/build_manual_pdf.js [input.md | game-slug] [output.pdf]
+//   node tools/build_manual_pdf.js                 -> docs/spirits-of-the-wild/manual.pdf
+//   node tools/build_manual_pdf.js azul            -> docs/azul/manual.md -> docs/azul/manual.pdf
+//   node tools/build_manual_pdf.js path/to/x.md    -> path/to/x.pdf
 // Requires: pandoc (Markdown -> HTML) and the `playwright` node module (Chromium).
 const { execFileSync } = require('child_process');
 const fs = require('fs');
@@ -10,7 +12,16 @@ const path = require('path');
 const { chromium } = require('playwright');
 
 const root = path.resolve(__dirname, '..');
-const input = path.resolve(process.argv[2] || path.join(root, 'docs/spirits-of-the-wild/manual.md'));
+function resolveInput(arg) {
+  if (!arg) return path.join(root, 'docs/spirits-of-the-wild/manual.md');
+  // A bare game slug (e.g. "azul") means docs/<slug>/manual.md.
+  if (!arg.endsWith('.md') && /^[a-z0-9-]+$/.test(arg)) {
+    return path.join(root, 'docs', arg, 'manual.md');
+  }
+  return arg;
+}
+const input = path.resolve(resolveInput(process.argv[2]));
+if (!fs.existsSync(input)) { console.error('No such file: ' + input); process.exit(1); }
 const output = path.resolve(process.argv[3] || input.replace(/\.md$/, '.pdf'));
 
 const CSS = `

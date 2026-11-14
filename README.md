@@ -51,3 +51,22 @@ node tools/build_manual_pdf.js          # manual.md -> manual.pdf
   short pause between sentences (one subtitle cue per sentence); change with `SOTW_VOICE=bm_george`,
   `SOTW_SPEED=1.0`
 - `videos.py` – the scripts for each episode (`EPISODES` / `CLIPS`); one short sentence per idea
+
+## Azul (2–4 players, ~30–45 min)
+
+Work in progress: rules, cheat sheet and rules engine are done; colour manual, HTML pages and videos come next.
+Rules follow the photographed German rulebook (2018), which matches the published English rules on every number.
+
+| What | File |
+|---|---|
+| Full English manual (with German → English glossary) | [docs/azul/manual.md](docs/azul/manual.md) · [PDF](docs/azul/manual.pdf) |
+| One-page cheat sheet | [docs/azul/quick-reference.md](docs/azul/quick-reference.md) |
+| Rules engine + seeded AI (source of truth for every point value) | [tools/azul/engine.py](tools/azul/engine.py) · tests: `tests/test_azul_engine.py` |
+
+### Rebuilding
+
+```bash
+node tools/build_manual_pdf.js azul          # docs/azul/manual.md -> docs/azul/manual.pdf
+python3 tools/azul/engine.py 1 2             # print a seeded AI game: seed 1, 2 players
+python3 -m pytest tests/test_azul_engine.py
+```
