@@ -2,7 +2,7 @@
 <meta name="claude:viewport-fit-sides" content="cover">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Arcade-style training game for Spirits of the Wild: seven stages that teach the rules by playing, plus a Score Rush quick-fire mode.">
+<meta name="description" content="Arcade-style trainer for Spirits of the Wild: nine short lessons that teach the rules, seven scoring puzzles, and a Score Rush quick-fire mode.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Pixelify+Sans:wght@500;700&family=Press+Start+2P&display=swap">
@@ -133,15 +133,27 @@ h1, h2, h3 { text-wrap: balance; margin: 0; }
 .topbar .ttl { font-family: var(--font-display); font-size: 22px; font-weight: 700; flex: 1 1 auto; min-width: 0; }
 .topbar .meta { font: 11px var(--font-num); color: var(--ink-2); }
 .mapgrid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
-@media (min-width: 900px) { .mapgrid { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); align-items: start; } }
-.path { position: relative; display: grid; gap: 12px; padding: 8px 0; }
-.path::before { content: ""; position: absolute; left: 50%; top: 20px; bottom: 20px; border-left: 3px dotted var(--dim); transform: translateX(-1px); }
-.node { position: relative; width: min(330px, 86%); justify-self: start; display: grid; grid-template-columns: 54px minmax(0, 1fr); gap: 4px 12px;
-  align-items: center; text-align: left; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--line); background: var(--panel);
+@media (min-width: 900px) { .mapgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; } }
+.chapter { display: grid; gap: 12px; align-content: start; min-width: 0; }
+.chhead { display: grid; gap: 6px; padding: 12px 14px; border-radius: 10px; background: var(--panel-2); border: 2px solid var(--line); }
+.chhead .tag { justify-self: start; }
+.chhead h3 { font-family: var(--font-display); font-size: 24px; line-height: 1.1; }
+.chhead p { margin: 0; color: var(--ink-2); font-size: 14px; }
+.meter { height: 10px; border-radius: 99px; background: var(--bg-2); border: 2px solid var(--line); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--good); }
+.locknote { display: grid; gap: 8px; border: 2px dashed var(--line); border-radius: 8px; padding: 10px 12px; font-size: 14px; }
+.locknote .btn { justify-self: start; }
+.chapter.locked .path { opacity: .6; }
+.path { position: relative; display: grid; gap: 10px; padding: 2px 0; }
+.path::before { content: ""; position: absolute; left: 36px; top: 24px; bottom: 24px; border-left: 3px dotted var(--dim); }
+.node { position: relative; width: 100%; display: grid; grid-template-columns: 46px minmax(0, 1fr); gap: 3px 12px;
+  align-items: center; text-align: left; padding: 9px 12px; border-radius: 8px; border: 2px solid var(--line); background: var(--panel);
   box-shadow: 0 4px 0 var(--edge); cursor: pointer; }
-.node:nth-child(even) { justify-self: end; }
-.node .n { grid-row: span 2; width: 54px; height: 54px; display: grid; place-items: center; font: 20px var(--font-num);
+.node .n { grid-row: span 2; width: 46px; height: 46px; display: grid; place-items: center; font: 16px var(--font-num);
   border-radius: 50%; background: var(--panel-2); border: 2px solid var(--line); }
+.node.next { border-color: var(--accent); animation: pulse2 1.6s ease-in-out infinite; }
+@keyframes pulse2 { 50% { box-shadow: 0 4px 0 var(--edge), 0 0 0 4px color-mix(in srgb, var(--accent) 40%, transparent) } }
+.node.bridge .n { font-size: 20px; }
 .node.cleared .n { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
 .node .nm { font-family: var(--font-display); font-size: 17px; font-weight: 700; line-height: 1.15; }
 .node .sub { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; color: var(--ink-2); }
@@ -359,6 +371,107 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
 .replaytag { font-family: var(--font-display); background: var(--spark); color: var(--st-ink-light); padding: 2px 8px; border-radius: 4px; font-size: 13px; animation: blink 1s steps(2, start) infinite; }
 .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
+/* ---------- lessons ---------- */
+.lesson { display: grid; gap: 12px; max-width: 940px; margin: 0 auto; min-width: 0; }
+.coach { min-height: 0; gap: 6px; }
+.coach .say { font-size: 16px; line-height: 1.5; max-width: 70ch; }
+.coach .sub { font-size: 13px; color: var(--ink-2); }
+.coach .acts { margin-top: 2px; }
+.w { font-weight: 700; text-decoration: underline dotted var(--spark) 2px; text-underline-offset: 3px; }
+.msg.hint { color: var(--ink); font-weight: 700; }
+.dots { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.dots i { width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--dim); display: block; }
+.dots i.on { background: var(--good); border-color: var(--good); }
+.dots i.cur { border-color: var(--accent); background: var(--accent); }
+.lview { display: grid; gap: 12px; min-width: 0; }
+.tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.tile { display: grid; justify-items: center; align-content: start; gap: 6px; text-align: center; padding: 12px 8px; min-height: 132px; border-radius: 10px;
+  border: 2px solid var(--line); background: var(--panel); box-shadow: 0 4px 0 var(--edge); cursor: pointer; touch-action: manipulation; min-width: 0; }
+.tile .pic { height: 44px; display: flex; align-items: center; justify-content: center; gap: 3px; flex-wrap: wrap; --stone: 22px; }
+.tile .tn { font-family: var(--font-display); font-weight: 700; font-size: 16px; line-height: 1.1; }
+.tile .tt { font-size: 13px; color: var(--ink-2); line-height: 1.35; }
+.tile .tq { font-family: var(--font-display); font-size: 12px; color: var(--spark); letter-spacing: .08em; text-transform: uppercase; }
+.tile.met { border-color: var(--good); background: var(--good-bg); animation: popin .3s cubic-bezier(.3,1.5,.5,1); }
+.tile.met .tt { color: var(--ink); }
+.pic .spr { width: 34px; height: 30px; color: var(--ink); }
+.pic .spr svg { width: 100%; height: 100%; }
+.minicard { width: 22px; height: 30px; border-radius: 3px; border: 2px solid var(--line); background: var(--panel-2); display: inline-block; }
+.minicard.sp { border-color: var(--spark); }
+.minibowl { width: 64px; height: 30px; border-radius: 50% / 45%; border: 3px solid var(--line); background: var(--bg-2); display: inline-block; }
+.opts.txt { grid-template-columns: minmax(0, 1fr); }
+.opts.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.opt.t { font: 700 17px/1.25 var(--font-body); text-align: left; padding: 12px 14px 12px 30px; }
+.track { border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+.track th, .track td { border: 1.5px solid var(--line); padding: 4px 9px; text-align: center; }
+.track th { font-family: var(--font-display); font-weight: 700; text-align: left; background: var(--panel-2); }
+.track td.hit { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.trackwrap { overflow-x: auto; max-width: 100%; }
+.held { flex-wrap: wrap; }
+.qcard { background: var(--panel); border: 2px solid var(--line); border-radius: 10px; padding: 12px; box-shadow: 0 4px 0 var(--edge); display: grid; gap: 10px; min-width: 0; }
+.qrow { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+@media (min-width: 760px) { .qrow { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: start; } }
+.outview { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+@media (min-width: 760px) { .outview { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.bowlmini { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-family: var(--font-display); --stone: 30px; }
+.hidetot .bhead .tot { visibility: hidden; }
+
+/* setup table */
+.tbl { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr); }
+.seatz { border: 2px dashed var(--line); border-radius: 10px; padding: 8px; display: grid; gap: 8px; min-width: 0; }
+.seatz .who { font-family: var(--font-display); font-weight: 700; font-size: 15px; }
+.midz { display: grid; gap: 10px; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+@media (min-width: 760px) { .midz { grid-template-columns: 0.8fr 1.6fr 1.6fr 0.9fr; } }
+.zone { display: grid; justify-items: center; align-content: center; gap: 4px; padding: 8px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel);
+  cursor: pointer; text-align: center; min-height: 92px; min-width: 0; touch-action: manipulation; box-shadow: 0 3px 0 var(--edge); }
+.zone.goal { border-color: var(--accent); border-style: dashed; }
+.zone.flat { box-shadow: none; cursor: default; }
+.zone .lbl { font-size: 11px; }
+.zone .cnt { font: 10px var(--font-num); color: var(--ink-2); }
+.zone .pouch { width: 40px; height: 44px; border-radius: 40% 40% 46% 46% / 30% 30% 60% 60%; background: var(--coyote); box-shadow: inset 0 -5px 0 rgba(0,0,0,.2); }
+.zone .bowl { width: 100%; min-height: 56px; flex: none; }
+.heap { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; --stone: 18px; max-width: 260px; }
+.spot { border: 2px dashed var(--line); border-radius: 8px; min-height: 52px; display: grid; place-items: center; color: var(--ink-2); font-family: var(--font-display);
+  background: transparent; cursor: pointer; padding: 6px; width: 100%; }
+.spot.goal { border-color: var(--accent); color: var(--ink); }
+.minib { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; padding: 6px; border-radius: 8px; background: var(--panel); border: 2px solid var(--line); }
+.minib span { display: grid; justify-items: center; font-size: 11px; color: var(--ink-2); }
+.minib svg { width: 24px; height: 20px; color: var(--ink); }
+.mcards { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+.mcard { font: 700 12px/1.2 var(--font-body); border: 2px solid var(--line); border-radius: 6px; padding: 6px 5px; background: var(--panel-2); min-height: 50px;
+  text-align: left; cursor: pointer; min-width: 0; overflow-wrap: anywhere; box-shadow: 0 2px 0 var(--edge); }
+.mcard.down { background: repeating-linear-gradient(45deg, var(--panel-2) 0 6px, var(--bg-2) 6px 12px); color: var(--ink-2); box-shadow: none; }
+.mcard.deal { animation: dropin .4s cubic-bezier(.3,1.6,.5,1) both; }
+.pilez { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: 100%; }
+.pilebtn { min-height: 64px; border-radius: 8px; border: 2px dashed var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; padding: 6px;
+  font-family: var(--font-display); font-size: 14px; position: relative; }
+.pilebtn.has { border-style: solid; border-color: var(--spark); background: var(--panel-2); box-shadow: 2px 2px 0 var(--line), 4px 4px 0 var(--line); }
+.pilebtn small { font: 9px var(--font-num); color: var(--ink-2); }
+.loose { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.spbtn { font-family: var(--font-display); font-weight: 700; font-size: 13px; padding: 8px 10px; border-radius: 6px; border: 2px solid var(--spark); background: var(--panel-2);
+  cursor: pointer; min-height: 40px; box-shadow: 0 3px 0 var(--edge); }
+.spbtn.sel { outline: 3px solid var(--accent); outline-offset: 2px; transform: translateY(-3px); }
+.coyz svg { width: 34px; height: 34px; color: var(--coyote); }
+.yesno { display: flex; gap: 10px; flex-wrap: wrap; }
+.remember ul { margin: 0; padding-left: 20px; display: grid; gap: 4px; font-size: 15px; }
+.bigcheck { font: 40px/1 var(--font-num); color: var(--good); text-align: center; animation: starpop .5s cubic-bezier(.3,1.8,.5,1) both; }
+.words { margin: 0; display: grid; gap: 4px; font-size: 14px; }
+.words dt { font-family: var(--font-display); font-weight: 700; display: inline; }
+.words dd { margin: 0 0 2px; display: inline; color: var(--ink-2); }
+.words div { line-height: 1.4; }
+.bridge-list { margin: 0; padding-left: 20px; display: grid; gap: 6px; }
+.maths { margin: 4px 0 0; padding-left: 20px; display: grid; gap: 3px; font-size: 14px; }
+.maths .tot { font-weight: 700; list-style: none; margin-left: -20px; }
+.help section { display: grid; gap: 6px; }
+.help ol { margin: 0; padding-left: 22px; display: grid; gap: 3px; }
+.help p { margin: 0; }
+.help .tablewrap { overflow-x: auto; max-width: 100%; }
+.toc { display: flex; gap: 6px; flex-wrap: wrap; }
+.toc a { font-family: var(--font-display); font-size: 13px; color: var(--ink); border: 1.5px solid var(--line); border-radius: 99px; padding: 2px 9px; text-decoration: none; background: var(--panel-2); }
+
+@media (max-width: 759px) {
+  .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .mcards { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
 @media (max-width: 420px) {
   :root { --stone: clamp(22px, 6.8vw, 34px); }
   .row { grid-template-columns: 60px minmax(0, max-content) calc(var(--stone) + 4px) minmax(0, 1fr) 30px; gap: 3px; padding: 4px 2px; }
@@ -381,6 +494,10 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   .card .ct { font-size: 10.5px; }
   .hud .stg { font-size: 15px; }
   .solo .row { grid-template-columns: 72px minmax(0, max-content) calc(var(--stone) + 4px); }
+  .coach .say { font-size: 15px; }
+  .opt.t { font-size: 15.5px; }
+  .tile { min-height: 120px; padding: 10px 6px; }
+  .chhead h3 { font-size: 21px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition: none !important; }
@@ -398,56 +515,79 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     </div>
     <div class="parade" aria-hidden="true"></div>
     <button class="btn primary press" id="pressStart" type="button">PRESS START</button>
-    <div class="title-meta"><span id="tStars">★ 0 / 21</span><span id="tRush">RUSH HI 0</span></div>
+    <div class="title-meta"><span id="tLessons">LESSONS 0 / 9</span><span id="tStars">★ 0 / 21</span><span id="tRush">RUSH HI 0</span></div>
     <div class="title-links">
+      <button class="btn small" type="button" data-help>Rules</button>
       <button class="btn small" type="button" data-go="rush">Score Rush</button>
-      <button class="btn small" type="button" data-help>How to play</button>
       <button class="btn small" type="button" data-mute aria-pressed="false">Sound: on</button>
     </div>
-    <p class="fineprint">Seven stages, easy to boss, built from the <a href="scenarios.html">practice scenarios</a>. Rules follow the <a href="manual.md">player manual</a> (Owl pair = 4 points). Unofficial fan learning tool; Spirits of the Wild is a trademark of Mattel.</p>
+    <p class="fineprint">Never played? Chapter 1 teaches the rules in nine short lessons. Chapter 2 has seven scoring puzzles, built from the <a href="scenarios.html">practice scenarios</a>. Chapter 3 is Score Rush. Rules follow the <a href="manual.md">player manual</a>. Unofficial fan learning tool; Spirits of the Wild is a trademark of Mattel.</p>
   </section>
 
   <!-- MAP -->
   <section class="screen" id="map" hidden aria-labelledby="m-h">
     <div class="topbar">
       <button class="btn small" type="button" data-go="title" aria-label="Back to title">◀ Title</button>
-      <h2 class="ttl" id="m-h">Stage map</h2>
+      <h2 class="ttl" id="m-h">Learning path</h2>
       <div class="hud-btns" style="align-items:center">
         <span class="meta" id="mStars"></span>
-        <button class="btn small icon-btn" type="button" data-help aria-label="How to play">?</button>
+        <button class="btn small" type="button" data-help>Rules</button>
         <button class="btn small icon-btn" type="button" data-mute aria-label="Sound on" aria-pressed="false">♪</button>
       </div>
     </div>
     <div class="mapgrid">
-      <div class="path" id="path"></div>
-      <div class="col">
+      <section class="chapter" id="ch1" aria-labelledby="ch1-h">
+        <div class="chhead">
+          <span class="tag" style="color:var(--good)">Chapter 1 · Basics</span>
+          <h3 id="ch1-h">Learn the game</h3>
+          <p>Nine short lessons, 1–3 minutes each. You set up the table, play turns and read points yourself.</p>
+          <div class="meter" aria-hidden="true"><i id="ch1bar" style="width:0"></i></div>
+          <span class="meta" id="ch1prog"></span>
+        </div>
+        <div class="path" id="lpath"></div>
+      </section>
+      <section class="chapter" id="ch2" aria-labelledby="ch2-h">
+        <div class="chhead">
+          <span class="tag" style="color:var(--accent)">Chapter 2 · Advanced</span>
+          <h3 id="ch2-h">Score better</h3>
+          <p>Seven puzzles. Now you look for the best move and count points ahead.</p>
+          <div class="locknote" id="ch2lock" hidden>
+            <span>Opens when you finish Chapter 1.</span>
+            <button class="btn small" type="button" data-skip>I already know the rules</button>
+          </div>
+        </div>
+        <div class="path" id="path"></div>
+      </section>
+      <section class="chapter" aria-labelledby="ch3-h">
         <div class="rushcard">
-          <span class="tag" style="justify-self:start;color:var(--spark)">Quick-fire</span>
-          <h2>SCORE RUSH</h2>
+          <span class="tag" style="justify-self:start;color:var(--spark)">Chapter 3 · Quick-fire</span>
+          <h2 id="ch3-h">SCORE RUSH</h2>
           <p>Random boards, a ticking clock. Tap the right score for a section, or the best animal for a stone. Streaks raise your multiplier; three misses and you're out.</p>
           <p class="num" id="mRushHi" style="font-size:12px">HI 0</p>
           <button class="btn primary" type="button" data-go="rush">Play Score Rush</button>
         </div>
         <div class="side-note">
-          <span><b>Stars:</b> ★ clears the stage and opens the next one. ★★★ means you found the best possible move.</span>
-          <span>Scores are saved in this browser only.</span>
-          <span><button class="btn small" type="button" id="unlockAll">Open all stages</button> <button class="btn small ghost" type="button" id="resetSave">Reset saves</button></span>
-          <span id="resetConfirm" hidden>Erase all stars and high scores? <button class="btn small" type="button" id="resetYes">Erase</button> <button class="btn small ghost" type="button" id="resetNo">Keep</button></span>
+          <span><b>Lessons:</b> a check mark means done. The next lesson opens when you finish one.</span>
+          <span><b>Stars:</b> ★ clears a puzzle and opens the next one. ★★★ means you found the best possible move.</span>
+          <span>Progress is saved in this browser only.</span>
+          <span><button class="btn small" type="button" id="unlockAll">Open everything</button> <button class="btn small ghost" type="button" id="resetSave">Reset saves</button></span>
+          <span id="resetConfirm" hidden>Erase all lessons, stars and high scores? <button class="btn small" type="button" id="resetYes">Erase</button> <button class="btn small ghost" type="button" id="resetNo">Keep</button></span>
         </div>
-      </div>
+      </section>
     </div>
   </section>
 
   <!-- GAME -->
   <section class="screen" id="game" hidden aria-label="Stage">
     <div class="hud">
-      <button class="btn small" type="button" data-go="map" aria-label="Back to stage map">◀ Map</button>
+      <button class="btn small" type="button" data-go="map" aria-label="Back to the map">◀ Map</button>
       <div class="stg" id="gStage"></div>
       <div class="ladder" id="gLadder"></div>
       <div class="score" id="gScore"></div>
       <div class="hud-btns">
-        <button class="btn small icon-btn" type="button" id="gRestart" aria-label="Restart stage (R)" title="Restart (R)">↻</button>
-        <button class="btn small icon-btn" type="button" data-help aria-label="How to play (H)" title="How to play (H)">?</button>
+        <button class="btn small" type="button" id="gHint" title="A one-line tip">Hint</button>
+        <button class="btn small icon-btn" type="button" id="gRestart" aria-label="Start again (R)" title="Start again (R)">↻</button>
+        <button class="btn small" type="button" data-help title="Rules (H)">Rules</button>
         <button class="btn small icon-btn" type="button" data-mute aria-label="Sound on" aria-pressed="false" title="Sound (M)">♪</button>
       </div>
     </div>
@@ -457,7 +597,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   <!-- RUSH -->
   <section class="screen" id="rush" hidden aria-label="Score Rush">
     <div class="hud">
-      <button class="btn small" type="button" data-go="map" aria-label="Back to stage map">◀ Map</button>
+      <button class="btn small" type="button" data-go="map" aria-label="Back to the map">◀ Map</button>
       <div class="rushhud" style="flex:1 1 auto">
         <span><small class="lbl">Score</small><br><span class="big" id="rScore">0</span></span>
         <span><small class="lbl">Combo</small><br><span class="mult" id="rMult">×1</span></span>
@@ -465,7 +605,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
         <span><small class="lbl">Level</small><br><span class="big" id="rLevel">1</span></span>
       </div>
       <div class="hud-btns">
-        <button class="btn small icon-btn" type="button" data-help aria-label="How to play">?</button>
+        <button class="btn small" type="button" data-help>Rules</button>
         <button class="btn small icon-btn" type="button" data-mute aria-label="Sound on" aria-pressed="false">♪</button>
       </div>
     </div>
@@ -488,6 +628,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   var TURTLE_PTS = [0, 1, 3, 6, 9, 14];
   var SALMON_PTS = [0, 1, 2, 4, 6, 9, 13];
   var CARDS = ["take1a", "take1b", "take2", "add2", "add3", "spirit"];
+  var BEAVER_PTS = { triple: 5, pair: 2, bonus: 7 };
 
   function newBoard() {
     var bonus = {};
@@ -508,7 +649,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (a === "salmon") return nuniq(s) === s.length ? SALMON_PTS[s.length] : 0;
     if (a === "owl") return OWL_POINTS * s.filter(function (p) { return p.length === 2 && nuniq(p) <= 1; }).length;
     var t = s.triple.length === 3 && nuniq(s.triple) <= 1, p = s.pair.length === 2 && nuniq(s.pair) <= 1;
-    return (t ? 5 : 0) + (p ? 2 : 0) + (t && p ? 7 : 0);
+    return (t ? BEAVER_PTS.triple : 0) + (p ? BEAVER_PTS.pair : 0) + (t && p ? BEAVER_PTS.bonus : 0);
   }
   function animalScore(b, a) { return rawScore(b, a) * (b.bonus[a] ? 2 : 1); }
   function totalScore(b) { return ANIMALS.reduce(function (n, a) { return n + animalScore(b, a); }, 0); }
@@ -622,9 +763,9 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   }
   function facedown(s) { return CARDS.filter(function (k) { return k !== "spirit" && !s.cards[k]; }).length; }
   function cardReason(s, c) {
-    if (!s.cards[c]) return "That card is face-down. Spirit Power & Recover turns it face-up again.";
+    if (!s.cards[c]) return "That card is face-down, so you can't use it. Spirit Power turns it face-up again later.";
     if ((c === "take1a" || c === "take1b") && !s.bowl.length) return "The bowl is empty: there is nothing to take.";
-    if (c === "take2" && s.bowl.length < 2) return "Take Two needs at least 2 stones in the bowl.";
+    if (c === "take2" && s.bowl.length < 2) return "Take Two Stones needs at least 2 stones in the bowl.";
     if (c === "spirit" && facedown(s) < 3) return "Spirit Power needs 3 other cards face-down (you have " + facedown(s) + ").";
     return null;
   }
@@ -678,7 +819,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
         s.over = true; return;
       }
       if (st.k === "take" && !s.bowl.length) { s.steps.shift(); s.ev.push({ t: "note", msg: "The bowl is empty." }); continue; }
-      if (st.k === "coyote" && !s.opp) { s.steps.shift(); s.ev.push({ t: "coyote-solo" }); continue; }
+      if (st.k === "coyote" && !s.opp) { s.steps.shift(); s.ev.push({ t: "coyote-solo", half: !!st.half }); continue; }
       if (st.k === "card" && !available(s).length) { s.steps.shift(); s.ev.push({ t: "note", msg: "No card can be played: pass." }); continue; }
       if (st.k === "deer" && !ANIMALS.some(function (a) { return stonesIn(s.you, a).length; })) { s.steps.shift(); continue; }
       if (st.k === "bisonRet" && !s.bowl.length) { s.steps.shift(); continue; }
@@ -792,6 +933,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       id: 1, name: "First Pick", level: "Easy", kind: "play",
       intro: "You are the start player, so Take Two went face-down during setup. Training round: your opponent sits out and you play two turns in a row. Points only come from finished sets, so plan two stones ahead.",
       goal: "Score as much as you can in two turns.",
+      hint: "Two stones of one colour finish an Owl pair. One stone alone scores very little.",
       you: mk({}), bowl: ["blue", "blue", "red", "yellow"], bag: ["green", "white", "purple", "red", "yellow", "green"],
       cards: { take2: false }, piles: [["wolf", "ram", "bear"], ["bison", "eagle", "deer"]], turns: 2,
       thresholds: [1, 3, 4], unit: "pts", evaluate: gainEval,
@@ -803,6 +945,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       id: 2, name: "Count It", level: "Easy", kind: "tally",
       intro: "The game is over. Count Mia's board one animal at a time, then the total. Owl pair = 4 points. Beat the clock for a cleaner run.",
       goal: "Score each animal and the total.",
+      hint: "Unfinished sets score 0. A Spirit Stone doubles one animal.",
       you: mk({ rabbit: ["red", "blue"], turtle: rep("green", 4), salmon: ["yellow", "purple", "red", "blue", "white"],
         owl: [["blue", "blue"], ["red", "red"], ["yellow"]], triple: rep("purple", 3), pair: ["white"], bonus: ["turtle"] }),
       bowl: [], thresholds: [4, 5, 6], unit: "of 6",
@@ -822,6 +965,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       id: 3, name: "Turtle or Salmon?", level: "Medium", kind: "play",
       intro: "Mid-game. Your Rabbit and Beaver are finished and your opponent put the Coyote on your Owl. Add Two and Add Three are face-down. Find the biggest gain this turn.",
       goal: "Gain the most points this turn.",
+      hint: "Try two yellows on the same animal, and read the Turtle's points table.",
       you: mk({ rabbit: ["red", "blue", "white"], turtle: rep("yellow", 3), salmon: ["green", "blue", "purple", "red", "white"],
         owl: [["red", "red"]], triple: rep("green", 3), pair: rep("purple", 2) }),
       coyote: { on: "you", animal: "owl" }, bowl: ["yellow", "yellow", "blue", "blue"], bag: ["green", "red", "white"],
@@ -832,9 +976,10 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       note: "One yellow is worth more on the Salmon (+4 than +3), but two together are worth more on the Turtle (6 → 14). Blue fits nowhere: it would go straight back to the bowl."
     },
     {
-      id: 4, name: "Deer Trade", level: "Medium", kind: "play",
+      showSpirits: true, id: 4, name: "Deer Trade", level: "Medium", kind: "play",
       intro: "Three of your cards are face-down, so Spirit Power is open. Deer and Bear are on top. Your Owl has a finished blue pair and two lonely halves.",
       goal: "Gain the most points this turn.",
+      hint: "A lone Owl stone scores nothing, so the Deer can send it to the bowl for free.",
       you: mk({ rabbit: ["red", "blue"], turtle: rep("purple", 2), salmon: ["yellow"], owl: [["blue", "blue"], ["green"], ["white"]], triple: rep("yellow", 3) }),
       bowl: ["green", "white"], bag: ["red", "blue", "purple", "yellow", "green"],
       cards: { take1a: false, take2: false, add2: false }, piles: [["deer", "wolf", "ram"], ["bear", "eagle", "bison"]],
@@ -844,9 +989,10 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       note: "Removing the lone green (or white) from the Owl costs nothing. Then green finishes the Rabbit (+6) and white finishes an Owl pair (+4)."
     },
     {
-      id: 5, name: "Eagle Eye", level: "Medium", kind: "play",
+      showSpirits: true, id: 5, name: "Eagle Eye", level: "Medium", kind: "play",
       intro: "Spirit Power is open, with Eagle and Wolf on top. Two reds and a green are in the bowl, and your opponent wants the reds for their own Turtle.",
       goal: "Gain the most points before your opponent moves.",
+      hint: "Eagle: take one stone, get all your cards back, then play again at once.",
       you: mk({ rabbit: ["blue", "yellow"], turtle: rep("red", 4), salmon: ["purple", "white"], owl: [["red"]], triple: rep("white", 2) }),
       bowl: ["red", "red", "green"], bag: ["white", "purple", "yellow", "blue", "white", "purple", "green"],
       cards: { take1a: false, add2: false, add3: false }, piles: [["eagle", "deer", "ram"], ["wolf", "bear", "bison"]],
@@ -859,6 +1005,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       id: 6, name: "Coyote Drop", level: "Hard", kind: "play",
       intro: "You played Add Three & Move Coyote and drew three stones into the empty bowl. Now put the Coyote on one of Ben's animals. Ben answers with Take Two.",
       goal: "Hold Ben's reply to the fewest points.",
+      hint: "Which of Ben's animals is one stone away from its biggest jump?",
       you: null, opp: mk({ rabbit: ["red", "yellow", "green"], turtle: rep("blue", 4), salmon: ["red", "yellow", "purple"], owl: [["purple", "purple"]], triple: rep("white", 3), bonus: ["owl"] }),
       oppName: "Ben", bowl: [], bag: ["blue", "clear", "white", "green", "red"], extraOut: 1,
       cards: { add3: false }, steps: [{ k: "draw", n: 3 }, { k: "coyote" }, { k: "end" }],
@@ -868,9 +1015,10 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       note: "Ben's Turtle is one blue away from 14, and the Spirit Stone would double it to 28: +19. On the Turtle, the Coyote stops both. Anywhere else, Ben still takes +19."
     },
     {
-      id: 7, name: "Last Spirit Stone", level: "Boss", kind: "play",
+      showSpirits: true, id: 7, name: "Last Spirit Stone", level: "Boss", kind: "play",
       intro: "You 38, Ben 52. Ben put the Coyote on your Salmon a few turns ago. Four Spirit Stones are out of the bag (three on boards, one in the bowl). The bag holds the rest.",
       goal: "Win the game this turn.",
+      hint: "Bison returns one bowl stone to the bag. Which one you return decides if the game ends.",
       you: mk({ rabbit: ["blue", "yellow"], turtle: rep("green", 5), salmon: ["red", "white", "purple", "yellow"], owl: [["blue", "blue"], ["white", "white"]], triple: rep("red", 3), bonus: ["beaver"] }),
       opp: mk({ rabbit: ["red", "green", "white"], turtle: rep("purple", 4), salmon: ["green", "yellow", "blue", "purple", "white", "red"], owl: [["yellow", "yellow"], ["blue", "blue"]], pair: rep("yellow", 2), bonus: ["rabbit", "owl"] }),
       oppName: "Ben", coyote: { on: "you", animal: "salmon" }, bowl: ["red", "clear"], bag: ["clear", "blue", "purple", "green", "yellow", "red"],
@@ -887,12 +1035,14 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     }
   ];
 
-  function solve(cfg) {
+  function solve(cfg) { return solveFrom(newGame(cfg), cfg.evaluate); }
+  /* Brute force from any state (also mid-turn): best value of evaluate() over every legal line. */
+  function solveFrom(s0, evaluate) {
     var best = null, count = 0;
     function dfs(s, path) {
       if (s.over) {
         count++;
-        var v = cfg.evaluate(s);
+        var v = evaluate(s);
         if (!best || v > best.value) best = { value: v, path: path, state: s };
         return;
       }
@@ -902,7 +1052,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
         dfs(s2, path.concat([d]));
       });
     }
-    dfs(newGame(cfg), []);
+    var s1 = clone(s0); s1.ev = [];
+    dfs(s1, []);
     best.lines = count;
     return best;
   }
@@ -916,12 +1067,14 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     deer: "Move 1 stone from your board to the bowl, then take 2.",
     bison: "Draw 3 into the bowl, take 1, then return 1 bowl stone to the bag."
   };
-  var CARD_NAMES = { take1a: "Take One", take1b: "Take One", take2: "Take Two", add2: "Add Two & Take One", add3: "Add Three & Move Coyote", spirit: "Spirit Power & Recover" };
+  var CARD_NAMES = { take1a: "Take One Stone", take1b: "Take One Stone", take2: "Take Two Stones", add2: "Add Two Stones & Take One", add3: "Add Three Stones & Move Coyote", spirit: "Use Spirit Power & Recover Cards" };
   function where(w) { return NAMES[w[0]] + (w[1] === "triple" ? " (three-of-a-kind)" : w[1] === "pair" ? " (pair)" : w[1] === "bonus" ? " bonus space" : ""); }
   function sign(n) { return (n >= 0 ? "+" : "−") + Math.abs(n); }
   /* Human-readable line for a decision path (used for the "best line" card). */
-  function describe(cfg, path) {
-    var s = newGame(cfg), out = [], opp = cfg.oppName || "your opponent";
+  function describe(cfg, path) { return describeFrom(newGame(cfg), path, cfg.oppName); }
+  function describeFrom(s0, path, oppName) {
+    var s = clone(s0), out = [], opp = oppName || "your opponent";
+    s.ev = [];
     path.forEach(function (d) {
       var st = s.steps[0];
       var color = st.k === "take" ? s.bowl[d.i] : st.k === "bisonRet" ? s.bowl[d.i] : null;
@@ -938,14 +1091,398 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     return { lines: out, state: s };
   }
 
+  /* Plain-words point maths for one animal, e.g. "Turtle: 4 green stones = 9, × 2 for the Spirit Stone = 18". */
+  function explain(b, a) {
+    var s = b[a], raw = rawScore(b, a), n = stonesIn(b, a).length, t;
+    if (!n) t = "no stones = 0";
+    else if (a === "rabbit") t = n === 3 && raw ? "3 different colours = " + raw : n + " of 3 stones, not finished = 0";
+    else if (a === "turtle") t = n + " " + s[0] + " stone" + (n > 1 ? "s" : "") + " = " + raw;
+    else if (a === "salmon") t = n + " different colour" + (n > 1 ? "s" : "") + " = " + raw;
+    else if (a === "owl") {
+      var fp = s.filter(function (p) { return p.length === 2; }).length, lone = s.length - fp;
+      t = fp + " finished pair" + (fp === 1 ? "" : "s") + " × " + OWL_POINTS + " = " + raw + (lone ? " (" + lone + " lone stone" + (lone > 1 ? "s score" : " scores") + " 0)" : "");
+    } else {
+      var tr = s.triple.length === 3, pr = s.pair.length === 2, parts = [];
+      parts.push(tr ? "three-of-a-kind " + BEAVER_PTS.triple : "three-of-a-kind not finished 0");
+      parts.push(pr ? "pair " + BEAVER_PTS.pair : "pair not finished 0");
+      if (tr && pr) parts.push("bonus " + BEAVER_PTS.bonus);
+      t = parts.join(" + ") + " = " + raw;
+    }
+    if (b.bonus[a]) t += ", × 2 for the Spirit Stone = " + raw * 2;
+    return NAMES[a] + ": " + t;
+  }
+
+  /* ---------------- a simple opponent (Ben) for the practice game ----------------
+     Greedy: Take Two or Take One when a stone scores now, otherwise Add Two, then Add Three.
+     He never uses Spirit Power (the practice game is too short to need it). */
+  function coyoteTarget(b, cur) {
+    var best = null, bv = -1;
+    ANIMALS.forEach(function (a) {
+      if (b.bonus[a] || a === cur) return;
+      var v = stonesIn(b, a).length + (a === "turtle" || a === "salmon" ? 3 : 0);
+      if (v > bv) { best = a; bv = v; }
+    });
+    return best;
+  }
+  function benChoice(s, bc) {
+    var blk = blockedFor(s, "opp");
+    var t1 = bc.take1a ? "take1a" : bc.take1b ? "take1b" : null;
+    var g2 = bc.take2 && s.bowl.length >= 2 ? bestTake(s.opp, s.bowl, 2, blk).gain : -1;
+    var g1 = t1 && s.bowl.length ? bestTake(s.opp, s.bowl, 1, blk).gain : -1;
+    if (g2 > 0 && g2 > g1) return "take2";
+    if (g1 > 0) return t1;
+    if (bc.add2) return "add2";
+    if (bc.add3) return "add3";
+    if (t1 && s.bowl.length) return t1;
+    if (g2 >= 0) return "take2";
+    return null;
+  }
+  function benTurn(s, bc) {
+    var ev = [], card = benChoice(s, bc), blk = blockedFor(s, "opp");
+    if (!card) { ev.push({ t: "pass" }); return ev; }
+    bc[card] = false;
+    ev.push({ t: "card", card: card });
+    function drawB(n) { var d = s.bag.splice(0, Math.min(n, s.bag.length)); s.bowl = s.bowl.concat(d); ev.push({ t: "draw", stones: d }); }
+    function takeB(k) {
+      (bestTake(s.opp, s.bowl, k, blk).path || []).forEach(function (p) {
+        if (!p[1]) { ev.push({ t: "bounce", color: p[0] }); return; }
+        s.bowl.splice(s.bowl.indexOf(p[0]), 1);
+        var before = totalScore(s.opp);
+        place(s.opp, p[0], p[1]);
+        ev.push({ t: "place", color: p[0], w: p[1], gain: totalScore(s.opp) - before });
+      });
+    }
+    function coy(half) {
+      var a = coyoteTarget(s.you, blockedFor(s, "you"));
+      if (a) { s.coyote = { on: "you", animal: a }; ev.push({ t: "coyote", animal: a, half: half }); }
+    }
+    if (card === "take2") takeB(2);
+    else if (card === "take1a" || card === "take1b") { takeB(1); if (!bc.take1a && !bc.take1b) coy(true); }
+    else if (card === "add2") { drawB(2); takeB(1); }
+    else if (card === "add3") { drawB(3); coy(false); }
+    return ev;
+  }
+
   root.SOTW = {
     COLORS: COLORS, CLEAR: CLEAR, ANIMALS: ANIMALS, CARDS: CARDS, OWL_POINTS: OWL_POINTS, OWL_PAIRS: OWL_PAIRS,
     TURTLE_PTS: TURTLE_PTS, SALMON_PTS: SALMON_PTS, NAMES: NAMES, CNAME: CNAME, CARD_NAMES: CARD_NAMES, SPIRIT_TEXT: SPIRIT_TEXT,
     newBoard: newBoard, clone: clone, stonesIn: stonesIn, rawScore: rawScore, animalScore: animalScore, totalScore: totalScore,
     placements: placements, place: place, remove: remove, bestTake: bestTake, placeReason: placeReason,
     blockedFor: blockedFor, spiritOut: spiritOut, cardReason: cardReason, available: available, newGame: newGame,
-    options: options, act: act, solve: solve, starsFor: starsFor, describe: describe, mk: mk, STAGES: STAGES, sign: sign
+    options: options, act: act, solve: solve, solveFrom: solveFrom, starsFor: starsFor, describe: describe, describeFrom: describeFrom,
+    mk: mk, STAGES: STAGES, sign: sign, explain: explain, benTurn: benTurn, coyoteTarget: coyoteTarget, BEAVER_PTS: BEAVER_PTS, gainEval: gainEval, POWERS: POWERS
   };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+
+<script id="sotw-lessons">
+/* Chapter 1 "Learn the game": lesson content as data (no DOM access), so node can check it as well.
+   Every point value in the text is read from the engine (P below), never typed by hand. */
+(function (root) {
+  "use strict";
+  var E = root.SOTW, mk = E.mk, N = E.NAMES, CN = E.CARD_NAMES;
+  function rep(c, n) { var r = []; for (var i = 0; i < n; i++) r.push(c); return r; }
+  function w(t) { return '<b class="w">' + t + "</b>"; }
+  function card(k) { return "<b>" + CN[k] + "</b>"; }
+  var P = {
+    rabbit: E.rawScore(mk({ rabbit: ["green", "yellow", "blue"] }), "rabbit"),
+    turtle: E.TURTLE_PTS, salmon: E.SALMON_PTS, owl: E.OWL_POINTS,
+    triple: E.rawScore(mk({ triple: rep("purple", 3) }), "beaver"),
+    pair: E.rawScore(mk({ pair: rep("yellow", 2) }), "beaver"),
+    beaver: E.rawScore(mk({ triple: rep("purple", 3), pair: rep("yellow", 2) }), "beaver")
+  };
+  P.bonus = P.beaver - P.triple - P.pair;
+  P.turtleMax = P.turtle[5]; P.salmonMax = P.salmon[6];
+
+  /* gates for coached game steps: return a reason to refuse a decision, or null */
+  function onlyCards(list, msg) { return function (d, s, k) { return k === "card" && list.indexOf(d.card) < 0 ? msg : null; }; }
+  function stepIs(s, k) { return !!(s.steps[0] && s.steps[0].k === k); }
+  var PILES = [["wolf", "bison", "ram"], ["bear", "eagle", "deer"]];
+  var START_BOWL = ["green", "yellow", "red", "blue"];
+
+  /* Lesson 4 board, built up stone by stone */
+  var B4 = mk({ rabbit: ["green", "yellow"], turtle: rep("red", 2), salmon: ["blue"], owl: [["white"]], triple: rep("purple", 2) });
+  /* Lesson 8 boards */
+  var B8 = mk({ rabbit: ["green", "yellow"], turtle: rep("red", 4), salmon: ["blue", "white"], owl: [["purple", "purple"]] });
+  var OUT_YOU = mk({ rabbit: ["green", "yellow", "blue"], turtle: rep("red", 4), owl: [["white", "white"]], bonus: ["turtle", "owl"] });
+  var OUT_BEN = mk({ salmon: ["red", "blue", "green", "white"], triple: rep("yellow", 3), bonus: ["salmon"] });
+  var OUT_BOWL = ["clear", "red", "green"];
+  var END_YOU = mk({ rabbit: ["green", "yellow"], turtle: rep("red", 5), salmon: ["blue", "white", "purple"], owl: [["white", "white"]], bonus: ["turtle", "owl"] });
+  var END_BEN = mk({ rabbit: ["red", "blue", "white"], turtle: rep("purple", 4), salmon: ["red", "blue", "green", "white", "yellow"], triple: rep("yellow", 3), bonus: ["salmon"] });
+  var TIE_YOU = mk({ rabbit: ["green", "yellow", "blue"], turtle: rep("red", 3), salmon: ["blue", "white"] });
+  var TIE_BEN = mk({ turtle: rep("purple", 3), owl: [["green", "green"], ["blue", "blue"]] });
+
+  var LESSONS = [
+    {
+      id: 1, name: "What's in the box", mins: 2,
+      goal: "Meet every piece of the game, and learn how to win.",
+      words: [["Player", "one of the two people playing."], ["Opponent", "the other player."],
+        ["Turn", "one player's go. Players take turns: you, then your opponent, then you again."], ["Points", "what your animals score. The most points wins."]],
+      beats: [
+        { type: "meet", say: "This game is for two people. Tap each thing on the table to meet it.",
+          items: [
+            { k: "bag", name: "Bag", text: "A cloth bag. All the stones start in here. You take stones out without looking." },
+            { k: "bowl", name: "Bowl", text: "It sits between the players. On your turn you take stones from the bowl." },
+            { k: "stones", name: "Stones", text: "Most stones have one of 6 colours: green, yellow, blue, purple, white and red. Each colour has a letter." },
+            { k: "spirit", name: "Spirit Stones", text: "8 special stones, marked S. A Spirit Stone is not a colour. It doubles an animal's points." },
+            { k: "board", name: "Player board", text: "One for each player. It shows five animals: Rabbit, Turtle, Salmon, Owl and Beaver." },
+            { k: "cards", name: "Action cards", text: "Six for each player. Both players get the exact same six cards. A card says what you may do." },
+            { k: "powers", name: "Spirit Power cards", text: "Six cards: Bear, Wolf, Ram, Eagle, Deer and Bison. They help you get your action cards back." },
+            { k: "coyote", name: "Coyote", text: "A troublemaker. You put him on one of your opponent's animals, and that animal can't take stones." }
+          ],
+          done: "You've met everything in the box." },
+        { type: "choice",
+          say: "Each " + w("player") + " has a board. The other player is your " + w("opponent") + ". Players take " + w("turns") +
+            ": a turn is one player's go. On your turn you give stones to your animals. Animals score " + w("points") + ".",
+          q: "How do you win?",
+          options: [{ v: "points", label: "The most points at the end" }, { v: "full", label: "The first full board" }, { v: "stones", label: "The most stones" }],
+          answer: "points",
+          why: { full: "A full board doesn't end the game. Points decide who wins.", stones: "Stones only help when they score points on your animals." },
+          right: "Yes! At the end, each player adds up their points. The most points wins." }
+      ],
+      remember: ["Two players take turns.", "You give stones to your animals to score points.", "The most points at the end wins."]
+    },
+    {
+      id: 2, name: "Set up the table", mins: 3,
+      goal: "Get the game ready yourself, one step at a time.",
+      words: [["Draw", "take stones out of the bag without looking."], ["Face-up", "a card shows its words. You can use it."],
+        ["Face-down", "a card is turned over. Its words are hidden and you can't use it."], ["Pile", "a stack of cards."], ["Start player", "the player who goes first."]],
+      beats: [
+        { type: "setup", step: "bag", say: "Setting up means getting the table ready. First, put all 56 stones into the " + w("bag") + ". Tap the bag.",
+          done: "All 56 stones are in the bag: 8 of each of the 6 colours, plus 8 Spirit Stones." },
+        { type: "setup", step: "draw", say: "Now " + w("draw") + " 4 stones into the bowl. Drawing means taking stones out of the bag without looking. Tap the bag to draw one stone.",
+          done: "The bowl holds 4 coloured stones. That's how every game starts." },
+        { type: "setup", step: "seats", say: "Each player takes a player board. Tap the empty spot in front of each player: you and Ben.",
+          done: "Both boards show the same five animals." },
+        { type: "setup", step: "deal", say: "Each player takes six action cards and lays them " + w("face-up") + ". Face-up means you can read the words. Tap <b>Deal cards</b>.",
+          done: "Yes. Both players get the exact same six cards. Each player even has two Take One Stone cards." },
+        { type: "setup", step: "piles", say: "Mix the 6 Spirit Power cards and make two face-up " + w("piles") + " of 3. A pile is a stack of cards. Tap a card, then tap a pile.",
+          done: "" },
+        { type: "setup", step: "coyote", say: "The Coyote waits beside the table until someone moves him. Tap the Coyote to put him there.",
+          done: "He blocks nobody yet." },
+        { type: "setup", step: "flip", say: "Choose who goes first. Here it's you: you are the " + w("start player") + ". The start player turns their Take Two Stones card " + w("face-down") +
+            ". Face-down means the words are hidden, and you can't use it. Tap your Take Two Stones card.",
+          done: "This keeps the game fair for Ben, who goes second. You're ready to play!" }
+      ],
+      remember: ["Draw 4 coloured stones into the bowl. A Spirit Stone drawn now goes back in the bag.", "Each player gets a board and the same six cards, face-up.", "The start player turns Take Two Stones face-down."]
+    },
+    {
+      id: 3, name: "Your turn", mins: 2,
+      goal: "Play a turn: pick a card, do it, turn it face-down.",
+      words: [["Take", "pick a stone from the bowl and put it on your board."], ["Available", "a card you can really do right now."]],
+      beats: [
+        { type: "game",
+          intro: "Your turn has three steps. Your cards are at the bottom right, the bowl is above them.",
+          cfg: { you: mk({}), bowl: START_BOWL.slice(), bag: ["white", "purple", "green", "red", "yellow", "blue", "white", "green"], cards: { take2: false }, piles: PILES, turns: 2 },
+          tasks: [
+            { say: "Step 1: pick a face-up card. Tap a " + card("take1a") + " card. (Striped cards are face-down. You can't use them.)",
+              allow: onlyCards(["take1a", "take1b"], "A good card, but start with Take One Stone."),
+              done: function (s) { return stepIs(s, "take"); } },
+            { say: "Step 2: do what the card says. Take one stone: tap a stone in the bowl, then tap one of your animals. Any animal that takes it is fine for now.",
+              done: function (s) { return s.turnNo >= 2; },
+              after: "Step 3: the card turned face-down. See the stripes? You can't use it again for now." },
+            { say: "In a real game, Ben would play now. Here you play again. Pick any face-up card and do what it says.",
+              allow: onlyCards(["take1a", "take1b", "add2", "spirit"], "That card moves the Coyote. You'll meet him in lesson 7. Pick another card."),
+              done: function (s) { return s.over; },
+              after: "That's a whole turn: pick a card, do it, turn it face-down." }
+          ] }
+      ],
+      remember: ["On your turn, pick one face-up card.", "Do what it says.", "Then turn it face-down."]
+    },
+    {
+      id: 4, name: "Placing stones", mins: 3,
+      goal: "Learn where each stone may go.",
+      words: [["Section", "one animal's part of your board."], ["Rule", "which stones an animal takes. It's written under the animal's name."],
+        ["Fit", "a stone fits when it matches the animal's rule."], ["Pair", "two stones of the same colour."]],
+      beats: [
+        { type: "place", board: B4, stone: "red", target: "turtle",
+          say: "Every stone you take goes on your board. Each animal's part is its " + w("section") + ". Under each name is its " + w("rule") +
+            ". The Turtle's rule: all one colour. Its stones are red. Put the red stone on the Turtle.",
+          done: "It " + w("fits") + "! A stone fits when it matches the animal's rule." },
+        { type: "place", stone: "blue", tryIllegal: "turtle",
+          say: "Now you took a blue stone. Try the Turtle anyway: tap it.",
+          done: "A stone must fit the rule, or it can't go there." },
+        { type: "place", stone: "blue", target: "rabbit",
+          say: "The Rabbit's rule: 3 stones, each a different colour. It has green and yellow. Give it the blue stone.",
+          done: "The Rabbit is full now. It has room for 3 stones." },
+        { type: "place", stone: "white", target: "owl",
+          say: "The Owl's rule: " + w("pairs") + ". A pair is two stones of the same colour. The Owl has one white stone. Give it a second white.",
+          done: "A pair! The Owl has room for 3 pairs." },
+        { type: "place", stone: "purple", target: "beaver", slot: "triple",
+          say: "The Beaver's rule has two parts: 3 stones of one colour on top, and a pair below. Finish the purple group on top.",
+          done: "Three stones of one colour are called a " + w("three-of-a-kind") + "." },
+        { type: "place", stone: "yellow", target: "salmon",
+          say: "The Salmon's rule: every stone a different colour. Give it the yellow stone.",
+          done: "The Salmon has room for one stone of each colour: 6 stones." },
+        { type: "place", nowhere: true, stone: "green",
+          board: mk({ rabbit: ["green", "yellow", "blue"], turtle: rep("red", 3), salmon: ["blue", "yellow", "green"], owl: [["white", "white"], ["red"], ["purple"]], triple: rep("purple", 3), pair: ["yellow"] }),
+          say: "Sometimes a stone fits nowhere. Tap a few animals to see why this green stone doesn't fit. Then tap <b>Return it to the bowl</b>.",
+          done: "A stone that fits nowhere goes back to the bowl." }
+      ],
+      remember: ["Each animal has its own section and rule.", "A stone must fit the animal's rule.", "If it fits nowhere, it goes back to the bowl."]
+    },
+    {
+      id: 5, name: "Reading points", mins: 3,
+      goal: "Read the points of each animal, one at a time.",
+      words: [["Finished", "an animal or set has all the stones it needs."], ["Three-of-a-kind", "three stones of the same colour."], ["Score", "your total points."]],
+      beats: [
+        { type: "choice", show: { kind: "row", animal: "rabbit", board: mk({ rabbit: ["red", "blue"] }) },
+          say: "Now, points. The Rabbit scores " + P.rabbit + " points, but only when all 3 stones are there. An animal with all its stones is " + w("finished") + ".",
+          q: "How many points does this Rabbit score?", options: [0, 2, P.rabbit] },
+        { type: "choice", show: { kind: "row", animal: "turtle", board: mk({ turtle: rep("green", 3) }) }, track: "turtle",
+          say: "The Turtle's points grow with every stone. Count the stones, then find that number in the table below.",
+          q: "How many points does this Turtle score?", options: [P.turtle[2], P.turtle[3], P.turtle[4]] },
+        { type: "choice", show: { kind: "row", animal: "salmon", board: mk({ salmon: ["yellow", "purple", "red", "blue"] }) }, track: "salmon",
+          say: "The Salmon works the same way, with its own table. All six colours score " + P.salmonMax + ".",
+          q: "How many points does this Salmon score?", options: [P.salmon[3], P.salmon[4], P.salmon[5]] },
+        { type: "choice", show: { kind: "row", animal: "owl", board: mk({ owl: [["blue", "blue"], ["white", "white"], ["red"]] }) }, track: "owl",
+          say: "The Owl scores " + P.owl + " points for each finished pair. A lone stone scores nothing yet.",
+          q: "How many points does this Owl score?", options: [P.owl, 2 * P.owl, 3 * P.owl] },
+        { type: "choice", show: { kind: "row", animal: "beaver", board: mk({ triple: rep("purple", 3), pair: rep("yellow", 2) }) }, track: "beaver",
+          say: "The Beaver: a " + w("three-of-a-kind") + " scores " + P.triple + ", a pair scores " + P.pair + ". Finish both, and you get " + P.bonus + " bonus points.",
+          q: "How many points does this Beaver score?", options: [P.triple + P.pair, P.beaver, P.triple] },
+        { type: "choice", show: { kind: "board", board: mk({ rabbit: ["green", "yellow", "blue"], turtle: rep("red", 2), salmon: ["blue", "white", "purple"], owl: [["green", "green"]], triple: rep("yellow", 3) }) },
+          say: "Your " + w("score") + " is all five animals added up. The number at the end of each row is that animal's points.",
+          q: "What is this board's total?", total: true }
+      ],
+      remember: ["Rabbit, Owl pairs and Beaver sets score only when finished.", "Turtle and Salmon score more with every stone.", "Your score is all five animals added up."]
+    },
+    {
+      id: 6, name: "Getting cards back", mins: 2,
+      goal: "Use Spirit Power to turn all your cards face-up again.",
+      words: [["Spirit Power", "your sixth action card. It gets all your cards back."], ["Top card", "the card you can see on a pile. Only top cards can be used."]],
+      beats: [
+        { type: "game",
+          cfg: { you: mk({ rabbit: ["red", "blue"], turtle: rep("white", 2), salmon: ["green", "purple"] }), bowl: ["yellow", "white", "green"],
+            bag: ["red", "white", "blue", "purple", "yellow", "green", "white", "red"], cards: { take1a: false, take2: false }, piles: PILES, turns: 2, showSpirits: true },
+          tasks: [
+            { say: "Every turn, one card goes face-down. Two of yours are face-down now. Your last card is " + card("spirit") + ". Tap it and see what happens.",
+              allow: onlyCards(["spirit"], "First, tap the Spirit Power card (the last one)."),
+              illegal: function (info) { return info && info.card === "spirit"; }, test: { card: "spirit" },
+              after: "It won't play yet." },
+            { say: "Turn a third card face-down: play " + card("take1b") + " and take a stone.",
+              allow: onlyCards(["take1b", "add2"], "Play Take One Stone, so a third card goes face-down."),
+              done: function (s) { return s.turnNo >= 2; } },
+            { say: "Now 3 other cards are face-down. Play " + card("spirit") + ".",
+              allow: onlyCards(["spirit"], "Play Spirit Power now: it's ready."),
+              done: function (s) { return stepIs(s, "spirit"); } },
+            { say: "Look at the two Spirit cards by the bowl. You may use the " + w("top card") + " of either pile. Tap one.",
+              done: function (s) { return s.log.some(function (r) { return r.k === "spirit"; }); } },
+            { say: function (s) { var r = s.log.filter(function (x) { return x.k === "spirit"; })[0]; return r ? "Do what the " + r.name.charAt(0).toUpperCase() + r.name.slice(1) + " says, in order: " + E.SPIRIT_TEXT[r.name] : "Do what the Spirit card says."; },
+              done: function (s) { return s.over; },
+              after: "All six of your cards are face-up again! The used Spirit card went under its pile." }
+          ] }
+      ],
+      remember: ["Spirit Power needs at least 3 other cards face-down.", "Choose one of the two top Spirit cards and do its steps in order.", "Then all six of your cards turn face-up."]
+    },
+    {
+      id: 7, name: "The Coyote", mins: 3,
+      goal: "Block your opponent with the Coyote, and see what blocking does.",
+      words: [["Blocked", "an animal with the Coyote on it. No new stones can go there."]],
+      beats: [
+        { type: "game",
+          cfg: { you: mk({ rabbit: ["red"], turtle: rep("blue", 2), salmon: ["green", "yellow"] }), oppName: "Ben",
+            opp: mk({ rabbit: ["white", "green"], turtle: rep("purple", 4), salmon: ["red", "blue", "yellow"], owl: [["green", "green"]] }),
+            bowl: ["white", "red"], bag: ["purple", "yellow", "green", "blue", "white", "red"], cards: { take1a: false }, piles: PILES, turns: 2 },
+          tasks: [
+            { say: "Ben's board is at the top. Way one to move the Coyote: play " + card("add3") + ".",
+              allow: onlyCards(["add3"], "For now, play Add Three Stones & Move Coyote."),
+              done: function (s) { return stepIs(s, "coyote"); } },
+            { say: "Three stones went from the bag into the bowl. This card takes no stone. Now drag the Coyote onto one of Ben's animals, or tap him and then the animal.",
+              allow: function (d, s, k) { return k === "coyote" && !d.animal ? "This time, do move him onto one of Ben's animals." : null; },
+              done: function (s) { return !!(s.coyote && s.coyote.on === "opp"); },
+              after: function (s) { return "Ben's " + N[s.coyote.animal] + " is " + w("blocked") + ": Ben can't add stones there. Stones already there stay and still score."; } },
+            { say: "Way two. One " + card("take1a") + " card is already face-down. Its back shows half a Coyote. Play the other " + card("take1b") + ".",
+              allow: onlyCards(["take1b"], "Play the face-up Take One Stone card."),
+              done: function (s) { return s.turnNo >= 2 && stepIs(s, "take"); } },
+            { say: "Take a stone and give it to one of your animals.",
+              done: function (s) { return stepIs(s, "coyote"); } },
+            { say: "Both Take One Stone cards are face-down. Their backs make a whole Coyote! Move him onto a different animal of Ben's.",
+              allow: function (d, s, k) { return k === "coyote" && (!d.animal || d.animal === s.coyote.animal) ? "Pick a different animal of Ben's, to see him move." : null; },
+              done: function (s) { return s.over; },
+              after: "The Coyote is only ever on one animal. The animal he left is free again." }
+          ] },
+        { type: "place", board: mk({ rabbit: ["red"], turtle: rep("blue", 3), salmon: ["green", "yellow"] }), blocked: "turtle", stone: "blue", tryIllegal: "turtle",
+          say: "Now Ben has moved the Coyote onto <b>your</b> Turtle. You took a blue stone. Try to put it on your Turtle.",
+          done: "Blocked! While the Coyote sits there, no stone can go on that animal." },
+        { type: "place", blocked: "turtle", stone: "blue", target: "any",
+          say: "Put the blue stone on an animal that isn't blocked.",
+          done: "The Coyote stays until someone moves him. Your Turtle's stones still count." }
+      ],
+      remember: ["The Coyote blocks one animal: no new stones there.", "Move him with Add Three Stones & Move Coyote.", "Or move him when both your Take One Stone cards are face-down."]
+    },
+    {
+      id: 8, name: "Spirit Stones and the end", mins: 3,
+      goal: "Use a Spirit Stone, then see how the game ends and who wins.",
+      words: [["Bonus space", "the diamond at the end of each animal's row. Only a Spirit Stone goes there."], ["Double", "times two."],
+        ["Closed", "an animal with a Spirit Stone. No more stones can go there."], ["Out of the bag", "in the bowl, or on either player's board."], ["Tie", "both players have the same points."]],
+      beats: [
+        { type: "place", board: B8, stone: "clear", target: "turtle", showPts: true,
+          say: "A Spirit Stone never goes in the round spaces. It goes in an animal's " + w("bonus space") + ", the diamond at the end of its row. There it " +
+            w("doubles") + " the animal's points. Your Turtle has 4 red stones: " + P.turtle[4] + " points. Put the Spirit Stone on the Turtle.",
+          done: "Doubled means times two." },
+        { type: "place", stone: "red", tryIllegal: "turtle", showPts: true,
+          say: "Here's a red stone. Try to add it to the Turtle.",
+          done: "The Turtle is " + w("closed") + " now. So place a Spirit Stone when an animal is full or nearly full." },
+        { type: "choice", show: { kind: "out", you: OUT_YOU, opp: OUT_BEN, bowl: OUT_BOWL },
+          say: "Spirit Stones also end the game. Count the ones " + w("out of the bag") + ": in the bowl, or on either player's board.",
+          q: "How many Spirit Stones are out of the bag?", out: true, options: [3, 4, 5] },
+        { type: "game",
+          cfg: { you: END_YOU, opp: END_BEN, oppName: "Ben", bowl: ["clear", "green", "purple"], bag: ["clear", "yellow", "blue", "red", "white"],
+            cards: { take1a: false, take2: false, add3: false }, piles: PILES, turns: 1 },
+          tasks: [
+            { say: "4 Spirit Stones are out: see the counter by the bowl. Play " + card("add2") + ".",
+              allow: onlyCards(["add2"], "For this example, play Add Two Stones & Take One."),
+              done: function (s) { return stepIs(s, "take"); },
+              after: "A Spirit Stone came out of the bag. That's 5 out!" },
+            { say: "The game ends at the end of a turn when 5 Spirit Stones are out of the bag. So finish this turn: take one stone.",
+              done: function (s) { return s.over; },
+              after: function (s) {
+                var y = E.totalScore(s.you), o = E.totalScore(s.opp);
+                return "Game over. Everyone adds up their points: you " + y + ", Ben " + o + ". " + (y > o ? "You win!" : y < o ? "Ben wins this time." : "A tie!");
+              } }
+          ] },
+        { type: "choice", show: { kind: "tie", you: TIE_YOU, opp: TIE_BEN, coyote: { on: "opp", animal: "turtle" } },
+          say: "What if both players have the same points? That's a " + w("tie") + ". Then the player with the Coyote on their board wins.",
+          q: "It's a tie, and the Coyote is on Ben's board. Who wins?",
+          options: [{ v: "ben", label: "Ben" }, { v: "you", label: "You" }, { v: "both", label: "Nobody: it's a draw" }], answer: "ben",
+          why: { you: "Not this time: the Coyote sits on Ben's board, so Ben wins the tie.", both: "The rules break the tie: the player with the Coyote on their board wins." },
+          right: "Right: Ben wins. The Coyote bothered him, so the spirits help him." }
+      ],
+      remember: ["A Spirit Stone goes in a bonus space and doubles that animal. Then the animal is closed.",
+        "The game ends at the end of a turn when 5 Spirit Stones are out of the bag.", "The most points wins. In a tie, the player with the Coyote on their board wins."]
+    },
+    {
+      id: 9, name: "Practice game", mins: 3,
+      goal: "Play four turns against Ben, with hints.",
+      words: [["Hint", "a tip that shows a move worth points. Tap Hint whenever you like."]],
+      beats: [
+        { type: "mini", rounds: 4,
+          cfg: { you: mk({}), opp: mk({}), oppName: "Ben", bowl: START_BOWL.slice(), piles: PILES, cards: { take2: false },
+            bag: ["white", "green", "red", "blue", "yellow", "purple", "clear", "green", "white", "red", "purple", "yellow", "blue", "white", "green", "red", "yellow", "blue", "purple", "green", "clear", "white", "red", "yellow", "blue", "purple"] },
+          tips: [
+            "You are the start player, so Take Two Stones is face-down. Pick a card, take a stone, give it to an animal.",
+            "Try to finish a set: a pair on the Owl, or 3 colours on the Rabbit.",
+            "Ben takes stones from the same bowl. Take what you need before he does.",
+            "Last turn. If 3 of your other cards are face-down, Spirit Power gets them all back."
+          ] }
+      ],
+      remember: ["Pick a card, do it, turn it face-down.", "Finish your sets: unfinished ones score 0.", "Watch the Spirit Stones: 5 out of the bag ends the game."]
+    }
+  ];
+  /* choice answers come from the engine */
+  LESSONS.forEach(function (l) {
+    l.beats.forEach(function (b) {
+      if (b.type !== "choice" || b.answer != null) return;
+      if (b.show.kind === "row") b.answer = E.animalScore(b.show.board, b.show.animal);
+      else if (b.total) {
+        b.answer = E.totalScore(b.show.board);
+        b.options = [b.answer - P.owl, b.answer, b.answer + P.rabbit];
+      } else if (b.out) b.answer = E.spiritOut({ you: b.show.you, opp: b.show.opp, bowl: b.show.bowl });
+    });
+  });
+  var SETUP = { draws: ["green", "yellow", "clear", "red", "blue"], spirits: ["eagle", "bear", "bison", "wolf", "ram", "deer"] };
+  E.LESSONS = LESSONS; E.P = P; E.SETUP = SETUP;
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
 
@@ -958,12 +1495,13 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
   var LETTER = { green: "G", yellow: "Y", blue: "B", purple: "P", white: "W", red: "R", clear: "S" };
   var REQ = { rabbit: "3 different colours", turtle: "all one colour", salmon: "all different", owl: "same-colour pairs", beaver: "3 of a kind + pair" };
-  var CARD_SHORT = { take1a: ["Take One", "1 stone from the bowl"], take1b: ["Take One", "1 stone from the bowl"], take2: ["Take Two", "2 stones from the bowl"],
-    add2: ["Add 2, Take 1", "Bag → bowl 2, take 1"], add3: ["Add 3 + Coyote", "Bag → bowl 3, move Coyote"], spirit: ["Spirit Power", "Use a Spirit, recover all cards"] };
+  var CARD_SHORT = { take1a: [E.CARD_NAMES.take1a, "1 stone from the bowl"], take1b: [E.CARD_NAMES.take1b, "1 stone from the bowl"], take2: [E.CARD_NAMES.take2, "2 stones from the bowl"],
+    add2: [E.CARD_NAMES.add2, "2 from bag to bowl, take 1"], add3: [E.CARD_NAMES.add3, "3 from bag to bowl, move the Coyote"], spirit: [E.CARD_NAMES.spirit, "Use a Spirit card, all cards face-up"] };
+  var LS = E.LESSONS, P = E.P;
 
   /* ---------- storage ---------- */
   var Store = {
-    key: "sotw-arcade-v1", data: { stages: {}, rushHi: 0, muted: false, unlockAll: false },
+    key: "sotw-arcade-v1", data: { stages: {}, lessons: {}, rushHi: 0, muted: false, unlockAll: false, skipLearn: false, bridgeSeen: false },
     load: function () { try { var r = localStorage.getItem(this.key); if (r) { var d = JSON.parse(r); if (d && typeof d === "object") Object.assign(this.data, d); } } catch (e) {} },
     save: function () { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) {} }
   };
@@ -1006,6 +1544,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
         case "lose": [392, 349, 311, 262].forEach(function (f, i) { T(f, 0.2, "triangle", 0.06, i * 0.15); }); break;
         case "tick": T(1200, 0.03, "square", 0.025); break;
         case "recover": [440, 554, 659, 880].forEach(function (f, i) { T(f, 0.08, "triangle", 0.05, i * 0.05); }); break;
+        case "ok": T(660, 0.08, "square", 0.04); T(990, 0.12, "square", 0.04, 0.07); break;
+        case "flip": T(520, 0.05, "triangle", 0.05); T(390, 0.06, "triangle", 0.04, 0.04); break;
       }
     }
   };
@@ -1149,9 +1689,20 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   function renderTitle() {
     $(".parade").innerHTML = ["green", "yellow", "blue", "purple", "white", "red", "clear"].map(function (c) { return stone(c); }).join("");
     $("#tStars").textContent = "★ " + totalStars() + " / 21";
+    $("#tLessons").textContent = "LESSONS " + lessonsDone() + " / " + LS.length;
     $("#tRush").textContent = "RUSH HI " + (Store.data.rushHi || 0);
   }
-  function unlocked(id) { if (id === 1 || Store.data.unlockAll) return true; var r = Store.data.stages[id - 1]; return !!(r && r.stars > 0); }
+  function lessonDone(id) { return !!(Store.data.lessons && Store.data.lessons[id]); }
+  function lessonsDone() { return LS.filter(function (l) { return lessonDone(l.id); }).length; }
+  function ch1Done() { return lessonsDone() === LS.length; }
+  function ch2Open() { return ch1Done() || Store.data.skipLearn || Store.data.unlockAll || E.STAGES.some(function (s) { var r = Store.data.stages[s.id]; return !!(r && r.stars); }); }
+  function lessonOpen(id) { return id === 1 || Store.data.unlockAll || Store.data.skipLearn || lessonDone(id) || lessonDone(id - 1); }
+  function unlocked(id) {
+    if (Store.data.unlockAll) return true;
+    if (!ch2Open()) return false;
+    if (id === 1) return true;
+    var r = Store.data.stages[id - 1]; return !!(r && r.stars > 0);
+  }
   function fmtBest(cfg, v) {
     if (v == null) return "";
     if (cfg.unit === "pts") return E.sign(v);
@@ -1163,7 +1714,22 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   function renderMap() {
     $("#mStars").textContent = "★ " + totalStars() + " / 21";
     $("#mRushHi").textContent = "HI " + (Store.data.rushHi || 0);
-    $("#path").innerHTML = E.STAGES.map(function (s) {
+    var nd = lessonsDone(), nextL = null;
+    LS.forEach(function (l) { if (!nextL && !lessonDone(l.id) && lessonOpen(l.id)) nextL = l.id; });
+    $("#ch1bar").style.width = Math.round(nd / LS.length * 100) + "%";
+    $("#ch1prog").textContent = nd + " / " + LS.length + " DONE";
+    $("#lpath").innerHTML = LS.map(function (l) {
+      var done = lessonDone(l.id), open = lessonOpen(l.id);
+      return '<button type="button" class="node' + (done ? " cleared" : "") + (open ? "" : " locked") + (l.id === nextL ? " next" : "") + '" data-lesson="' + l.id + '"' +
+        (open ? "" : ' aria-disabled="true"') + ' aria-label="Lesson ' + l.id + ": " + l.name + (done ? ", done" : open ? "" : ", locked") + '">' +
+        '<span class="n">' + (done ? "✓" : open ? l.id : "🔒︎") + '</span><span class="nm">' + l.name + '</span><span class="sub"><span>About ' + l.mins + " min</span>" +
+        (l.id === nextL ? '<span class="tag" style="color:var(--accent)">' + (nd ? "Next" : "Start here") + "</span>" : "") + "</span></button>";
+    }).join("");
+    var c2 = ch2Open();
+    $("#ch2lock").hidden = c2;
+    $("#ch2").classList.toggle("locked", !c2);
+    $("#path").innerHTML = '<button type="button" class="node bridge' + (c2 ? "" : " locked") + '" data-bridge' + (c2 ? "" : ' aria-disabled="true"') + '>' +
+      '<span class="n">▶</span><span class="nm">What changes now</span><span class="sub"><span>Read this first · 1 min</span></span></button>' + E.STAGES.map(function (s) {
       var r = Store.data.stages[s.id], open = unlocked(s.id);
       return '<button type="button" class="node' + (r && r.stars ? " cleared" : "") + (open ? "" : " locked") + (s.level === "Boss" ? " boss" : "") + '" data-stage="' + s.id + '"' +
         (open ? "" : ' aria-disabled="true"') + ' aria-label="Stage ' + s.id + ": " + s.name + (open ? "" : ", locked") + (r ? ", " + r.stars + " stars" : "") + '">' +
@@ -1178,7 +1744,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   var G = null; // current stage session
   function openStage(id, skipIntro) {
     var cfg = E.STAGES[id - 1];
-    if (!unlocked(id)) { toast("Clear stage " + (id - 1) + " to open this one."); Snd.play("bad"); return; }
+    if (!unlocked(id)) { toast(ch2Open() ? "Clear stage " + (id - 1) + " to open this one." : "Finish Chapter 1 first, or tap \u201cI already know the rules\u201d."); Snd.play("bad"); return; }
+    if (id === 1 && !skipIntro && !Store.data.bridgeSeen) { showBridge(function () { openStage(1); }); return; }
     G = { cfg: cfg, sel: null, msg: "", msgCls: "", replay: false, busy: false, done: false };
     if (cfg.kind === "tally") G.tally = { q: 0, correct: 0, order: ["rabbit", "turtle", "salmon", "owl", "beaver", "total"], answered: [], locked: false };
     else G.s = E.newGame(cfg);
@@ -1190,7 +1757,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     var c = G.cfg;
     overlay('<span class="eyebrow">Stage ' + c.id + " · " + c.level + "</span><h2>" + c.name + "</h2><p>" + c.intro + "</p>" +
       '<p><b>Goal:</b> ' + c.goal + "</p>" + '<div class="ladder" style="font-size:14px">' + ladderHTML(c, null) + "</div>" +
-      '<div class="row-btns"><button class="btn primary" type="button" data-close>READY!</button> <button class="btn" type="button" data-help>How to play</button></div>',
+      '<div class="row-btns"><button class="btn primary" type="button" data-close>READY!</button> <button class="btn" type="button" data-help>Rules</button></div>',
       function () { Snd.play("start"); afterEvents(); });
   }
   function ladderHTML(c, cur) {
@@ -1202,6 +1769,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   }
   function hudStage() {
     var c = G.cfg, s = G.s;
+    $("#gHint").hidden = !(c.hint || (c.kind === "lesson" && curBeat().type === "mini"));
+    if (c.kind === "lesson") return hudLesson();
     $("#gStage").innerHTML = "<small>STAGE " + c.id + " · " + c.level.toUpperCase() + (G.replay ? ' · <span class="replaytag">REPLAY</span>' : "") + "</small>" + c.name;
     var cur = null, scoreHTML = "";
     if (c.kind === "tally") {
@@ -1220,13 +1789,14 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     var s = G.s, st = s.steps[0];
     if (G.replay) return "Watching the best line…";
     if (!st || s.over) return "Turn over.";
-    var turn = (G.cfg.turns > 1 ? '<span class="pill">TURN ' + s.turnNo + "/" + G.cfg.turns + "</span>" : "") + (G.extraTurn ? '<span class="pill alt">EAGLE EXTRA TURN</span>' : "");
+    var gc = gcfg();
+    var turn = (gc.turns > 1 ? '<span class="pill">TURN ' + s.turnNo + "/" + gc.turns + "</span>" : "") + (G.extraTurn ? '<span class="pill alt">EAGLE EXTRA TURN</span>' : "");
     switch (st.k) {
       case "card": return turn + "Play an action card";
       case "take":
         var left = s.steps.filter(function (x) { return x.k === "take"; }).length;
         return turn + (G.sel != null ? "Now tap an animal for that stone" : "Take a stone: drag it from the bowl onto an animal") + (left > 1 ? ' <span class="pill">' + left + " to take</span>" : "");
-      case "coyote": return turn + (st.half ? "Both Take One cards are face-down: their backs form a Coyote. " : "") + "Drag the Coyote onto one of " + (G.cfg.oppName || "your opponent") + "'s animals";
+      case "coyote": return turn + (st.half ? "Both Take One Stone cards are face-down: their backs form a Coyote. " : "") + "Drag the Coyote onto one of " + (gc.oppName || "your opponent") + "'s animals";
       case "spirit": return turn + "Choose a Spirit Power";
       case "deer": return turn + "Deer: tap one of your stones to send it back to the bowl";
       case "bisonRet": return turn + "Bison: tap a bowl stone to return it to the bag";
@@ -1237,6 +1807,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     var c = G.cfg;
     hudStage();
     if (c.kind === "tally") return renderTally();
+    if (c.kind === "lesson" && !G.s) return renderLesson();
+    c = gcfg();
     var s = G.s, st = s.steps[0] || {}, out = E.spiritOut(s);
     var coyYou = s.coyote && s.coyote.on === "you" ? s.coyote.animal : null, coyOpp = s.coyote && s.coyote.on === "opp" ? s.coyote.animal : null;
     var boards = "";
@@ -1248,7 +1820,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     }).join("") : '<span class="none">empty</span>';
     var pips = ""; for (var i = 0; i < 5; i++) pips += '<span class="p' + (i < out ? " on" : "") + (out >= 4 ? " warn" : "") + '"></span>';
     var spirits = "";
-    var showSp = st.k === "spirit" || s.cards && (E.available(s).indexOf("spirit") >= 0 || c.id === 4 || c.id === 5 || c.id === 7);
+    var showSp = st.k === "spirit" || s.cards && (E.available(s).indexOf("spirit") >= 0 || c.showSpirits);
     if (showSp && s.piles[0].length) {
       spirits = '<div><span class="lbl">Spirit Powers on top</span><div class="spirits">' + s.piles.map(function (p, i) {
         var live = st.k === "spirit" && !G.replay;
@@ -1262,14 +1834,14 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
         '<span class="k">' + (i + 1) + '</span><span class="cn">' + CARD_SHORT[k][0] + '</span><span class="ct">' + (up ? CARD_SHORT[k][1] : back) + "</span></button>";
     }).join("");
     var acts = "";
-    if (st.k === "coyote" && !G.replay) acts = '<button type="button" class="coydock" id="coyTok" aria-label="Coyote: tap, then tap one of ' + (c.oppName || "the opponent") + "'s animals\">" + sprite("coyote") + 'Coyote</button><button type="button" class="btn small" id="coySkip">Leave it</button>';
+    if (st.k === "coyote" && !G.replay && !G.busy) acts = '<button type="button" class="coydock" id="coyTok" aria-label="Coyote: tap, then tap one of ' + (c.oppName || "the opponent") + "'s animals\">" + sprite("coyote") + 'Coyote</button><button type="button" class="btn small" id="coySkip">Leave it</button>';
     if (st.k === "take" && G.sel != null && !G.replay) {
       var col = s.bowl[G.sel];
       if (!E.placements(s.you, col, E.blockedFor(s, "you")).length) acts = '<button type="button" class="btn small" id="bounceBtn">It fits nowhere: return it to the bowl</button>';
     }
+    G.acts = acts;
     $("#gBody").innerHTML =
-      '<div class="play"><div class="col">' +
-      '<div class="banner" aria-live="polite"><div class="step">' + stepText() + '</div><div class="msg ' + G.msgCls + '">' + G.msg + "</div>" + (acts ? '<div class="acts">' + acts + "</div>" : "") + "</div>" +
+      '<div class="play"><div class="col">' + bannerHTML() +
       boards + '</div><div class="col">' +
       '<div class="tablebox"><div class="bowlrow"><div class="bag" aria-label="Bag"><span class="pouch"></span>BAG</div>' +
       '<div class="bowl' + (st.k === "bisonRet" ? " target" : "") + '" aria-label="Bowl">' + bowl + "</div></div>" +
@@ -1278,11 +1850,25 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       '<div class="tablebox"><span class="lbl">Your action cards' + (st.k === "card" ? " · keys 1–6" : "") + '</span><div class="cards">' + cards + "</div></div></div></div>";
     G.newBowl = null;
   }
+  /* the banner above the board: stage step text, or the lesson coach */
+  function bannerHTML() {
+    var acts = G.acts || "";
+    if (G.cfg.kind === "lesson") {
+      var co = coachInfo();
+      if (G.les.done) acts += nextBtnHTML();
+      return '<div class="banner coach" aria-live="polite"><div class="step">' + co.pill + '</div><div class="say">' + co.say + "</div>" +
+        (co.sub ? '<div class="sub">' + co.sub + "</div>" : "") + '<div class="msg ' + G.msgCls + '">' + G.msg + "</div>" + (acts ? '<div class="acts">' + acts + "</div>" : "") + "</div>";
+    }
+    return '<div class="banner" aria-live="polite"><div class="step">' + stepText() + '</div><div class="msg ' + G.msgCls + '">' + G.msg + "</div>" + (acts ? '<div class="acts">' + acts + "</div>" : "") + "</div>";
+  }
+  function updateBanner() { var b = $("#gBody .banner"); if (b) b.outerHTML = bannerHTML(); hudStage(); }
   function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
-  function setMsg(m, cls) { G.msg = m; G.msgCls = cls || ""; var el = $("#gBody .banner .msg"); if (el) { el.textContent = m; el.className = "msg " + (cls || ""); } if (m) say(m); }
+  function setMsg(m, cls) { G.msg = m; G.msgCls = cls || ""; var el = $("#gBody .banner .msg"); if (el) { el.innerHTML = m; el.className = "msg " + (cls || ""); } if (m) say(stripTags(m)); }
 
   /* Apply a decision with animations. fromRect: where the moving stone started. */
   function doAct(d, fromRect) {
+    var gate = coachGate(d);
+    if (gate) { illegal($("#gBody .banner"), gate); return; }
     var s = G.s, st = s.steps[0], beforeYou = s.you ? E.clone(s.you) : null, beforeOpp = s.opp ? E.clone(s.opp) : null;
     var beforeBowl = s.bowl.length;
     s.ev = [];
@@ -1302,8 +1888,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       if (e.t === "bounce") { msg = cap(E.CNAME[e.color]) + " fits nowhere, so it goes back to the bowl."; cls = "bad"; Snd.play("bad"); }
       if (e.t === "spirit") { msg = cap(e.name) + ": " + E.SPIRIT_TEXT[e.name]; Snd.play("recover"); }
       if (e.t === "deer") msg = "Deer sends " + e.color + " from your " + E.NAMES[e.animal] + " to the bowl" + (e.gain ? " (" + E.sign(e.gain) + ")" : " (it scored nothing)") + ".";
-      if (e.t === "coyote") { Snd.play("coyote"); msg = e.animal ? "Coyote → " + (G.cfg.oppName || "opponent") + "'s " + E.NAMES[e.animal] + "." : "The Coyote stays put."; }
-      if (e.t === "coyote-solo") toast("Both Take One backs show a whole Coyote. In a real game you'd now move it onto your opponent's board.");
+      if (e.t === "coyote") { Snd.play("coyote"); msg = e.animal ? "Coyote → " + (gcfg().oppName || "opponent") + "'s " + E.NAMES[e.animal] + "." : "The Coyote stays put."; }
+      if (e.t === "coyote-solo") toast(e.half ? "Both Take One Stone backs show a whole Coyote. In a real game you'd now move him onto your opponent's board." : "In a real game you'd now move the Coyote onto your opponent's board.");
       if (e.t === "bisonRet") msg = "Bison returns " + E.CNAME[e.color] + " to the bag.";
       if (e.t === "recover") toast("All six action cards are face-up again.");
       if (e.t === "extra") { G.extraTurn = true; toast("Eagle: take another turn now!"); }
@@ -1326,7 +1912,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     });
     if (st.k === "deer") scorePops(beforeYou, s.you, "you");
     if (st.k === "coyote" && d.animal) { var r = $('#gBody .row[data-who="opp"][data-animal="' + d.animal + '"]'); if (r) { var rc = r.getBoundingClientRect(); burst(rc.right - 30, rc.top + 10, 18, [cssVar("--coyote"), cssVar("--accent")]); } }
-    afterEvents();
+    afterEvents(d);
   }
   function scorePops(before, after, who) {
     var total = 0;
@@ -1342,8 +1928,9 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (total >= 8) shake();
     var tot = $('#gBody [data-tot="' + who + '"]'); if (tot && total) popAt(tot, E.sign(total), total < 0 ? "neg" : "");
   }
-  function afterEvents() {
+  function afterEvents(d) {
     if (!G || G.cfg.kind === "tally") return;
+    if (G.cfg.kind === "lesson") return lessonAfter(d);
     if (G.s.over && !G.done) { G.done = true; setTimeout(finishStage, 650); }
   }
   function finishStage() {
