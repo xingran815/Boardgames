@@ -125,6 +125,21 @@ The audience is someone who has **never played a board game**. A dense, single "
   - a diagram
   - "Your question" with A–D choices
   - a `<details>` answer with the point maths for every option, the rule it teaches, and a manual section reference
+- **Balance basics and advanced (all HTML pages).** Beginners need setup and rules before strategy. Point maths and "find the best move" alone were rejected as too advanced. Order the content as a learning path:
+  1. **Learn the game:** short interactive lessons. Each is one idea, the player does it, every word is defined, and it ends with a "Remember" card. Lessons:
+     - components and goal
+     - table setup, done step by step by the player
+     - the turn
+     - placing stones
+     - reading points
+     - getting cards back
+     - special pieces
+     - end of game
+     - a guided mini-game
+  2. **Score better:** strategy puzzles. A bridge screen first says what's new. Each puzzle has a hint button and explains the point maths step by step.
+  3. **Quick-fire practice.**
+
+  Always provide a "skip, I know the rules" path and a plain-language Rules overlay reachable from every screen.
 - **Arcade trainer:**
   - Real interaction: tap or drag pieces, with illegal moves rejected and a one-line reason.
   - Stages with 1–3 stars against the brute-force optimum, plus a "Rule learned" card and a replay of the best line.
