@@ -1979,12 +1979,19 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     var bestV = c.kind === "tally" ? 6 : sol.value;
     var clear = stars > 0;
     var lines = "";
+    var mine = "";
     if (c.kind === "tally") {
-      lines = "<ol class=\"line\">" + ["rabbit", "turtle", "salmon", "owl", "beaver"].map(function (a) { return "<li>" + E.NAMES[a] + ": <b>" + E.animalScore(c.you, a) + "</b>. " + c.tally[a].why + "</li>"; }).join("") +
-        "<li>Total: <b>" + E.totalScore(c.you) + "</b>.</li></ol>";
+      lines = '<ol class="line">' + A.map(function (a) { return "<li>" + esc(E.explain(c.you, a)) + "</li>"; }).join("") +
+        "<li>Total: " + A.map(function (a) { return E.animalScore(c.you, a); }).join(" + ") + " = <b>" + E.totalScore(c.you) + "</b></li></ol>";
     } else {
       var desc = E.describe(c, sol.path);
       lines = '<ol class="line">' + desc.lines.map(function (l) { return "<li>" + esc(l) + "</li>"; }).join("") + "</ol>";
+      var who = c.you ? "you" : "opp", fin = G.s;
+      if (!wasReplay) mine = '<div><span class="lbl">' + (who === "you" ? "Your points, step by step" : "Ben's reply, step by step") + "</span>" + mathsHTML(c[who], fin[who]) +
+        (c.id === 7 ? finalLine(fin) : "") + "</div>";
+      var bestFin = desc.state;
+      if (who === "opp") { var br = E.bestTake(bestFin.opp, bestFin.bowl, 2, E.blockedFor(bestFin, "opp")); bestFin = { opp: br.board || bestFin.opp }; }
+      if (wasReplay || v !== bestV) lines += '<span class="lbl">Best line, step by step</span>' + mathsHTML(c[who], bestFin[who]) + (c.id === 7 ? finalLine(desc.state) : "");
     }
     var yourLab = fmtResult(c, v), bestLab = fmtResult(c, bestV);
     var verdict = c.unit === "win" ? (v ? "YOU WIN!" : "BEN WINS") : clear ? (stars === 3 ? "PERFECT!" : "STAGE CLEAR") : "TRY AGAIN";
@@ -1997,12 +2004,12 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       '<div class="bigstars" aria-label="' + stars + ' of 3 stars">' + [0, 1, 2].map(function (i) { return '<span class="' + (i < stars ? "on" : "") + '">★</span>'; }).join("") + "</div>" +
       (newHi && clear ? '<span class="pill newhi">NEW HIGH SCORE</span>' : "") +
       '<div class="cmp"><div><small>' + (wasReplay ? "Best line" : "Your result") + "</small><b>" + yourLab + "</b></div><div><small>Best possible</small><b>" + bestLab + "</b></div></div>" +
-      '<div class="rulecard"><span class="lbl">Rule learned</span><span>' + c.rule + '</span><span class="ref">' + c.ref + "</span></div>" +
-      "<div><span class=\"lbl\">" + (c.kind === "tally" ? "The count" : "Best line") + "</span>" + lines + '<p style="margin-top:6px;color:var(--ink-2);font-size:14px">' + c.note + "</p></div>" +
+      '<div class="rulecard"><span class="lbl">Rule learned</span><span>' + c.rule + '</span><span class="ref">' + c.ref + "</span></div>" + mine +
+      "<div><span class=\"lbl\">" + (c.kind === "tally" ? "The count, step by step" : "Best line") + "</span>" + lines + '<p style="margin-top:6px;color:var(--ink-2);font-size:14px">' + c.note + "</p></div>" +
       '<div class="row-btns">' + (c.kind !== "tally" ? '<button class="btn" type="button" id="rWatch">▶ Watch best move</button>' : "") +
       '<button class="btn" type="button" id="rRetry">↻ Retry</button>' +
       (next ? '<button class="btn primary" type="button" id="rNext">Next stage ▶</button>' : "") +
-      '<button class="btn ghost" type="button" id="rMap">Map</button></div>', null, true);
+      '<button class="btn ghost" type="button" id="rMap">Map</button><button class="btn ghost" type="button" data-help>Rules</button></div>', null, true);
     var w = $("#rWatch"); if (w) w.onclick = function () { closeOverlay(); watchBest(); };
     $("#rRetry").onclick = function () { closeOverlay(); openStage(c.id, true); };
     var n = $("#rNext"); if (n) n.onclick = function () { closeOverlay(); openStage(c.id + 1); };
@@ -2015,6 +2022,21 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (c.unit === "ben") return "Ben " + E.sign(-v);
     if (c.unit === "win") return v ? "Win" : "Loss";
     return v;
+  }
+  /* step-by-step point maths between two boards, every number from the engine */
+  function mathsHTML(before, after) {
+    var items = A.filter(function (a) { return E.animalScore(before, a) !== E.animalScore(after, a); }).map(function (a) {
+      var d = E.animalScore(after, a) - E.animalScore(before, a);
+      return "<li>" + esc(E.explain(before, a)) + " \u2192 now " + esc(E.explain(after, a).replace(/^\w+: /, "")) + ". <b>" + E.sign(d) + "</b></li>";
+    });
+    var t0 = E.totalScore(before), t1 = E.totalScore(after);
+    if (!items.length) return '<ul class="maths"><li class="tot">No animal changed its points: ' + t0 + " stays " + t1 + ".</li></ul>";
+    return '<ul class="maths">' + items.join("") + '<li class="tot">Total: ' + t0 + " \u2192 " + t1 + " (" + E.sign(t1 - t0) + ")</li></ul>";
+  }
+  function finalLine(st) {
+    var y = E.totalScore(st.you), o = E.totalScore(st.opp);
+    return '<p class="maths" style="padding:0">' + (st.ended ? "The game ended: " : "The game goes on: ") + "you " + y + ", Ben " + o + "." +
+      (st.ended && y === o ? " A tie, so the player with the Coyote on their board wins: " + (st.coyote && st.coyote.on === "you" ? "you." : "Ben.") : "") + "</p>";
   }
   function esc(t) { return String(t).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
   function watchBest() {
@@ -2049,14 +2071,15 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     var s = G.s, i = G.sel, color = s.bowl[i];
     if (rowEl.getAttribute("data-who") !== "you") { illegal(rowEl, "Stones go on your own board."); return; }
     var r = resolveTarget(rowEl, slotHint, color);
-    if (r.reason) { illegal(rowEl, r.reason); return; }
+    if (r.reason) { illegal(rowEl, r.reason, { place: rowEl.getAttribute("data-animal"), color: color }); return; }
     if (!fromRect) { var b = $('#gBody [data-bowl="' + i + '"]'); if (b) fromRect = b.getBoundingClientRect(); }
     doAct({ i: i, w: r.w }, fromRect);
   }
-  function illegal(el, reason) {
+  function illegal(el, reason, info) {
     Snd.play("bad");
     setMsg(reason, "bad");
     if (el) { el.classList.remove("flash-bad", "shake"); void el.offsetWidth; el.classList.add("flash-bad", "shake"); }
+    if (G && G.coach && info) coachIllegal(info, reason);
   }
   function placeCoyote(rowEl) {
     if (rowEl.getAttribute("data-who") !== "opp") { illegal(rowEl, "The Coyote always goes on your opponent's board, never your own."); return; }
@@ -2068,18 +2091,23 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     var t = ev.target;
     var go = t.closest("[data-go]"); if (go) { Snd.ensure(); Snd.play("select"); show(go.getAttribute("data-go")); return; }
     if (t.closest("[data-help]")) { Snd.ensure(); showHelp(); return; }
+    if (t.closest("[data-skip]")) { Snd.ensure(); skipLearn(); return; }
+    if (t.closest("#gHint")) { Snd.ensure(); showHint(); return; }
     if (t.closest("[data-mute]")) { Store.data.muted = !Store.data.muted; Store.save(); syncMute(); Snd.ensure(); Snd.play("select"); return; }
     var node = t.closest("[data-stage]"); if (node && ui.screen === "map") { Snd.ensure(); openStage(+node.getAttribute("data-stage")); return; }
+    var ln = t.closest("[data-lesson]"); if (ln && ui.screen === "map") { Snd.ensure(); openLesson(+ln.getAttribute("data-lesson")); return; }
+    if (t.closest("[data-bridge]") && ui.screen === "map") { Snd.ensure(); if (!ch2Open()) { toast("Finish Chapter 1 first, or tap \u201cI already know the rules\u201d."); Snd.play("bad"); return; } showBridge(function () { openStage(1); }); return; }
     if (ui.screen === "rush") return rushClick(ev);
     if (ui.screen !== "game" || !G || G.replay || $(".overlay")) return;
     if (G.cfg.kind === "tally") return tallyClick(ev);
+    if (G.cfg.kind === "lesson") { if (G.busy) return; if (lessonClick(ev)) return; if (!G.s) return; }
     var s = G.s, st = s.steps[0]; if (!st || s.over) return;
     if (suppressClick) { suppressClick = false; return; }
     var card = t.closest("[data-card]");
     if (card) {
       var k = card.getAttribute("data-card");
       if (st.k !== "card") { illegal(card, "Finish this step first: " + stripTags(stepText()) + "."); return; }
-      var why = E.cardReason(s, k); if (why) { illegal(card, why); return; }
+      var why = E.cardReason(s, k); if (why) { illegal(card, why, { card: k }); return; }
       doAct({ card: k }); return;
     }
     var sp = t.closest("[data-spirit]");
@@ -2117,7 +2145,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   /* ---------- input: drag (pointer events) ---------- */
   var drag = null, suppressClick = false;
   document.addEventListener("pointerdown", function (ev) {
-    if (ui.screen !== "game" || !G || G.replay || !G.s || $(".overlay")) return;
+    if (ui.screen !== "game" || !G || G.replay || G.busy || !G.s || $(".overlay")) return;
     var st = G.s.steps[0]; if (!st) return;
     var src = ev.target.closest(st.k === "take" ? "[data-bowl]" : st.k === "coyote" ? "#coyTok" : "__none");
     if (!src || ev.button > 0) return;
@@ -2174,8 +2202,9 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (ui.screen === "rush") return rushKey(ev);
     if (ui.screen !== "game" || !G) return;
     if (G.cfg.kind === "tally") { if (/^[1-4]$/.test(k)) { var o = $$("#gBody .opt")[+k - 1]; if (o) o.click(); } return; }
-    if (G.replay) return;
-    if (k === "r" || k === "R") { openStage(G.cfg.id, true); return; }
+    if (G.replay || G.busy) return;
+    if (k === "r" || k === "R") { restartCurrent(); return; }
+    if (G.cfg.kind === "lesson" && !G.s) { if (/^[1-9]$/.test(k)) { var lo = $$("#gBody [data-lopt]")[+k - 1]; if (lo) lo.click(); } return; }
     if (k === "Escape" && G.sel != null) { G.sel = null; setMsg("", ""); renderGame(); return; }
     var st = G.s.steps[0];
     if (/^[1-6]$/.test(k) && st && st.k === "card") { $('#gBody [data-card="' + E.CARDS[+k - 1] + '"]').click(); }
@@ -2247,7 +2276,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       T.opts = opts;
       q = '<div class="qbox tablebox"><span class="lbl">Question ' + (T.q + 1) + " of 6</span><div class=\"qtext\">" + (key === "total" ? "What is Mia's total?" : "How many points does the " + E.NAMES[key] + " score?") + "</div>" +
         '<div class="timer"><i id="tBar"></i></div><div class="opts">' + opts.map(function (v, i) { return '<button type="button" class="opt" data-opt="' + v + '"><span class="k">' + (i + 1) + "</span>" + v + "</button>"; }).join("") + "</div>" +
-        '<div class="explain ' + (G.msgCls || "") + '" aria-live="polite">' + (G.msg || "Owl pair = 4 points. Keys 1–4 answer.") + "</div></div>";
+        '<div class="explain ' + (G.msgCls || "") + '" aria-live="polite">' + (G.msg || "Owl pair = " + E.OWL_POINTS + " points. Keys 1–4 answer.") + "</div></div>";
     }
     $("#gBody").innerHTML = '<div class="play"><div class="col">' + board + '</div><div class="col">' + q + "</div></div>";
     if (key) {
@@ -2282,7 +2311,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (ok) T.correct++;
     T.answered.push(key);
     $$("#gBody .opt").forEach(function (b) { var bv = +b.getAttribute("data-opt"); if (bv === right) b.classList.add("right"); else if (b === btn) b.classList.add("wrong"); });
-    var why = c.tally[key].why;
+    var why = key === "total" ? A.map(function (a) { return E.animalScore(c.you, a); }).join(" + ") + " = " + right + "." : E.explain(c.you, key) + ".";
     G.msg = (ok ? "Right! " : v == null ? "Time! " : "Not quite. ") + why; G.msgCls = ok ? "good" : "bad";
     var ex = $("#gBody .explain"); if (ex) { ex.textContent = G.msg; ex.className = "explain " + G.msgCls; }
     hudStage();
@@ -2473,13 +2502,13 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
 
   /* ---------- boot ---------- */
   $("#pressStart").addEventListener("click", function () { Snd.ensure(); Snd.play("start"); show("map"); });
-  $("#gRestart").addEventListener("click", function () { if (G) openStage(G.cfg.id, true); });
-  $("#unlockAll").addEventListener("click", function () { Store.data.unlockAll = true; Store.save(); renderMap(); toast("All stages are open."); });
+  $("#gRestart").addEventListener("click", function () { if (G) restartCurrent(); });
+  $("#unlockAll").addEventListener("click", function () { Store.data.unlockAll = true; Store.save(); renderMap(); toast("All lessons and stages are open."); });
   $("#resetSave").addEventListener("click", function () { $("#resetConfirm").hidden = false; });
   $("#resetNo").addEventListener("click", function () { $("#resetConfirm").hidden = true; });
-  $("#resetYes").addEventListener("click", function () { Store.data = { stages: {}, rushHi: 0, muted: Store.data.muted, unlockAll: false }; Store.save(); $("#resetConfirm").hidden = true; renderMap(); toast("Saves erased."); });
+  $("#resetYes").addEventListener("click", function () { Store.data = { stages: {}, lessons: {}, rushHi: 0, muted: Store.data.muted, unlockAll: false, skipLearn: false, bridgeSeen: false }; Store.save(); $("#resetConfirm").hidden = true; renderMap(); toast("Saves erased."); });
   syncMute();
   renderTitle();
-  window.SOTW_UI = { openStage: openStage, show: show, get G() { return G; }, get R() { return R; }, solution: solution };
+  window.SOTW_UI = { openStage: openStage, openLesson: openLesson, enterBeat: enterBeat, show: show, get G() { return G; }, get R() { return R; }, solution: solution };
 })();
 </script>
