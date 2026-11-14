@@ -35,7 +35,7 @@ On your turn you play one of your **action cards** to collect stones. Every ston
 | Spirit Power cards | 6 |
 | Stones | 56 (8 in each of 7 colours) |
 
-**The stones:** there are six *regular* colours — **green, yellow, blue, purple, white and red** — plus **clear (opalescent) stones**, called **Spirit Stones**. Spirit Stones are special: they are *not* a seventh regular colour and follow their own rules (see section 7).
+**The stones:** there are six *regular* colours — **green, yellow, blue, purple, white and red** — plus 8 special shiny stones called **Spirit Stones**. Spirit Stones are special: they are *not* a seventh regular colour and follow their own rules (see section 7).
 
 **Each player's six action cards:**
 
@@ -55,7 +55,7 @@ On your turn you play one of your **action cards** to collect stones. Every ston
 1. **Table layout.** Put the bowl between the two players. Set the Coyote pawn off to one side for now.
 2. **Fill the bag.** Put all 56 stones in the cloth bag and shake it well.
 3. **Seed the bowl.** Draw 4 stones from the bag into the bowl. If any of them are Spirit Stones, put those back in the bag and draw replacements. Keep doing this until the bowl holds **4 regular (non-Spirit) stones**.
-4. **Player areas.** Each player takes a player board and lays their 6 action cards **face-up** in front of it.
+4. **Player areas.** Each player takes a player board and lays their 6 action cards **face-up** in front of it. **Both players have exactly the same six cards** (an identical set each): Take One Stone ×2, Take Two Stones, Add Two Stones & Take One, Add Three Stones & Move Coyote, Use Spirit Power & Recover Cards.
 5. **Spirit Power cards.** Shuffle the 6 Spirit Power cards and split them into **two face-up piles of 3 cards** each. Place both piles where both players can see them. Only the top card of each pile is available at any time.
 6. **First player.** Decide who starts in any way you like. The **start player flips their "Take Two Stones" card face-down** — it is unavailable to them until they recover their cards. (This offsets the advantage of going first.)
 
@@ -153,7 +153,7 @@ The Beaver wants two sets:
 If you complete **both** sets, you get a **7-point bonus**, for a **total of 14 points**.
 You may work on either set first, and you don't need to complete either in a single turn. Only completed sets score.
 
-### Spirit Stones (clear)
+### Spirit Stones
 
 Spirit Stones are powerful but restricted:
 

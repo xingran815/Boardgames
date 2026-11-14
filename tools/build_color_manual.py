@@ -335,7 +335,7 @@ def src(name):
 
 
 def st(c, cls="st"):
-    nm = "Spirit Stone (clear)" if c == "clear" else c
+    nm = "Spirit Stone" if c == "clear" else c
     return f'<img class="{cls}" src="{src(f"stone-{c}.png")}" alt="{nm}">'
 
 
@@ -466,7 +466,7 @@ def page_cover(I):
 def page_goal(I):
     sw = "".join(
         f'<div class="sw">{st(c, "big")}<div><b>{"Spirit Stone" if c == "clear" else c.title()}</b>'
-        f'<br><span class="need">{"clear / opalescent · ×8" if c == "clear" else "×8"}</span></div></div>'
+        f'<br><span class="need">{"special shiny stone · ×8" if c == "clear" else "×8"}</span></div></div>'
         for c in E.COLORS + [E.CLEAR])
     return f"""
 <div class="kick">Overview</div>
@@ -477,7 +477,7 @@ blocks any animal he sits on.</p>
 <div class="box tint-f" style="font-size:10.2pt">
   <b>Win by having the most points.</b> On each turn you play one action card to collect stones and place
   them on the five animals of your board &mdash; each animal accepts only certain stones and scores for the
-  sets you build. The game ends as soon as <b>five clear Spirit Stones</b> have come out of the bag.
+  sets you build. The game ends as soon as <b>five Spirit Stones</b> have come out of the bag.
 </div>
 <h2>A game in four sentences</h2>
 <ol class="steps">
@@ -487,7 +487,7 @@ blocks any animal he sits on.</p>
   does, the stone goes back to the bowl.</div></li>
   <li><span class="num">3</span><div>When three of your other cards are face-down you may use a
   <b>Spirit Power</b> and turn all your cards face-up again.</div></li>
-  <li><span class="num">4</span><div>A clear <b>Spirit Stone</b> doubles an animal&rsquo;s points but closes
+  <li><span class="num">4</span><div>A <b>Spirit Stone</b> doubles an animal&rsquo;s points but closes
   it &mdash; and the fifth one out of the bag ends the game.</div></li>
 </ol>
 <h2>Components</h2>
@@ -502,7 +502,7 @@ blocks any animal he sits on.</p>
   </table>
   <div>
     <div class="swatches">{sw}</div>
-    <p class="need" style="margin-top:2mm">Six <b>regular colours</b> plus the clear <b>Spirit Stones</b>.
+    <p class="need" style="margin-top:2mm">Six <b>regular colours</b> plus the special <b>Spirit Stones</b>.
     A Spirit Stone is <b>not</b> a seventh colour. In this booklet every stone carries its initial
     (G Y B P W R, S = Spirit Stone), so the pictures also work in black and white.</p>
   </div>
@@ -537,12 +537,13 @@ for reading.</p>
     Coyote pawn to one side &mdash; at the start it blocks nobody.</div></li>
     <li><span class="num">2</span><div><b>Fill the bag.</b> All 56 stones go in the cloth bag. Shake it.</div></li>
     <li><span class="num">3</span><div><b>Seed the bowl.</b> Draw stones into the bowl until it holds
-    <b>4 regular stones</b>. Any clear Spirit Stone drawn now goes straight back into the bag and you draw
+    <b>4 regular stones</b>. Any Spirit Stone drawn now goes straight back into the bag and you draw
     again.</div></li>
   </ol>
   <ol class="steps">
     <li><span class="num">4</span><div><b>Player areas.</b> Each player takes a board and lays their
-    6 action cards <b>face-up</b> in front of it.</div></li>
+    6 action cards <b>face-up</b> in front of it. <b>Both players get the same six cards</b>, an
+    identical set each.</div></li>
     <li><span class="num">5</span><div><b>Spirit Powers.</b> Shuffle the 6 Spirit Power cards into
     <b>two face-up piles of 3</b>. Only the top card of each pile can be used.</div></li>
     <li><span class="num">6</span><div><b>Start player.</b> Choose any way you like. The start player
@@ -553,7 +554,7 @@ for reading.</p>
 <div class="spacer"></div>
 <div class="box tint-f" style="margin-bottom:3mm"><span class="tag tip">First game?</span> Read pages 4&ndash;6
 together, then start playing and look things up as they come. Keep the quick reference (back page) face-up
-next to the bowl, and say the Spirit Stone count out loud whenever a clear stone leaves the bag.</div>
+next to the bowl, and say the Spirit Stone count out loud whenever a Spirit Stone leaves the bag.</div>
 <div class="box tint-a"><b>Check before the first turn:</b> 4 regular stones in the bowl ·
 0 Spirit Stones out of the bag · 2 Spirit piles, top cards visible · start player&rsquo;s
 Take Two Stones face-down · Coyote off both boards.</div>
@@ -579,7 +580,7 @@ def page_turn(I):
   {arrow}
   {flow_box(3, "Flip it", "Turn the card <b>face-down</b>. It can&rsquo;t be used again until you recover your cards.")}
 </div>
-<div class="endturn"><b>End of every turn:</b> count the clear Spirit Stones that are out of the bag
+<div class="endturn"><b>End of every turn:</b> count the Spirit Stones that are out of the bag
 (bowl + both boards). <b>Five or more? The game ends now</b> &mdash; go to final scoring (page 10).
 Otherwise it&rsquo;s your opponent&rsquo;s turn.</div>
 
@@ -612,7 +613,7 @@ Otherwise it&rsquo;s your opponent&rsquo;s turn.</div>
     <li>Placed stones stay put. (Only the Deer power moves one back to the bowl.)</li>
   </ul>
   <ul>
-    <li>A clear Spirit Stone goes only in an animal&rsquo;s <b>×2 bonus space</b> (page 8).</li>
+    <li>A Spirit Stone goes only in an animal&rsquo;s <b>×2 bonus space</b> (page 8).</li>
     <li>No stone of any kind may be added to a <b>closed</b> animal (holds a Spirit Stone) or a
     <b>blocked</b> one (the Coyote sits on it).</li>
     <li>Cards that only <b>add</b> stones to the bowl, and the optional Coyote move, never stop you from
@@ -641,7 +642,7 @@ def page_cards(I):
     return f"""
 <div class="kick">Reference</div>
 <h1 class="pt">The action cards</h1>
-<p class="lead">Each player has the same six cards (two of them identical). Play one per turn, then flip it
+<p class="lead">Both players have the same set of six cards; in each set the two Take One Stone cards are alike. Play one per turn, then flip it
 face-down.</p>
 <div class="cards">
 {card_box(I, E.TAKE1A, "Take One Stone", 2,
@@ -780,7 +781,7 @@ def page_spirit_coyote(I):
 <h1 class="pt">Spirit Stones</h1>
 <div class="grid2" style="grid-template-columns: 1fr 64mm; align-items:start">
   <div>
-    <p>The 8 clear (opalescent) stones {st('clear')} are not a colour. They follow their own rules:</p>
+    <p>The 8 Spirit Stones {st('clear')} are not a colour. They follow their own rules:</p>
     <ul>
       <li>Only in an animal&rsquo;s <b>×2 bonus space</b>, never in a normal space.</li>
       <li>At the end, that animal&rsquo;s points are <b>doubled</b>.</li>
@@ -1008,7 +1009,7 @@ def page_quickref(I):
     <li><span class="num">!</span><div>End of turn: <b>5 Spirit Stones out</b> of the bag? Game over.</div></li>
   </ol></div>
   <div class="box tint-a"><h3>Setup</h3>
-  Bowl: 4 regular stones (redraw clear ones) · 6 cards face-up each · Spirit cards in 2 face-up piles
+  Bowl: 4 regular stones (redraw any Spirit Stones) · same 6 cards each, face-up · Spirit cards in 2 face-up piles
   of 3 · start player flips <b>Take Two Stones</b> face-down · Coyote aside.</div>
 </div>
 <h2>Action cards</h2>

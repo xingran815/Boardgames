@@ -2,7 +2,7 @@
 
 **Goal:** collect stones with action cards and place them on your 5 animals. Most points wins.
 
-**Setup:** 4 non-Spirit stones in the bowl (redraw clear ones) · 6 action cards face-up each · Spirit Power cards in 2 face-up piles of 3 · start player flips *Take Two Stones* face-down.
+**Setup:** 4 non-Spirit stones in the bowl (redraw any Spirit Stones) · each player gets the same 6 action cards, face-up · Spirit Power cards in 2 face-up piles of 3 · start player flips *Take Two Stones* face-down.
 
 ## Your turn
 
@@ -41,7 +41,7 @@
 | Owl | same-colour pairs | 4 per complete pair (3 in English 2017 ed.) |
 | Beaver | 3-of-a-kind + a pair | 5 + 2, +7 bonus if both = 14 |
 
-**Spirit Stone (clear):** only in an animal's bonus space · **doubles** that animal · **closes** the section · not a colour.
+**Spirit Stone:** only in an animal's bonus space · **doubles** that animal · **closes** the section · not a colour.
 
 **Coyote:** you can't add any stones (incl. Spirit Stones) to the animal it sits on.
 
