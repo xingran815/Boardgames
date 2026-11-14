@@ -2,6 +2,8 @@
 
 English rules, cheat sheets and narrated how-to-play videos for board games.
 
+How everything here is made, and how to add a new game: [docs/PLAYBOOK.md](docs/PLAYBOOK.md).
+
 ## Spirits of the Wild (2 players, ~30 min)
 
 | What | File |
