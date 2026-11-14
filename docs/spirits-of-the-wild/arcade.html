@@ -569,7 +569,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
         </div>
         <div class="side-note">
           <span><b>Lessons:</b> a check mark means done. The next lesson opens when you finish one.</span>
-          <span><b>Stars:</b> ★ clears a puzzle and opens the next one. ★★★ means you found the best possible move.</span>
+          <span><b>Stars:</b> ★ passes a puzzle and opens the next one. ★★★ means you found the best possible move.</span>
           <span>Progress is saved in this browser only.</span>
           <span><button class="btn small" type="button" id="unlockAll">Open everything</button> <button class="btn small ghost" type="button" id="resetSave">Reset saves</button></span>
           <span id="resetConfirm" hidden>Erase all lessons, stars and high scores? <button class="btn small" type="button" id="resetYes">Erase</button> <button class="btn small ghost" type="button" id="resetNo">Keep</button></span>
@@ -1291,7 +1291,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       words: [["Take", "pick a stone from the bowl and put it on your board."], ["Available", "a card you can really do right now."]],
       beats: [
         { type: "game",
-          intro: "Your turn has three steps. Your cards are at the bottom right, the bowl is above them.",
+          intro: "Your turn has three steps. Your action cards sit under the bowl. On a small screen, scroll down to reach them.",
           cfg: { you: mk({}), bowl: START_BOWL.slice(), bag: ["white", "purple", "green", "red", "yellow", "blue", "white", "green"], cards: { take2: false }, piles: PILES, turns: 2 },
           tasks: [
             { say: "Step 1: pick a face-up card. Tap a " + card("take1a") + " card. (Striped cards are face-down. You can't use them.)",
@@ -1881,6 +1881,12 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     return '<div class="banner" aria-live="polite"><div class="step">' + stepText() + '</div><div class="msg ' + G.msgCls + '">' + G.msg + "</div>" + (acts ? '<div class="acts">' + acts + "</div>" : "") + "</div>";
   }
   function updateBanner() { var b = $("#gBody .banner"); if (b) b.outerHTML = bannerHTML(); hudStage(); }
+  /* on small screens the banner can be scrolled away while the player taps cards below: bring it back */
+  function showBanner() {
+    var b = $("#gBody .banner"); if (!b) return;
+    var r = b.getBoundingClientRect();
+    if (r.top < 0 || r.top > innerHeight * 0.6) { try { b.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }); } catch (e) { b.scrollIntoView(); } }
+  }
   function cap(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
   function setMsg(m, cls) { G.msg = m; G.msgCls = cls || ""; var el = $("#gBody .banner .msg"); if (el) { el.innerHTML = m; el.className = "msg " + (cls || ""); } if (m) say(stripTags(m)); }
 
@@ -2013,7 +2019,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       if (wasReplay || v !== bestV) lines += '<span class="lbl">Best line, step by step</span>' + mathsHTML(c[who], bestFin[who]) + (c.id === 7 ? finalLine(desc.state) : "");
     }
     var yourLab = fmtResult(c, v), bestLab = fmtResult(c, bestV);
-    var verdict = c.unit === "win" ? (v ? "YOU WIN!" : "BEN WINS") : clear ? (stars === 3 ? "PERFECT!" : "STAGE CLEAR") : "TRY AGAIN";
+    var verdict = c.unit === "win" ? (v ? "YOU WIN!" : "BEN WINS") : clear ? (stars === 3 ? "PERFECT!" : "STAGE PASSED") : "TRY AGAIN";
     if (wasReplay) verdict = "BEST LINE";
     Snd.play(clear ? (stars === 3 ? "win" : "start") : "lose");
     if (clear && !wasReplay) for (var i = 0; i < stars; i++) (function (k) { setTimeout(function () { Snd.play("star", k); burst(innerWidth / 2 + (k - 1) * 56, innerHeight * 0.28, 22, [cssVar("--gold"), cssVar("--accent")]); }, 300 + k * 250); })(i);
@@ -2046,7 +2052,8 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   function mathsHTML(before, after) {
     var items = A.filter(function (a) { return E.animalScore(before, a) !== E.animalScore(after, a); }).map(function (a) {
       var d = E.animalScore(after, a) - E.animalScore(before, a);
-      return "<li>" + esc(E.explain(before, a)) + " \u2192 now " + esc(E.explain(after, a).replace(/^\w+: /, "")) + ". <b>" + E.sign(d) + "</b></li>";
+      var strip = function (b) { return esc(E.explain(b, a).replace(/^\w+: /, "")); };
+      return "<li><b>" + E.NAMES[a] + "</b>. Before: " + strip(before) + ". Now: " + strip(after) + ". <b>" + E.sign(d) + "</b></li>";
     });
     var t0 = E.totalScore(before), t1 = E.totalScore(after);
     if (!items.length) return '<ul class="maths"><li class="tot">No animal changed its points: ' + t0 + " stays " + t1 + ".</li></ul>";
@@ -2355,7 +2362,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   }
   function hudLesson() {
     var d = G.cfg.def, n = d.beats.length, dots = "";
-    $("#gStage").innerHTML = "<small>LESSON " + d.id + " OF " + LS.length + " · ABOUT " + d.mins + " MIN</small>" + d.name;
+    $("#gStage").innerHTML = "<small>LESSON " + d.id + "/" + LS.length + " · " + d.mins + " MIN</small>" + d.name;
     for (var i = 0; i < n; i++) dots += '<i class="' + (i < G.les.i || (i === G.les.i && G.les.done) ? "on" : i === G.les.i ? "cur" : "") + '"></i>';
     $("#gLadder").innerHTML = n > 1 ? '<span class="dots" role="img" aria-label="Step ' + (G.les.i + 1) + " of " + n + '">' + dots + "</span>" : "";
     var s = G.s;
@@ -2416,7 +2423,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       '<ul class="bridge-list">' +
       "<li><b>Count points ahead.</b> Before you place a stone, ask: how many points does it add? Compare two or three choices.</li>" +
       "<li><b>Think one stone further.</b> A set scores only when it's finished, so one stone alone often adds 0.</li>" +
-      "<li><b>Stars.</b> ★ clears a puzzle and opens the next. ★★★ means you found the best possible move.</li>" +
+      "<li><b>Stars.</b> ★ passes a puzzle and opens the next one. ★★★ means you found the best possible move.</li>" +
       "<li><b>Stuck?</b> Tap <b>Hint</b> for a one-line tip. After each puzzle you see the point maths step by step, and you can watch the best move.</li>" +
       "<li>The rules haven't changed. The <b>Rules</b> button is always at the top.</li></ul>" +
       '<div class="row-btns"><button class="btn primary" type="button" data-close>Start Stage 1 ▶</button><button class="btn ghost" type="button" id="brMap">Back to map</button></div>',
@@ -2435,7 +2442,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (!task || !task.illegal || !task.illegal(info)) return;
     G.msg = txt(task.after, G.s) + " " + reason; G.msgCls = "good";
     C.t++; Snd.play("ok");
-    updateBanner();
+    updateBanner(); showBanner();
   }
   function coachAdvance() {
     var C = G.coach, moved = false;
@@ -2448,6 +2455,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (C.t >= C.tasks.length || G.s.over) markDone(null);
     else if (moved) Snd.play("ok");
     updateBanner();
+    if (moved || G.les.done) showBanner();
     if (G.les.done) afterDoneFx();
   }
   function lessonAfter() {
@@ -2466,7 +2474,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   function miniYourTurnOver() {
     var M = G.mini, b = curBeat(), s = G.s, tok = G.les.tok;
     if (s.ended) return miniFinish("5 Spirit Stones are out of the bag, so the game ends.");
-    G.busy = true; updateBanner();
+    G.busy = true; updateBanner(); showBanner();
     setTimeout(function () {
       if (!G || G.les.tok !== tok || ui.screen !== "game") return;
       var before = E.clone(s.opp), ev = E.benTurn(s, M.bc), parts = [];
@@ -2499,7 +2507,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     M.over = true; G.busy = false;
     M.final = (why ? why + " " : "We stop after " + curBeat().rounds + " turns each. ") + "Final score: you " + y + ", Ben " + o + ". " + res;
     markDone(why ? null : "A real game goes on like this until 5 Spirit Stones are out of the bag.");
-    renderGame(); afterDoneFx();
+    renderGame(); showBanner(); afterDoneFx();
   }
   function showHint() {
     if (!G || $(".overlay")) return;
