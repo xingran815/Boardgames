@@ -44,6 +44,7 @@ F = {k: font(s, w) for k, (s, w) in {
     "h0": (104, "Bold"), "h1": (64, "Bold"), "h2": (44, "Bold"), "h3": (32, "Bold"),
     "b": (34, "Regular"), "s": (26, "Regular"), "sb": (26, "SemiBold"),
     "xs": (21, "Regular"), "xsb": (21, "SemiBold"), "cap": (34, "SemiBold"),
+    "big": (84, "Bold"), "mid": (46, "SemiBold"), "rc": (58, "SemiBold"),
 }.items()}
 
 
@@ -121,6 +122,7 @@ def finish(im):
 # with a stable key so animations can move stones between frames.
 CTX = {"reg": {}, "hide": set(), "player": None, "coyote": None, "sec": {}}
 BAG_XY = (210, 470)
+PARTS = ("board0", "cards0", "board1", "cards1", "bag", "bowl", "piles", "coyote")
 
 
 def bstone(d, key, cx, cy, r, color, outline=None, empty_ring=True):
@@ -308,7 +310,21 @@ SPIRIT_SHORT = {
 }
 
 
-def draw_middle(d, y, st, hl=None, drawn=None):
+def draw_middle(d, y, st, hl=None, drawn=None, show=PARTS):
+    if "bag" in show:
+        draw_bag(d, y, st, hl)
+    if "bowl" in show:
+        draw_bowl(d, y, st, hl, drawn)
+    if "piles" in show:
+        draw_piles(d, y, st, hl)
+    if st["coyote"] is None and "coyote" in show:
+        CTX["coyote"] = (1650, y + 50, 1.3)
+        if "coyote" not in CTX["hide"]:
+            draw_coyote(d, 1650, y + 50, 1.3)
+        text_center(d, (1685, y + 150), "Coyote", F["xs"], fill=MUTED)
+
+
+def draw_bag(d, y, st, hl=None):
     d.rounded_rectangle((60, y, 360, y + 200), 30, fill=(70, 50, 40), outline=(150, 120, 90), width=3)
     text_center(d, (210, y + 16), "BAG", F["h3"], fill=(240, 220, 200))
     text_center(d, (210, y + 64), f"{st['bag']} stones", F["s"], fill=INK)
@@ -319,6 +335,9 @@ def draw_middle(d, y, st, hl=None, drawn=None):
         stone(d, 130 + i * 40, y + 158, 15, "clear" if i < co else None)
     if hl == "meter":
         d.rounded_rectangle((100, y + 134, 320, y + 182), 20, outline=HL, width=4)
+
+
+def draw_bowl(d, y, st, hl=None, drawn=None):
     bx = 430
     d.ellipse((bx, y + 10, bx + 620, y + 200), fill=(205, 180, 140),
               outline=HL if hl == "bowl" else (120, 90, 60), width=6 if hl == "bowl" else 3)
@@ -332,6 +351,9 @@ def draw_middle(d, y, st, hl=None, drawn=None):
         cy = y + 105 + (row - ((n - 1) // 9) / 2) * 52
         bstone(d, ("bowl", i), cx, cy, 23, c, outline=HL if drawn and i >= n - drawn else None,
                empty_ring=False)
+
+
+def draw_piles(d, y, st, hl=None):
     sx = 1110
     d.text((sx, y - 34), "SPIRIT POWER CARDS", font=F["xsb"], fill=MUTED)
     for i, pile in enumerate(st["piles"]):
@@ -346,11 +368,6 @@ def draw_middle(d, y, st, hl=None, drawn=None):
             text_center(d, (px + 110, y + 20), pile[0].upper(), F["h3"], fill=INK)
             for j, ln in enumerate(SPIRIT_SHORT[pile[0]]):
                 text_center(d, (px + 110, y + 70 + j * 28), ln, F["xs"], fill=MUTED)
-    if st["coyote"] is None:
-        CTX["coyote"] = (1650, y + 50, 1.3)
-        if "coyote" not in CTX["hide"]:
-            draw_coyote(d, 1650, y + 50, 1.3)
-        text_center(d, (1685, y + 150), "Coyote", F["xs"], fill=MUTED)
 
 
 def info_bar(d, left=None, right=None):
@@ -386,22 +403,26 @@ def banner(d, text, sub=None):
 
 
 def table(st, names=("Ana", "Ben"), hl=None, hide=None, bar=None, deltas=None, ban=None,
-          ticker=True):
+          ticker=True, show=None):
     """Full table view (supersampled). hl keys: card=(p, card), sections=(p, [animals]),
-    mid='bowl'|'meter'|<spirit>, drawn=n."""
+    mid='bowl'|'meter'|<spirit>, drawn=n. show: subset of PARTS to draw (default all),
+    used to introduce the table one piece at a time."""
     hl = hl or {}
+    show = set(PARTS if show is None else show)
     CTX.update(reg={}, hide=set(hide or ()), coyote=None, sec={})
     im, d = new_canvas()
     coy = st["coyote"]
     for p, y in ((1, 14), (0, 552)):
         CTX["player"] = p
         card = hl.get("card")
-        draw_cards(d, 14, y + 12, st["cards"][p], hl=card[1] if card and card[0] == p else None)
+        if f"cards{p}" in show:
+            draw_cards(d, 14, y + 12, st["cards"][p], hl=card[1] if card and card[0] == p else None)
         secs = hl.get("sections")
-        draw_board(d, 426, y, st["boards"][p], names[p], st["scores"][p],
-                   coyote_animal=coy[1] if coy and coy[0] == p else None,
-                   hl=secs[1] if secs and secs[0] == p else None, active=(st["current"] == p))
-    draw_middle(d, 330, st, hl=hl.get("mid"), drawn=hl.get("drawn"))
+        if f"board{p}" in show:
+            draw_board(d, 426, y, st["boards"][p], names[p], st["scores"][p],
+                       coyote_animal=coy[1] if coy and coy[0] == p else None,
+                       hl=secs[1] if secs and secs[0] == p else None, active=(st["current"] == p))
+    draw_middle(d, 330, st, hl=hl.get("mid"), drawn=hl.get("drawn"), show=show)
     if deltas:
         pops(d, deltas)
     right = f"{names[0]} {st['scores'][0]}  ·  {names[1]} {st['scores'][1]}" if ticker else None
@@ -447,4 +468,28 @@ def spirit_grid(names_lines, hl=None, bar=None):
         y = 60 + (i // 3) * 450
         spirit_card(nm, lines, x, y, w=560, h=420, hl=(hl == k))(d)
     info_bar(d, bar)
+    return im
+
+
+def recap_card(lines, nxt=None, title="Remember"):
+    """End-of-episode recap: 2-3 short lines, plus a 'Next:' teaser."""
+    im, d = new_canvas()
+    wrapped = [wrap_text(d, ln, F["rc"], W - 640) for ln in lines]
+    body = sum(70 * len(w) + 50 for w in wrapped) - 50
+    h = 190 + body + 80
+    top = (850 - h) / 2 + 20
+    d.rounded_rectangle((200, top, W - 200, top + h), 40, fill=PANEL, outline=GOLD, width=4)
+    text_center(d, (W / 2, top + 50), title, F["h1"], fill=GOLD)
+    y = top + 190
+    colors = ["green", "yellow", "blue", "purple", "red"]
+    for i, sub in enumerate(wrapped):
+        stone(d, 330, y + 36, 24, colors[i % len(colors)])
+        for j, s in enumerate(sub):
+            d.text((390, y + j * 70), s, font=F["rc"], fill=INK)
+        y += 70 * len(sub) + 50
+    if nxt:
+        s = f"Next: {nxt}"
+        tw = d.textlength(s, font=F["mid"])
+        d.rounded_rectangle((W / 2 - tw / 2 - 40, 900, W / 2 + tw / 2 + 40, 990), 45, fill=ACCENT)
+        d.text((W / 2 - tw / 2, 916), s, font=F["mid"], fill=(10, 20, 40))
     return im

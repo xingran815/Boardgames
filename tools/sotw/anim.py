@@ -5,13 +5,14 @@ from __future__ import annotations
 import hashlib
 import math
 import os
+import re
 import subprocess
 import wave
 from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageDraw
 
 import render as R
 
@@ -23,8 +24,11 @@ CAM_FRAMES = 18
 FULL = (0, 0, 1920)       # camera rect: x, y, width (height = width * 9/16)
 VOICE_DIR = Path(__file__).resolve().parents[1] / "voices"
 VOICE = os.environ.get("SOTW_VOICE", "af_heart")
-SPEED = float(os.environ.get("SOTW_SPEED", "1.0"))
+SPEED = float(os.environ.get("SOTW_SPEED", "0.9"))
 SR = 24000
+GAP = 0.32                # silence between sentences (each sentence is voiced separately)
+FADE_FRAMES = 14          # crossfade for reveals and cards
+OV_FRAMES = 10            # fade-in of captions, arrows and spotlights
 
 
 # ================================================================ diffing
@@ -211,18 +215,161 @@ def _crop(im, rect):
     return im.resize((R.W, R.H), Image.LANCZOS, box=(x * s, y * s, (x + w) * s, (y + h) * s))
 
 
-def _render_seg(args):
-    idx, seg, cam_prev, seg_dir = args
-    cam = seg.get("cam") or FULL
+def _blend(a, b, t):
+    return Image.blend(a, b, t)
+
+
+def _screen(rect, x, y):
+    cx, cy, cw = rect
+    k = R.W / cw
+    return (x - cx) * k, (y - cy) * k
+
+
+def _pill(d, box, fill, outline=None, width=0, r=None):
+    x0, y0, x1, y1 = box
+    d.rounded_rectangle(box, r if r is not None else (y1 - y0) / 2, fill=fill, outline=outline,
+                        width=width)
+
+
+def _alpha(layer, a):
+    if a < 1:
+        al = layer.getchannel("A").point(lambda v: int(v * a))
+        layer.putalpha(al)
+    return layer
+
+
+def _draw_caption(ov):
+    """Big key-word caption (top or bottom), as an RGBA layer."""
+    cap = ov["cap"]
+    title, sub = (cap, None) if isinstance(cap, str) else cap
+    layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
+    d = R.SDraw(layer, 1)
+    fb, fm = R.F["big"], R.F["mid"]
+    w = max(d.textlength(title, fb), d.textlength(sub, fm) if sub else 0) + 110
+    h = 120 + (64 if sub else 0)
+    y0 = 28 if ov.get("cap_pos", "top") == "top" else R.H - h - 34
+    x0 = (R.W - w) / 2
+    _pill(d, (x0, y0, x0 + w, y0 + h), (8, 14, 36, 232), outline=R.GOLD + (255,), width=4, r=34)
+    R.text_center(d, (R.W / 2, y0 + 12), title, fb, fill=R.GOLD)
+    if sub:
+        R.text_center(d, (R.W / 2, y0 + 112), sub, fm, fill=R.INK)
+    return layer
+
+
+def _draw_arrows(arrows, rect):
+    layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
+    d = R.SDraw(layer, 1)
+    f = R.F["mid"]
+    for x, y, label, side in arrows:
+        tx, ty = _screen(rect, x, y)
+        dx, dy = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}[side]
+        dist = 150
+        lx, ly = tx + dx * dist, ty + dy * dist
+        tw = d.textlength(label, f)
+        bw, bh = tw + 56, 76
+        bx0, by0 = lx - bw / 2 + dx * bw / 2, ly - bh / 2 + dy * bh / 2
+        bx0 = max(16, min(R.W - bw - 16, bx0))
+        by0 = max(16, min(R.H - bh - 16, by0))
+        # line from the label box edge to just short of the target
+        sx = bx0 + bw / 2 if dx == 0 else (bx0 if dx > 0 else bx0 + bw)
+        sy = by0 + bh / 2 if dy == 0 else (by0 if dy > 0 else by0 + bh)
+        ex, ey = tx + dx * 26, ty + dy * 26
+        d.line((sx, sy, ex, ey), fill=R.GOLD + (255,), width=9)
+        ang = math.atan2(ey - sy, ex - sx)
+        hx, hy = tx + dx * 8, ty + dy * 8
+        pts = [(hx, hy)] + [(hx - 40 * math.cos(ang + s), hy - 40 * math.sin(ang + s)) for s in (0.5, -0.5)]
+        d.polygon(pts, fill=R.GOLD + (255,))
+        _pill(d, (bx0, by0, bx0 + bw, by0 + bh), R.GOLD + (255,), outline=(60, 40, 0, 255), width=3)
+        d.text((bx0 + 28, by0 + 10), label, font=f, fill=(30, 20, 0))
+    return layer
+
+
+def _draw_focus(rects, rect):
+    """Dim everything except the given table-space rectangles."""
+    layer = Image.new("RGBA", (R.W, R.H), (4, 8, 22, 165))
+    d = ImageDraw.Draw(layer)
+    boxes = []
+    for x0, y0, x1, y1 in rects:
+        a, b = _screen(rect, x0, y0)
+        c, e = _screen(rect, x1, y1)
+        boxes.append((a, b, c, e))
+        d.rounded_rectangle((a, b, c, e), 22, fill=(0, 0, 0, 0))
+    for box in boxes:
+        d.rounded_rectangle(box, 22, outline=R.GOLD + (255,), width=5)
+    return layer
+
+
+def _draw_bar(ov):
+    layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
+    d = R.SDraw(layer, 1)
+    y = R.H - 78
+    d.rectangle((0, y, R.W, R.H), fill=(6, 10, 26, 225))
+    f = R.F["cap"]
+    if ov.get("bar"):
+        d.text((48, y + 18), ov["bar"], font=f, fill=R.GOLD)
+    if ov.get("score"):
+        d.text((R.W - 48 - d.textlength(ov["score"], f), y + 18), ov["score"], font=f, fill=R.INK)
+    return layer
+
+
+def overlay(im, ov, rect, fade=None):
+    """Draw screen-space overlays on a 1920x1080 frame. fade: {element: alpha} for
+    elements that are fading in (others are fully visible)."""
+    if not ov:
+        return im
+    fade = fade or {}
+    out = im.convert("RGBA")
+    parts = []
+    if ov.get("focus"):
+        parts.append(("focus", _draw_focus(ov["focus"], rect)))
+    if ov.get("bar") or ov.get("score"):
+        parts.append(("bar", _draw_bar(ov)))
+    if ov.get("arrows"):
+        parts.append(("arrows", _draw_arrows(ov["arrows"], rect)))
+    if ov.get("cap"):
+        parts.append(("cap", _draw_caption(ov)))
+    for k, layer in parts:
+        out.alpha_composite(_alpha(layer, fade.get(k, 1.0)))
+    return out.convert("RGB")
+
+
+OV_KEYS = {"focus": ("focus",), "bar": ("bar", "score"), "arrows": ("arrows",),
+           "cap": ("cap", "cap_pos")}
+
+
+def _new_parts(ov, ov_prev):
+    ov_prev = ov_prev or {}
+    return [k for k, keys in OV_KEYS.items()
+            if any(ov.get(x) for x in keys) and any(ov.get(x) != ov_prev.get(x) for x in keys)]
+
+
+def _start_frames(seg):
+    """Supersampled frames for the segment: [(image, n)] (last = settled) and sfx."""
     if "image" in seg:
         frames, sfx = [(seg["image"], 1)], []
+        start = R.new_canvas()[0] if seg.get("fade") else None
     elif seg.get("pre") is not None:
-        frames, sfx = anim_frames(seg["pre"], seg["post"], seg.get("tk", {}))
+        return anim_frames(seg["pre"], seg["post"], seg.get("tk", {}))
     else:
-        frames, sfx = [(R.table(seg["post"], **seg.get("tk", {})), 1)], []
+        tk = seg.get("tk", {})
+        frames, sfx = [(R.table(seg["post"], **tk), 1)], []
+        start = R.table(seg["post"], **{**tk, **seg["fade_from"]}) if seg.get("fade_from") else None
+    if start is not None:
+        end = frames[0][0]
+        frames = [(_blend(start, end, ease(f / FADE_FRAMES)), 2)
+                  for f in range(0, FADE_FRAMES, 2)] + frames
+    return frames, sfx
+
+
+def _render_seg(args):
+    idx, seg, cam_prev, ov_prev, seg_dir = args
+    cam = seg.get("cam") or FULL
+    ov = seg.get("ov") or {}
+    frames, sfx = _start_frames(seg)
     moving = cam_prev != cam
     nanim = sum(n for _, n in frames[:-1])
-    total = max(nanim, CAM_FRAMES if moving else 0)
+    new = _new_parts(ov, ov_prev)
+    total = max(nanim, CAM_FRAMES if moving else 0, OV_FRAMES if new else 0)
     out, f = [], 0
     timeline = []
     for im, n in frames[:-1]:
@@ -231,9 +378,10 @@ def _render_seg(args):
         im = timeline[f] if f < len(timeline) else frames[-1][0]
         t = ease(f / CAM_FRAMES) if moving else 1
         rect = tuple(a + (b - a) * t for a, b in zip(cam_prev, cam))
-        out.append((_crop(im, rect), 2))
+        a = ease(f / OV_FRAMES)
+        out.append((overlay(_crop(im, rect), ov, rect, {k: a for k in new}), 2))
         f += 2
-    out.append((_crop(frames[-1][0], cam), 1))
+    out.append((overlay(_crop(frames[-1][0], cam), ov, cam), 1))
     paths = []
     for j, (im, n) in enumerate(out):
         p = Path(seg_dir) / f"{idx:04d}_{j:03d}.png"
@@ -242,20 +390,43 @@ def _render_seg(args):
     return idx, (paths, sfx + [(0, s) for s in seg.get("sfx", [])])
 
 
+def sentences(text):
+    """Split narration into sentences; each is voiced separately, with a pause between."""
+    return [s for s in re.split(r"(?<=[.!?])\s+", text.strip()) if s]
+
+
+def narrate(text, cache_dir):
+    """(audio, [(sentence, start, end)]) with GAP seconds of silence between sentences."""
+    parts, cues, t = [], [], 0.0
+    for i, s in enumerate(sentences(text)):
+        if i:
+            parts.append(np.zeros(int(GAP * SR), np.float32))
+            t += GAP
+        a = tts(s, cache_dir)
+        parts.append(a)
+        cues.append((s, t, t + len(a) / SR))
+        t += len(a) / SR
+    return (np.concatenate(parts) if parts else np.zeros(0, np.float32)), cues
+
+
 def build(name, segments, out_dir, work_dir, music=True, pad=0.45):
     """segments: dicts with text, and image | post (+pre for animation), tk (table
-    kwargs), cam (x, y, w), hold (min seconds after the animation), sfx [names]."""
+    kwargs), cam (x, y, w), hold (min seconds after the animation), sfx [names],
+    ov (screen overlays: cap, cap_pos, arrows, focus, bar, score), pause (silence
+    after the narration, default pad), say_after (narration waits for the animation),
+    fade (cards fade in) / fade_from (table kwargs to crossfade from)."""
     seg_dir = Path(work_dir) / name
     seg_dir.mkdir(parents=True, exist_ok=True)
     for f in seg_dir.glob("*.png"):
         f.unlink()
-    audio = [tts(s["text"], Path(work_dir) / "tts") if s.get("text") else np.zeros(0, np.float32)
-             for s in segments]
-    cams, prev = [], FULL
+    voiced = [narrate(s["text"], Path(work_dir) / "tts") if s.get("text") else
+              (np.zeros(0, np.float32), []) for s in segments]
+    cams, ovs, prev, prev_ov = [], [], FULL, None
     for s in segments:
         cams.append(prev)
-        prev = s.get("cam") or FULL
-    jobs = [(i, s, cams[i], str(seg_dir)) for i, s in enumerate(segments)]
+        ovs.append(prev_ov)
+        prev, prev_ov = s.get("cam") or FULL, s.get("ov")
+    jobs = [(i, s, cams[i], ovs[i], str(seg_dir)) for i, s in enumerate(segments)]
     with ProcessPoolExecutor(max_workers=os.cpu_count() or 2) as ex:
         res = dict(ex.map(_render_seg, jobs))
     bank = _sfx_bank()
@@ -263,9 +434,11 @@ def build(name, segments, out_dir, work_dir, music=True, pad=0.45):
     for i, s in enumerate(segments):
         frames, sfx = res[i]
         anim_n = sum(n for _, n in frames[:-1])
-        speech = len(audio[i]) / SR
-        lead = 0.2 if s.get("text") else 0
-        need = max(lead + speech + (pad if s.get("text") else 0), anim_n / FPS + s.get("hold", 0.6))
+        audio, cues = voiced[i]
+        speech = len(audio) / SR
+        lead = (anim_n / FPS + 0.15 if s.get("say_after") else 0.2) if s.get("text") else 0
+        after = s.get("pause", pad) if s.get("text") else 0
+        need = max(lead + speech + after, anim_n / FPS + s.get("hold", 0.6))
         total_n = max(anim_n + 6, int(math.ceil(need * FPS)))
         for p, n in frames[:-1]:
             lines.append(f"file '{p}'\nduration {n / FPS:.6f}\n")
@@ -273,7 +446,7 @@ def build(name, segments, out_dir, work_dir, music=True, pad=0.45):
         n_samp = int(round(total_n / FPS * SR))
         a = np.zeros(n_samp, np.float32)
         st = int(lead * SR)
-        a[st:st + len(audio[i])] = audio[i][:max(0, n_samp - st)]
+        a[st:st + len(audio)] = audio[:max(0, n_samp - st)]
         b = np.zeros(n_samp, np.float32)
         for fr, kind in sfx:
             o = int(fr / FPS * SR)
@@ -281,8 +454,8 @@ def build(name, segments, out_dir, work_dir, music=True, pad=0.45):
             b[o:o + len(clip)] += clip
         tracks.append(a)
         fx.append(b)
-        if s.get("text"):
-            srt.append(f"{len(srt) + 1}\n{_ts(t + lead)} --> {_ts(t + lead + speech)}\n{s['text']}\n")
+        for text, c0, c1 in cues:
+            srt.append(f"{len(srt) + 1}\n{_ts(t + lead + c0)} --> {_ts(t + lead + c1)}\n{text}\n")
         t += total_n / FPS
     lines.append(f"file '{res[len(segments) - 1][0][-1][0]}'\n")
     voice = np.concatenate(tracks)
