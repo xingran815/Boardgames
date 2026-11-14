@@ -616,16 +616,17 @@ def factories_card(hl=None):
     im, d = new_canvas()
     text_center(d, (W / 2, 70), "Factory displays", F["h1"], fill=GOLD)
     for k, n in enumerate(sorted(E.FACTORIES)):
-        y = 270 + k * 260
+        y = 290 + k * 250
         on = hl == n
-        d.rounded_rectangle((120, y - 110, W - 120, y + 110), 30, fill=PANEL,
+        d.rounded_rectangle((120, y - 105, W - 120, y + 105), 30, fill=PANEL,
                             outline=HL if on else (60, 80, 140), width=6 if on else 2)
-        d.text((170, y - 60), f"{n} players", font=F["h1"], fill=INK)
+        d.text((170, y - 40), f"{n} players", font=F["h1"], fill=INK)
         cnt = E.FACTORIES[n]
         for i in range(cnt):
-            x = 640 + i * 132
-            d.ellipse((x - 54, y - 54, x + 54, y + 54), fill=FACTORY, outline=FACTORY_RIM, width=4)
-        text_center(d, (640 + cnt * 132 + 10, y - 34), f"= {cnt}", F["h2"], fill=GOLD)
+            x = 590 + i * 112
+            d.ellipse((x - 46, y - 46, x + 46, y + 46), fill=FACTORY, outline=FACTORY_RIM, width=4)
+        s = str(cnt)
+        d.text((W - 190 - d.textlength(s, F["h0"]), y - 64), s, font=F["h0"], fill=GOLD)
     return im
 
 
