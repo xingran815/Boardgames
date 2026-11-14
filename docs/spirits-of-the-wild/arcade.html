@@ -375,7 +375,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
 .lesson { display: grid; gap: 12px; max-width: 940px; margin: 0 auto; min-width: 0; }
 .coach { min-height: 0; gap: 6px; }
 .coach .say { font-size: 16px; line-height: 1.5; max-width: 70ch; }
-.coach .sub { font-size: 13px; color: var(--ink-2); }
+.coach .sub { font-size: 13px; color: var(--ink-2); display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
 .coach .acts { margin-top: 2px; }
 .w { font-weight: 700; text-decoration: underline dotted var(--spark) 2px; text-underline-offset: 3px; }
 .msg.hint { color: var(--ink); font-weight: 700; }
@@ -395,6 +395,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
 .tile.met .tt { color: var(--ink); }
 .pic .spr { width: 34px; height: 30px; color: var(--ink); }
 .pic .spr svg { width: 100%; height: 100%; }
+.pic .pouch { width: 32px; height: 36px; border-radius: 40% 40% 46% 46% / 30% 30% 60% 60%; background: var(--coyote); box-shadow: inset 0 -5px 0 rgba(0,0,0,.2); display: inline-block; }
 .minicard { width: 22px; height: 30px; border-radius: 3px; border: 2px solid var(--line); background: var(--panel-2); display: inline-block; }
 .minicard.sp { border-color: var(--spark); }
 .minibowl { width: 64px; height: 30px; border-radius: 50% / 45%; border: 3px solid var(--line); background: var(--bg-2); display: inline-block; }
@@ -402,7 +403,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
 .opts.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .opt.t { font: 700 17px/1.25 var(--font-body); text-align: left; padding: 12px 14px 12px 30px; }
 .track { border-collapse: collapse; font-size: 13.5px; font-variant-numeric: tabular-nums; }
-.track th, .track td { border: 1.5px solid var(--line); padding: 4px 9px; text-align: center; }
+.track th, .track td { border: 1.5px solid var(--line); padding: 4px 9px; text-align: center; background: var(--panel); }
 .track th { font-family: var(--font-display); font-weight: 700; text-align: left; background: var(--panel-2); }
 .track td.hit { background: var(--accent); color: var(--accent-ink); font-weight: 700; }
 .trackwrap { overflow-x: auto; max-width: 100%; }
@@ -426,7 +427,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
 .zone.goal { border-color: var(--accent); border-style: dashed; }
 .zone.flat { box-shadow: none; cursor: default; }
 .zone .lbl { font-size: 11px; }
-.zone .cnt { font: 10px var(--font-num); color: var(--ink-2); }
+.zone .cnt { font: 10px/1.6 var(--font-num); color: var(--ink-2); }
 .zone .pouch { width: 40px; height: 44px; border-radius: 40% 40% 46% 46% / 30% 30% 60% 60%; background: var(--coyote); box-shadow: inset 0 -5px 0 rgba(0,0,0,.2); }
 .zone .bowl { width: 100%; min-height: 56px; flex: none; }
 .heap { display: flex; flex-wrap: wrap; gap: 3px; justify-content: center; --stone: 18px; max-width: 260px; }
@@ -1069,6 +1070,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   };
   var CARD_NAMES = { take1a: "Take One Stone", take1b: "Take One Stone", take2: "Take Two Stones", add2: "Add Two Stones & Take One", add3: "Add Three Stones & Move Coyote", spirit: "Use Spirit Power & Recover Cards" };
   function where(w) { return NAMES[w[0]] + (w[1] === "triple" ? " (three-of-a-kind)" : w[1] === "pair" ? " (pair)" : w[1] === "bonus" ? " bonus space" : ""); }
+  function capF(x) { return x.charAt(0).toUpperCase() + x.slice(1); }
   function sign(n) { return (n >= 0 ? "+" : "−") + Math.abs(n); }
   /* Human-readable line for a decision path (used for the "best line" card). */
   function describe(cfg, path) { return describeFrom(newGame(cfg), path, cfg.oppName); }
@@ -1082,11 +1084,11 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
       act(s, d);
       var g = s.you ? totalScore(s.you) - pre : 0;
       if (st.k === "card") out.push("Play " + CARD_NAMES[d.card] + ".");
-      else if (st.k === "take") out.push(d.w ? CNAME[color] + " → " + where(d.w) + " (" + sign(g) + ")" : CNAME[color] + " fits nowhere and goes back to the bowl.");
+      else if (st.k === "take") out.push(capF(CNAME[color]) + (d.w ? " → " + where(d.w) + " (" + sign(g) + ")." : " fits nowhere and goes back to the bowl."));
       else if (st.k === "spirit") out.push("Use the " + s.log[s.log.length - 1].name.replace(/^./, function (x) { return x.toUpperCase(); }) + ".");
       else if (st.k === "deer") out.push("Deer: " + d.color + " from your " + NAMES[d.animal] + " → bowl (" + sign(g) + ")");
       else if (st.k === "coyote") out.push(d.animal ? "Coyote → " + opp + "'s " + NAMES[d.animal] + "." : "Leave the Coyote where it is.");
-      else if (st.k === "bisonRet") out.push("Return " + CNAME[color] + " to the bag.");
+      else if (st.k === "bisonRet") out.push("Return " + (color === CLEAR ? "a Spirit Stone" : "the " + CNAME[color] + " stone") + " to the bag.");
     });
     return { lines: out, state: s };
   }
@@ -1111,6 +1113,23 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     if (b.bonus[a]) t += ", × 2 for the Spirit Stone = " + raw * 2;
     return NAMES[a] + ": " + t;
   }
+
+  /* Hint value for the practice game: score, plus partial credit for unfinished sets, minus a penalty
+     for closing an animal with a Spirit Stone while it still has room (same idea as engine.potential / clear_value). */
+  var CAPACITY = { rabbit: 3, turtle: 5, salmon: 6, owl: OWL_PAIRS * 2, beaver: 5 };
+  function hintValue(b) {
+    var v = totalScore(b);
+    ANIMALS.forEach(function (a) {
+      var n = stonesIn(b, a).length;
+      if (b.bonus[a]) { v -= 1.8 * (CAPACITY[a] - n); return; }
+      if (a === "rabbit" && n < 3) v += 1.6 * n;
+      else if (a === "owl") v += 1.5 * b.owl.filter(function (p) { return p.length === 1; }).length;
+      else if (a === "beaver") { var t = b.beaver.triple.length, p = b.beaver.pair.length; if (t < 3) v += 1.3 * t; if (p < 2) v += 0.7 * p; }
+      else if (a === "turtle" && n > 0 && n < 5) v += 0.8;
+    });
+    return v;
+  }
+  function hintEval(s) { return hintValue(s.you); }
 
   /* ---------------- a simple opponent (Ben) for the practice game ----------------
      Greedy: Take Two or Take One when a stone scores now, otherwise Add Two, then Add Three.
@@ -1170,7 +1189,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
     placements: placements, place: place, remove: remove, bestTake: bestTake, placeReason: placeReason,
     blockedFor: blockedFor, spiritOut: spiritOut, cardReason: cardReason, available: available, newGame: newGame,
     options: options, act: act, solve: solve, solveFrom: solveFrom, starsFor: starsFor, describe: describe, describeFrom: describeFrom,
-    mk: mk, STAGES: STAGES, sign: sign, explain: explain, benTurn: benTurn, coyoteTarget: coyoteTarget, BEAVER_PTS: BEAVER_PTS, gainEval: gainEval, POWERS: POWERS
+    mk: mk, STAGES: STAGES, sign: sign, explain: explain, benTurn: benTurn, coyoteTarget: coyoteTarget, BEAVER_PTS: BEAVER_PTS, gainEval: gainEval, hintEval: hintEval, hintValue: hintValue, POWERS: POWERS
   };
 })(typeof window !== "undefined" ? window : globalThis);
 </script>
@@ -1446,7 +1465,7 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
           say: "What if both players have the same points? That's a " + w("tie") + ". Then the player with the Coyote on their board wins.",
           q: "It's a tie, and the Coyote is on Ben's board. Who wins?",
           options: [{ v: "ben", label: "Ben" }, { v: "you", label: "You" }, { v: "both", label: "Nobody: it's a draw" }], answer: "ben",
-          why: { you: "Not this time: the Coyote sits on Ben's board, so Ben wins the tie.", both: "The rules break the tie: the player with the Coyote on their board wins." },
+          why: { you: "The Coyote sits on Ben's board, so Ben wins the tie.", both: "The rules break the tie: the player with the Coyote on their board wins." },
           right: "Right: Ben wins. The Coyote bothered him, so the spirits help him." }
       ],
       remember: ["A Spirit Stone goes in a bonus space and doubles that animal. Then the animal is closed.",
@@ -2055,17 +2074,19 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   }
 
   /* ---------- placement resolution ---------- */
-  function resolveTarget(rowEl, slotHint, color) {
-    var a = rowEl.getAttribute("data-animal"), s = G.s, blocked = E.blockedFor(s, "you");
-    var legal = E.placements(s.you, color, blocked).filter(function (w) { return w[0] === a; });
-    if (color === "clear") return legal.length ? { w: [a, "bonus"] } : { reason: E.placeReason(s.you, color, a, "bonus", blocked) };
-    if (slotHint === "bonus") return { reason: E.placeReason(s.you, color, a, a === blocked || s.you.bonus[a] ? null : "bonus", blocked) };
+  function resolveTarget(rowEl, slotHint, color, board, blocked) {
+    var a = rowEl.getAttribute("data-animal");
+    if (!board) { board = G.s.you; blocked = E.blockedFor(G.s, "you"); }
+    var legal = E.placements(board, color, blocked).filter(function (w) { return w[0] === a; });
+    if (color === "clear") return legal.length ? { w: [a, "bonus"] } : { reason: E.placeReason(board, color, a, "bonus", blocked) };
+    if (slotHint === "bonus") return { reason: E.placeReason(board, color, a, a === blocked || board.bonus[a] ? null : "bonus", blocked) };
     if (a === "beaver") {
-      if (slotHint) { var m = legal.filter(function (w) { return w[1] === slotHint; }); return m.length ? { w: m[0] } : { reason: E.placeReason(s.you, color, a, slotHint, blocked) }; }
+      if (slotHint) { var m = legal.filter(function (w) { return w[1] === slotHint; }); return m.length ? { w: m[0] } : { reason: E.placeReason(board, color, a, slotHint, blocked) }; }
       if (legal.length) return { w: legal[0] };
-      return { reason: E.placeReason(s.you, color, a, "triple", blocked) + " " + (E.placeReason(s.you, color, a, "pair", blocked) || "") };
+      var r1 = E.placeReason(board, color, a, "triple", blocked), r2 = E.placeReason(board, color, a, "pair", blocked);
+      return { reason: r1 + (r2 && r2 !== r1 ? " " + r2 : "") };
     }
-    return legal.length ? { w: legal[0] } : { reason: E.placeReason(s.you, color, a, null, blocked) };
+    return legal.length ? { w: legal[0] } : { reason: E.placeReason(board, color, a, null, blocked) };
   }
   function tryPlace(rowEl, slotHint, fromRect) {
     var s = G.s, i = G.sel, color = s.bowl[i];
@@ -2231,36 +2252,572 @@ kbd { font-family: var(--font-display); font-size: 12px; border: 1.5px solid var
   function closeOverlay() { var o = $(".overlay:not(.help-ov)"); if (o) { o.remove(); if (lastFocus && lastFocus.focus && document.contains(lastFocus)) lastFocus.focus(); } }
   function showHelp() {
     if ($(".help-ov")) return;
-    var prevFocus = document.activeElement;
-    var html = '<div class="help"><span class="eyebrow">How to play</span><h2>Learn the rules by playing</h2>' +
-      "<h3>Controls</h3><ul>" +
-      "<li><b>Place a stone:</b> drag it from the bowl onto an animal, or tap the stone and then the animal. Beaver: drop on the three-of-a-kind or the pair group.</li>" +
-      "<li><b>Play a card:</b> tap it, or press <kbd>1</kbd>–<kbd>6</kbd>.</li>" +
-      "<li><b>Coyote:</b> drag it (or tap it, then tap) onto an opponent's animal.</li>" +
-      "<li>Keyboard: <kbd>Tab</kbd> to a stone, <kbd>Enter</kbd>; <kbd>Tab</kbd> to an animal name, <kbd>Enter</kbd>. <kbd>Esc</kbd> cancels, <kbd>R</kbd> restarts, <kbd>M</kbd> mutes, <kbd>H</kbd> opens this.</li>" +
-      "<li>Illegal moves shake and say why. Legal ones snap in and score live.</li></ul>" +
-      "<h3>Animals</h3><table><tr><th>Animal</th><th>Needs</th><th>Points</th></tr>" +
-      "<tr><td>Rabbit</td><td>3 different colours</td><td>6, only when complete</td></tr>" +
-      "<tr><td>Turtle</td><td>all one colour</td><td>1 / 3 / 6 / 9 / 14</td></tr>" +
-      "<tr><td>Salmon</td><td>all different colours</td><td>1 / 2 / 4 / 6 / 9 / 13</td></tr>" +
-      "<tr><td>Owl</td><td>same-colour pairs (3 pairs)</td><td>4 per finished pair</td></tr>" +
-      "<tr><td>Beaver</td><td>3 of a kind + a pair</td><td>5 + 2, +7 if both = 14</td></tr></table>" +
-      "<h3>Stones</h3><p>Six colours, each with a letter: " + ["green", "yellow", "blue", "purple", "white", "red"].map(function (c) { return stone(c); }).join(" ") +
-      ". The Spirit Stone " + stone("clear") + " only goes in an animal's bonus space: it doubles that animal and closes it.</p>" +
-      "<h3>Cards &amp; the end</h3><ul><li>Play one face-up card per turn; it then goes face-down. Spirit Power needs 3 other cards face-down and flips all six back up.</li>" +
-      "<li>The Coyote blocks every stone on one animal. Both Take One cards face-down = a whole Coyote to move.</li>" +
-      "<li>At the end of a turn with 5 Spirit Stones out of the bag, the game ends. Ties go to the player with the Coyote on their board.</li></ul>" +
+    var prevFocus = document.activeElement, T = P.turtle, S = P.salmon, CN = E.CARD_NAMES;
+    var secs = [
+      ["r-goal", "Goal", "<p>Two players take turns. A turn is one player's go. On your turn you take stones and give them to the five animals on your board. Animals score points. The most points at the end wins.</p>"],
+      ["r-setup", "Setup", "<ol><li>Put all 56 stones in the bag: 8 of each of the 6 colours, plus 8 Spirit Stones.</li>" +
+        "<li>Draw 4 stones into the bowl. Drawing means taking stones out of the bag without looking. A Spirit Stone drawn now goes back in the bag: draw again until the bowl holds 4 coloured stones.</li>" +
+        "<li>Each player takes a board and six action cards, face-up (words showing). <b>Both players get the exact same six cards.</b></li>" +
+        "<li>Mix the 6 Spirit Power cards into two face-up piles of 3. Only the top card of each pile can be used.</li>" +
+        "<li>Put the Coyote beside the table.</li>" +
+        "<li>Choose who goes first. The start player turns their Take Two Stones card face-down (words hidden), so they can't use it at first.</li></ol>"],
+      ["r-turn", "Your turn", "<ol><li>Pick one of your face-up action cards. You can only pick a card you can really do: Take Two Stones needs 2 stones in the bowl.</li><li>Do what it says.</li><li>Turn it face-down. Then it's the other player's turn.</li></ol>" +
+        '<div class="tablewrap"><table><tr><th>Card</th><th>What it does</th></tr>' +
+        "<tr><td>" + CN.take1a + " (you have two)</td><td>Take 1 stone from the bowl. Its back shows half a Coyote.</td></tr>" +
+        "<tr><td>" + CN.take2 + "</td><td>Take 2 stones from the bowl.</td></tr>" +
+        "<tr><td>" + CN.add2 + "</td><td>Draw 2 stones from the bag into the bowl. Then take 1.</td></tr>" +
+        "<tr><td>" + CN.add3 + "</td><td>Draw 3 stones into the bowl. You may move the Coyote. You take no stone.</td></tr>" +
+        "<tr><td>" + CN.spirit + "</td><td>Only when at least 3 of your other cards are face-down. Use a Spirit Power card, then turn all six of your cards face-up.</td></tr></table></div>"],
+      ["r-place", "Placing stones", "<p>Every stone you take goes on one of your animals, and it must fit that animal's rule. Each animal's part of the board is its section. A stone that fits nowhere goes back to the bowl.</p>"],
+      ["r-animals", "Animals and points", '<div class="tablewrap"><table><tr><th>Animal</th><th>Rule</th><th>Points</th></tr>' +
+        "<tr><td>Rabbit</td><td>3 stones, each a different colour</td><td>" + P.rabbit + ", only when all 3 are there</td></tr>" +
+        "<tr><td>Turtle</td><td>all one colour, up to 5</td><td>1 to 5 stones: " + T.slice(1).join(" / ") + "</td></tr>" +
+        "<tr><td>Salmon</td><td>all different colours, up to 6</td><td>1 to 6 stones: " + S.slice(1).join(" / ") + "</td></tr>" +
+        "<tr><td>Owl</td><td>pairs (2 of one colour), up to 3 pairs</td><td>" + P.owl + " per finished pair. A lone stone scores 0.</td></tr>" +
+        "<tr><td>Beaver</td><td>3 of one colour, plus a pair</td><td>" + P.triple + " for the three-of-a-kind, " + P.pair + " for the pair, " + P.bonus + " bonus if both: " + P.beaver + "</td></tr></table></div>" +
+        "<p>Your score is all five animals added up.</p>"],
+      ["r-spirit", "Spirit Stones", "<p>A Spirit Stone is not a colour. It only goes in an animal's bonus space, the diamond at the end of its row. It doubles that animal's points. Then the animal is closed: no more stones can go there. A Spirit Stone with no open bonus space goes back to the bowl.</p>"],
+      ["r-power", "Getting cards back", "<p>Play " + CN.spirit + " when at least 3 of your other cards are face-down. Choose the top card of either Spirit pile, do its steps in order, and slide it under its pile. Then turn all six of your cards face-up.</p><ul>" +
+        ["bear", "wolf", "ram", "eagle", "deer", "bison"].map(function (n) { return "<li><b>" + cap(n) + ":</b> " + E.SPIRIT_TEXT[n] + "</li>"; }).join("") + "</ul>"],
+      ["r-coyote", "The Coyote", "<p>The Coyote sits on one animal of your opponent's board. That animal is blocked: no new stones can go there, not even a Spirit Stone. Stones already there still score. He is only ever on one animal.</p>" +
+        "<p>Move him with " + CN.add3 + ", or when both your Take One Stone cards are face-down: their backs make a whole Coyote.</p>"],
+      ["r-end", "End and winner", "<p><b>The game ends at the end of a turn when 5 Spirit Stones are out of the bag.</b> Out of the bag means in the bowl or on either player's board.</p>" +
+        "<p>Everyone adds up their points. The most points wins. In a tie, the player with the Coyote on their board wins.</p>"],
+      ["r-controls", "Controls", "<ul>" +
+        "<li><b>Place a stone:</b> drag it from the bowl onto an animal, or tap the stone and then the animal. Beaver: drop on the three-of-a-kind or the pair group.</li>" +
+        "<li><b>Play a card:</b> tap it, or press <kbd>1</kbd>–<kbd>6</kbd>.</li>" +
+        "<li><b>Coyote:</b> drag him (or tap him, then tap) onto an opponent's animal.</li>" +
+        "<li>Keyboard: <kbd>Tab</kbd> to a stone, <kbd>Enter</kbd>; <kbd>Tab</kbd> to an animal name, <kbd>Enter</kbd>. <kbd>Esc</kbd> cancels, <kbd>R</kbd> starts again, <kbd>M</kbd> mutes, <kbd>H</kbd> opens these rules.</li>" +
+        "<li>Stones have letters: " + E.COLORS.map(function (c) { return stone(c); }).join(" ") + " and the Spirit Stone " + stone("clear") + ".</li></ul>"]
+    ];
+    var html = '<div class="help"><span class="eyebrow">Rules in plain words</span><h2>How Spirits of the Wild works</h2>' +
+      '<nav class="toc" aria-label="Rules sections">' + secs.map(function (x) { return '<a href="#' + x[0] + '" data-jump="' + x[0] + '">' + x[1] + "</a>"; }).join("") + "</nav>" +
+      secs.map(function (x) { return '<section id="' + x[0] + '" aria-labelledby="' + x[0] + '-h"><h3 id="' + x[0] + '-h">' + x[1] + "</h3>" + x[2] + "</section>"; }).join("") +
+      '<p style="font-size:12px;color:var(--ink-2)">Edition note: this trainer scores an Owl pair at ' + P.owl + " points (German 2019 rules). The English 2017 rulebook says 3.</p>" +
       '<div class="row-btns"><button class="btn primary" type="button" id="helpClose">Got it</button></div></div>';
     var o = document.createElement("div"); o.className = "overlay help-ov";
-    o.innerHTML = '<div class="dialog" role="dialog" aria-modal="true" aria-label="How to play">' + html + "</div>";
+    o.innerHTML = '<div class="dialog" role="dialog" aria-modal="true" aria-label="Rules">' + html + "</div>";
     document.body.appendChild(o);
     var close = function () { o.remove(); if (prevFocus && prevFocus.focus && document.contains(prevFocus)) prevFocus.focus(); };
     $("#helpClose", o).onclick = close;
-    o.addEventListener("click", function (ev) { if (ev.target === o) close(); });
+    o.addEventListener("click", function (ev) {
+      if (ev.target === o) { close(); return; }
+      var j = ev.target.closest("[data-jump]");
+      if (j) { ev.preventDefault(); var sec = o.querySelector("#" + j.getAttribute("data-jump")); if (sec) sec.scrollIntoView({ block: "start", behavior: reduced ? "auto" : "smooth" }); }
+    });
     try { $("#helpClose", o).focus({ preventScroll: true }); } catch (e) {}
     $(".dialog", o).scrollTop = 0;
   }
   function paused() { return !!$(".help-ov"); }
+
+  /* ================= Chapter 1: the lesson runner =================
+     A lesson is a list of beats. Each beat teaches one small thing and must be done before "Next".
+     Beat types: meet (tap to meet pieces), setup (build the table), choice (pick an answer),
+     place (put one stone on a board), game (coached turns on the real turn engine), mini (practice game vs Ben). */
+  var LTOK = 0;
+  function gcfg() { if (!G || G.cfg.kind !== "lesson") return G ? G.cfg : {}; var b = curBeat(); return (b && b.cfg) || {}; }
+  function curBeat() { return G.cfg.def.beats[G.les.i]; }
+  function txt(x, s) { return typeof x === "function" ? x(s) : x || ""; }
+  function restartCurrent() { if (!G) return; if (G.cfg.kind === "lesson") { enterBeat(G.les.i); return; } openStage(G.cfg.id, true); }
+
+  function openLesson(id, skipIntro) {
+    var def = LS[id - 1];
+    if (!def) return;
+    if (!lessonOpen(id)) { toast("Finish lesson " + (id - 1) + " first."); Snd.play("bad"); return; }
+    G = { cfg: { kind: "lesson", id: id, def: def }, les: { i: 0, st: null, done: false, tok: 0, boards: {} }, sel: null, msg: "", msgCls: "", replay: false, busy: false, done: false, s: null, coach: null };
+    show("game");
+    enterBeat(0);
+    if (!skipIntro) lessonIntro();
+  }
+  function lessonIntro() {
+    var d = G.cfg.def;
+    overlay('<span class="eyebrow">Lesson ' + d.id + " of " + LS.length + " · about " + d.mins + " min</span><h2>" + d.name + "</h2><p>" + d.goal + "</p>" +
+      (d.words.length ? '<div><span class="lbl">New words in this lesson</span><dl class="words">' + d.words.map(function (w) { return "<div><dt>" + w[0] + ":</dt> <dd>" + w[1] + "</dd></div>"; }).join("") + "</dl></div>" : "") +
+      '<div class="row-btns"><button class="btn primary" type="button" data-close>START</button> <button class="btn" type="button" data-help>Rules</button></div>',
+      function () { Snd.play("start"); });
+  }
+  function enterBeat(i) {
+    var b = G.cfg.def.beats[i];
+    G.les.i = i; G.les.done = false; G.les.tok = ++LTOK; G.busy = false;
+    G.msg = ""; G.msgCls = ""; G.sel = null; G.acts = ""; G.coach = null; G.s = null; G.mini = null; G.newBowl = null; G.extraTurn = false; G.done = false;
+    if (b.type === "game") { G.s = E.newGame(b.cfg); G.coach = { tasks: b.tasks, t: 0 }; if (b.intro) G.msg = b.intro; }
+    else if (b.type === "mini") {
+      G.mini = { round: 1, bc: { take1a: true, take1b: true, take2: true, add2: true, add3: true, spirit: true }, over: false, final: "" };
+      G.s = E.newGame(Object.assign({}, b.cfg, { turns: 1 }));
+    } else if (b.type === "place") {
+      if (!G.les.boards[i]) G.les.boards[i] = E.clone(b.board || G.les.board || E.newBoard());
+      G.les.st = { board: E.clone(G.les.boards[i]), held: b.stone };
+    } else if (b.type === "setup") G.les.st = setupBase(b.step);
+    else if (b.type === "meet") G.les.st = { met: {} };
+    else if (b.type === "choice") G.les.st = { wrong: [] };
+    renderGame();
+    window.scrollTo(0, 0);
+  }
+  function hudLesson() {
+    var d = G.cfg.def, n = d.beats.length, dots = "";
+    $("#gStage").innerHTML = "<small>LESSON " + d.id + " OF " + LS.length + " · ABOUT " + d.mins + " MIN</small>" + d.name;
+    for (var i = 0; i < n; i++) dots += '<i class="' + (i < G.les.i || (i === G.les.i && G.les.done) ? "on" : i === G.les.i ? "cur" : "") + '"></i>';
+    $("#gLadder").innerHTML = n > 1 ? '<span class="dots" role="img" aria-label="Step ' + (G.les.i + 1) + " of " + n + '">' + dots + "</span>" : "";
+    var s = G.s;
+    $("#gScore").innerHTML = s && s.you ? (s.opp ? "<small>YOU · BEN</small><b>" + E.totalScore(s.you) + "·" + E.totalScore(s.opp) + "</b>" : "<small>SCORE</small><b>" + E.totalScore(s.you) + "</b>") : "";
+  }
+  function coachInfo() {
+    var b = curBeat(), n = G.cfg.def.beats.length, pill = n > 1 ? '<span class="pill">STEP ' + (G.les.i + 1) + " / " + n + "</span>" : "";
+    if (b.type === "mini") return miniInfo();
+    if (b.type === "game") {
+      var C = G.coach, task = C.tasks[Math.min(C.t, C.tasks.length - 1)];
+      if (G.les.done) return { pill: pill, say: "Well done! Read the note, then tap Next.", sub: "" };
+      return { pill: pill, say: txt(task.say, G.s), sub: stepText() };
+    }
+    return { pill: pill, say: b.type === "setup" && b.step === "deal" && G.les.st.dealt ? "Both players lay their six cards face-up. Compare the two rows." : txt(b.say), sub: "" };
+  }
+  function nextBtnHTML() {
+    var last = G.les.i + 1 >= G.cfg.def.beats.length;
+    return '<button class="btn primary" type="button" id="lNext">' + (last ? "Finish lesson ▶" : "Next ▶") + "</button>";
+  }
+  function markDone(msg) { G.les.done = true; if (msg != null) { G.msg = msg; G.msgCls = "good"; } Snd.play("ok"); }
+  function afterDoneFx() {
+    var nb = $("#lNext"); if (!nb) return;
+    try { nb.focus({ preventScroll: true }); } catch (e) {}
+    var r = nb.getBoundingClientRect(); burst(r.left + r.width / 2, r.top + r.height / 2, 18, [cssVar("--good"), cssVar("--gold"), cssVar("--accent")]);
+    if (G.msg) say(stripTags(G.msg));
+  }
+  function beatNext() {
+    if (G.les.i + 1 < G.cfg.def.beats.length) { Snd.play("select"); enterBeat(G.les.i + 1); var sy = $("#gBody .say"); if (sy) { sy.setAttribute("tabindex", "-1"); try { sy.focus({ preventScroll: true }); } catch (e) {} } }
+    else lessonComplete();
+  }
+  function lessonComplete() {
+    var d = G.cfg.def, first = !lessonDone(d.id);
+    if (!Store.data.lessons) Store.data.lessons = {};
+    Store.data.lessons[d.id] = true; Store.save();
+    var nextL = LS[d.id], all = ch1Done();
+    Snd.play("win");
+    for (var k = 0; k < 3; k++) (function (k) { setTimeout(function () { burst(innerWidth / 2 + (k - 1) * 70, innerHeight * 0.25, 22, [cssVar("--good"), cssVar("--gold"), cssVar("--spark")]); }, 200 + k * 220); })(k);
+    overlay('<span class="eyebrow">Lesson ' + d.id + " of " + LS.length + " · " + d.name + '</span><div class="verdict win">LESSON DONE!</div><div class="bigcheck" aria-hidden="true">✓</div>' +
+      '<div class="rulecard remember"><span class="lbl">Remember</span><ul>' + d.remember.map(function (r) { return "<li>" + r + "</li>"; }).join("") + "</ul></div>" +
+      (all && first ? '<p><b>Chapter 1 complete!</b> Chapter 2 is open: puzzles where you look for the best move.</p>' : "") +
+      '<div class="row-btns">' + (nextL ? '<button class="btn primary" type="button" id="lnNext">Next: ' + nextL.name + " ▶</button>" : '<button class="btn primary" type="button" id="lnCh2">Go to Chapter 2 ▶</button>') +
+      '<button class="btn" type="button" id="lnAgain">↻ Again</button><button class="btn ghost" type="button" id="lnMap">Map</button></div>', null, true);
+    var n = $("#lnNext"); if (n) n.onclick = function () { closeOverlay(); openLesson(d.id + 1); };
+    var c2 = $("#lnCh2"); if (c2) c2.onclick = function () { closeOverlay(); show("map"); showBridge(function () { openStage(1); }); };
+    $("#lnAgain").onclick = function () { closeOverlay(); openLesson(d.id, true); };
+    $("#lnMap").onclick = function () { closeOverlay(); show("map"); };
+    var f = $("#lnNext") || $("#lnCh2"); if (f) { try { f.focus({ preventScroll: true }); } catch (e) {} }
+  }
+  function skipLearn() {
+    Store.data.skipLearn = true; Store.save();
+    if (ui.screen === "map") renderMap();
+    Snd.play("start"); toast("Chapter 2 is open. The lessons stay open too, whenever you want them.");
+  }
+  function showBridge(then) {
+    Store.data.bridgeSeen = true; Store.save();
+    overlay('<span class="eyebrow">Chapter 2 · Score better</span><h2>What changes now</h2>' +
+      "<p>In Chapter 1, any legal move was fine. Now each puzzle has a <b>best move</b>, and your job is to find it.</p>" +
+      '<ul class="bridge-list">' +
+      "<li><b>Count points ahead.</b> Before you place a stone, ask: how many points does it add? Compare two or three choices.</li>" +
+      "<li><b>Think one stone further.</b> A set scores only when it's finished, so one stone alone often adds 0.</li>" +
+      "<li><b>Stars.</b> ★ clears a puzzle and opens the next. ★★★ means you found the best possible move.</li>" +
+      "<li><b>Stuck?</b> Tap <b>Hint</b> for a one-line tip. After each puzzle you see the point maths step by step, and you can watch the best move.</li>" +
+      "<li>The rules haven't changed. The <b>Rules</b> button is always at the top.</li></ul>" +
+      '<div class="row-btns"><button class="btn primary" type="button" data-close>Start Stage 1 ▶</button><button class="btn ghost" type="button" id="brMap">Back to map</button></div>',
+      function () { if (then) then(); });
+    $("#brMap").onclick = function () { closeOverlay(); };
+  }
+
+  /* ---------- coached game beats (real turn engine + gates) ---------- */
+  function coachGate(d) {
+    if (!G || !G.coach || G.les.done) return null;
+    var task = G.coach.tasks[G.coach.t]; if (!task || !task.allow) return null;
+    var st = G.s.steps[0]; return task.allow(d, G.s, st ? st.k : null);
+  }
+  function coachIllegal(info, reason) {
+    var C = G.coach, task = C.tasks[C.t];
+    if (!task || !task.illegal || !task.illegal(info)) return;
+    G.msg = txt(task.after, G.s) + " " + reason; G.msgCls = "good";
+    C.t++; Snd.play("ok");
+    updateBanner();
+  }
+  function coachAdvance() {
+    var C = G.coach, moved = false;
+    while (C.t < C.tasks.length) {
+      var task = C.tasks[C.t];
+      if (!task.done || !task.done(G.s)) break;
+      if (task.after) { G.msg = (G.msg ? G.msg + " " : "") + txt(task.after, G.s); G.msgCls = "good"; }
+      C.t++; moved = true;
+    }
+    if (C.t >= C.tasks.length || G.s.over) markDone(null);
+    else if (moved) Snd.play("ok");
+    updateBanner();
+    if (G.les.done) afterDoneFx();
+  }
+  function lessonAfter() {
+    var b = curBeat();
+    if (b.type === "game") return coachAdvance();
+    if (b.type === "mini" && G.s.over) miniYourTurnOver();
+  }
+
+  /* ---------- the practice game against Ben ---------- */
+  function miniInfo() {
+    var b = curBeat(), M = G.mini;
+    if (M.over) return { pill: '<span class="pill">GAME OVER</span>', say: M.final, sub: "" };
+    if (G.busy) return { pill: '<span class="pill alt">BEN’S TURN</span>', say: "Ben is playing. Watch his board at the top.", sub: "" };
+    return { pill: '<span class="pill">YOUR TURN ' + M.round + " / " + b.rounds + "</span>", say: b.tips[M.round - 1] || "", sub: stepText() };
+  }
+  function miniYourTurnOver() {
+    var M = G.mini, b = curBeat(), s = G.s, tok = G.les.tok;
+    if (s.ended) return miniFinish("5 Spirit Stones are out of the bag, so the game ends.");
+    G.busy = true; updateBanner();
+    setTimeout(function () {
+      if (!G || G.les.tok !== tok || ui.screen !== "game") return;
+      var before = E.clone(s.opp), ev = E.benTurn(s, M.bc), parts = [];
+      ev.forEach(function (e) {
+        if (e.t === "card") parts.push("Ben plays " + E.CARD_NAMES[e.card] + ".");
+        if (e.t === "draw" && e.stones.length) parts.push("He draws " + e.stones.map(function (c) { return E.CNAME[c]; }).join(", ") + " into the bowl.");
+        if (e.t === "place") parts.push(cap(E.CNAME[e.color]) + " → his " + E.NAMES[e.w[0]] + (e.gain ? " (" + E.sign(e.gain) + ")" : "") + ".");
+        if (e.t === "bounce") parts.push(cap(E.CNAME[e.color]) + " fits nowhere on his board, so it stays in the bowl.");
+        if (e.t === "coyote") parts.push((e.half ? "Both his Take One Stone cards are face-down, so he" : "He") + " moves the Coyote onto your " + E.NAMES[e.animal] + ": no new stones there for now.");
+        if (e.t === "pass") parts.push("Ben can't play a card, so he passes.");
+      });
+      G.msg = parts.join(" "); G.msgCls = "";
+      renderGame(); Snd.play("card");
+      scorePops(before, s.opp, "opp");
+      if (ev.some(function (e) { return e.t === "coyote"; })) { Snd.play("coyote"); var cr = $('#gBody .row[data-who="you"] .coy'); if (cr) { var rc = cr.getBoundingClientRect(); burst(rc.left, rc.top, 16, [cssVar("--coyote"), cssVar("--accent")]); } }
+      setTimeout(function () {
+        if (!G || G.les.tok !== tok || ui.screen !== "game") return;
+        G.busy = false;
+        if (E.spiritOut(s) >= 5) { s.ended = true; return miniFinish("Ben's turn ended with 5 Spirit Stones out of the bag, so the game ends."); }
+        if (M.round >= b.rounds) return miniFinish();
+        M.round++;
+        G.s = E.newGame({ you: s.you, opp: s.opp, bowl: s.bowl, bag: s.bag, cards: s.cards, piles: s.piles, coyote: s.coyote, turns: 1 });
+        renderGame();
+      }, reduced ? 900 : 1700);
+    }, reduced ? 400 : 900);
+  }
+  function miniFinish(why) {
+    var M = G.mini, s = G.s, y = E.totalScore(s.you), o = E.totalScore(s.opp);
+    var res = y > o ? "You win!" : y < o ? "Ben wins this time." : "A tie: " + (s.coyote ? (s.coyote.on === "you" ? "the Coyote is on your board, so you win." : "the Coyote is on Ben's board, so Ben wins.") : "nobody has the Coyote, so you share the win.");
+    M.over = true; G.busy = false;
+    M.final = (why ? why + " " : "We stop after " + curBeat().rounds + " turns each. ") + "Final score: you " + y + ", Ben " + o + ". " + res;
+    markDone(why ? null : "A real game goes on like this until 5 Spirit Stones are out of the bag.");
+    renderGame(); afterDoneFx();
+  }
+  function showHint() {
+    if (!G || $(".overlay")) return;
+    if (G.cfg.kind === "lesson") {
+      if (curBeat().type !== "mini" || !G.s || G.s.over || G.busy) return;
+      var sol = E.solveFrom(G.s, E.hintEval), d = E.describeFrom(G.s, sol.path, "Ben"), gain = E.totalScore(d.state.you) - E.totalScore(G.s.you);
+      setMsg("Hint: " + d.lines.join(" ") + (gain > 0 ? "" : " No points this turn, but it starts a set you can finish later."), "hint");
+      Snd.play("select"); return;
+    }
+    if (!G.cfg.hint) return;
+    G.msg = "Hint: " + G.cfg.hint; G.msgCls = "hint";
+    if (G.cfg.kind === "tally") { var ex = $("#gBody .explain"); if (ex) { ex.textContent = G.msg; ex.className = "explain"; } }
+    else setMsg(G.msg, "hint");
+    Snd.play("select");
+  }
+
+  /* ---------- non-game beats ---------- */
+  function renderLesson() {
+    var b = curBeat(), view = "";
+    G.acts = "";
+    if (b.type === "meet") { view = meetView(b); if (!G.les.done) G.acts = '<button type="button" class="btn small" id="lMeetGo">Continue</button>'; }
+    else if (b.type === "choice") view = choiceView(b);
+    else if (b.type === "place") { view = placeView(b); if (b.nowhere && !G.les.done) G.acts = '<button type="button" class="btn small" id="lReturn">Return it to the bowl</button>'; }
+    else if (b.type === "setup") view = setupView(b);
+    $("#gBody").innerHTML = '<div class="lesson">' + bannerHTML() + '<div class="lview">' + view + "</div></div>";
+  }
+  function illegalLes(el, reason) {
+    Snd.play("bad"); G.msg = reason; G.msgCls = "bad"; say(reason);
+    renderLesson();
+    if (el && el.getAttribute) {
+      var sel = el.getAttribute("data-animal") ? '#gBody .row[data-animal="' + el.getAttribute("data-animal") + '"]' : el.getAttribute("data-z") ? '#gBody [data-z="' + el.getAttribute("data-z") + '"]' : null;
+      var ne = sel && $(sel); if (ne) { ne.classList.add("flash-bad", "shake"); }
+    }
+    shakeEl($("#gBody .banner .msg"));
+  }
+  function lessonClick(ev) {
+    var t = ev.target;
+    if (t.closest("#lNext")) { beatNext(); return true; }
+    if (G.s) return false;
+    var b = curBeat();
+    if (b.type === "meet") {
+      var m = t.closest("[data-meet]"); if (m) { meetClick(m.getAttribute("data-meet")); return true; }
+      if (t.closest("#lMeetGo")) meetGo();
+      return true;
+    }
+    if (b.type === "choice") { var o = t.closest("[data-lopt]"); if (o) choiceClick(o); return true; }
+    if (b.type === "place") {
+      if (t.closest("#lReturn")) { placeReturn(); return true; }
+      var row = t.closest('.row[data-who="les"]'); if (row) placeClick(row, t.closest("[data-slot]"));
+      return true;
+    }
+    if (b.type === "setup") { var z = t.closest("[data-z]"); if (z) setupClick(z.getAttribute("data-z"), z); return true; }
+    return true;
+  }
+
+  /* meet */
+  function meetPic(k) {
+    switch (k) {
+      case "bag": return '<span class="pouch"></span>';
+      case "bowl": return '<span class="minibowl"></span>';
+      case "stones": return E.COLORS.map(function (c) { return stone(c); }).join("");
+      case "spirit": return stone("clear") + " " + stone("clear");
+      case "board": return A.map(function (a) { return '<span class="spr" style="width:22px;height:20px">' + sprite(a) + "</span>"; }).join("");
+      case "cards": return [0, 1, 2, 3, 4, 5].map(function () { return '<span class="minicard"></span>'; }).join("");
+      case "powers": return [0, 1, 2].map(function () { return '<span class="minicard sp"></span>'; }).join("");
+      case "coyote": return '<span class="spr" style="color:var(--coyote)">' + sprite("coyote") + "</span>";
+    }
+    return "";
+  }
+  function meetView(b) {
+    var st = G.les.st, n = Object.keys(st.met).length;
+    return '<div class="tiles">' + b.items.map(function (it) {
+      var m = st.met[it.k];
+      return '<button type="button" class="tile' + (m ? " met" : "") + '" data-meet="' + it.k + '" aria-pressed="' + !!m + '"><span class="pic">' + meetPic(it.k) + '</span><span class="tn">' + it.name + "</span>" +
+        (m ? '<span class="tt">' + it.text + "</span>" : '<span class="tq">Tap to meet</span>') + "</button>";
+    }).join("") + '</div><p class="meta" style="text-align:center;margin:0">' + n + " / " + b.items.length + " MET</p>";
+  }
+  function meetClick(k) {
+    var b = curBeat(), st = G.les.st;
+    if (st.met[k]) return;
+    st.met[k] = true; Snd.play("flip");
+    var left = b.items.length - Object.keys(st.met).length;
+    if (!left) markDone(b.done);
+    else { G.msg = left + " left to meet."; G.msgCls = ""; }
+    renderLesson();
+    var el = $('#gBody [data-meet="' + k + '"]'); if (el) { try { el.focus({ preventScroll: true }); } catch (e) {} }
+    if (!left) afterDoneFx();
+  }
+  function meetGo() {
+    var b = curBeat(), left = b.items.length - Object.keys(G.les.st.met).length;
+    if (left) illegalLes(null, "Meet everything first: " + left + " left to tap.");
+  }
+
+  /* choice */
+  function trackHTML(a, sh) {
+    var n = sh && sh.board ? E.stonesIn(sh.board, a).length : -1, done = G.les.done, rows;
+    if (a === "turtle" || a === "salmon") {
+      var pts = a === "turtle" ? P.turtle : P.salmon, h = "<tr><th>Stones</th>", r = "<tr><th>Points</th>";
+      for (var i = 1; i < pts.length; i++) { var hit = done && i === n ? ' class="hit"' : ""; h += "<td" + hit + ">" + i + "</td>"; r += "<td" + hit + ">" + pts[i] + "</td>"; }
+      rows = h + "</tr>" + r + "</tr>";
+    } else if (a === "owl") rows = "<tr><th>Each finished pair</th><td>" + P.owl + "</td></tr><tr><th>A lone stone</th><td>0</td></tr>";
+    else if (a === "beaver") rows = "<tr><th>Three-of-a-kind</th><td>" + P.triple + "</td></tr><tr><th>Pair</th><td>" + P.pair + "</td></tr><tr><th>Both finished: bonus</th><td>+" + P.bonus + "</td></tr>";
+    else return "";
+    return '<div class="trackwrap"><table class="track"><caption class="sr">' + E.NAMES[a] + " points table</caption>" + rows + "</table></div>";
+  }
+  function choiceView(b) {
+    var st = G.les.st, sh = b.show, vis = "";
+    if (sh) {
+      if (sh.kind === "row") vis = '<div class="board solo">' + rowHTML(sh.board, sh.animal, "show", { noPts: true }) + "</div>";
+      else if (sh.kind === "board") vis = '<div class="' + (G.les.done ? "" : "hidetot") + '">' + boardHTML(sh.board, "show", "This board", {}) + "</div>";
+      else if (sh.kind === "out") vis = '<div class="outview">' + boardHTML(sh.you, "show", "Your board", { compact: true }) + boardHTML(sh.opp, "show", "Ben's board", { compact: true }) + "</div>" +
+        '<div class="qcard bowlmini"><span class="lbl">Bowl</span>' + sh.bowl.map(function (c) { return stone(c); }).join("") + "</div>";
+      else if (sh.kind === "tie") vis = '<div class="outview">' + boardHTML(sh.opp, "show", "Ben's board", { compact: true, coyote: sh.coyote.on === "opp" ? sh.coyote.animal : null }) +
+        boardHTML(sh.you, "show", "Your board", { compact: true, coyote: sh.coyote.on === "you" ? sh.coyote.animal : null }) + "</div>";
+    }
+    var tr = b.track ? trackHTML(b.track, sh) : "";
+    var opts = b.options.map(function (o) { return typeof o === "object" ? o : { v: o, label: String(o) }; }), num = typeof opts[0].v === "number";
+    var oh = '<div class="opts ' + (num ? "three" : "txt") + '">' + opts.map(function (o, i) {
+      var v = String(o.v), cls = st.wrong.indexOf(v) >= 0 ? " wrong" : G.les.done && v === String(b.answer) ? " right" : "";
+      return '<button type="button" class="opt' + (num ? "" : " t") + cls + '" data-lopt="' + v + '"><span class="k">' + (i + 1) + "</span>" + o.label + "</button>";
+    }).join("") + "</div>";
+    return '<div class="qrow"><div class="lview">' + vis + tr + '</div><div class="qcard"><div class="qtext">' + b.q + "</div>" + oh + "</div></div>";
+  }
+  function choiceRight(b) {
+    var sh = b.show;
+    if (b.right) return b.right;
+    if (sh.kind === "row") return "Right! " + E.explain(sh.board, sh.animal) + ".";
+    if (b.total) return "Right! " + A.map(function (a) { return E.animalScore(sh.board, a); }).join(" + ") + " = " + b.answer + ".";
+    if (b.out) return "Right! " + b.answer + " are out of the bag. When the 5th comes out, the game ends at the end of that turn.";
+    return "Right!";
+  }
+  function choiceWrong(b, v) {
+    if (b.why && b.why[v]) return b.why[v];
+    var sh = b.show;
+    if (sh.kind === "row") return { rabbit: "Count the colours. Is the Rabbit finished?", turtle: "Count the stones, then find that number in the table.", salmon: "Count the stones, then find that number in the table.",
+      owl: "Count only the finished pairs.", beaver: "Is the three-of-a-kind finished? Is the pair? Both finished means a bonus too." }[sh.animal];
+    if (b.total) return "Add up the five numbers at the end of the rows.";
+    if (b.out) return "Count the S stones: in the bowl, and in the diamonds on both boards.";
+    return "Try again.";
+  }
+  function choiceClick(btn) {
+    var b = curBeat(), st = G.les.st, v = btn.getAttribute("data-lopt");
+    if (G.les.done) return;
+    if (v === String(b.answer)) {
+      markDone(choiceRight(b)); renderLesson();
+      var nb = $('#gBody [data-lopt="' + v + '"]'); popAt(nb, "✓");
+      afterDoneFx();
+    } else {
+      if (st.wrong.indexOf(v) < 0) st.wrong.push(v);
+      illegalLes(null, "Not quite. " + choiceWrong(b, v));
+      shakeEl($('#gBody [data-lopt="' + v + '"]'));
+    }
+  }
+
+  /* place */
+  function placeView(b) {
+    var st = G.les.st;
+    var held = st.held ? '<div class="held">You took ' + stone(st.held, "", "span", 'id="lHeld"') + (st.held === "clear" ? " a Spirit Stone." : " a " + st.held + " stone.") + "</div>" :
+      '<div class="held">' + (b.nowhere ? "Back in the bowl." : "Placed.") + "</div>";
+    return '<div class="qcard">' + held + '<span class="sub" style="font-size:13px;color:var(--ink-2)">Tap an animal (its name or its row).</span></div>' +
+      '<div class="' + (b.showPts ? "" : "hidetot") + '">' + boardHTML(st.board, "les", "Your board", { noPts: !b.showPts, coyote: b.blocked || null }) + "</div>";
+  }
+  function placeClick(row, slotEl) {
+    var b = curBeat(), st = G.les.st;
+    if (G.les.done || !st.held) return;
+    var a = row.getAttribute("data-animal"), color = st.held, blocked = b.blocked || null;
+    var r = resolveTarget(row, slotEl ? slotEl.getAttribute("data-slot") : null, color, st.board, blocked);
+    if (r.reason) {
+      if (b.tryIllegal === a) { markDone(r.reason + " " + b.done); renderLesson(); shakeEl($('#gBody .row[data-animal="' + a + '"]')); afterDoneFx(); return; }
+      return illegalLes(row, r.reason);
+    }
+    if (b.tryIllegal) return illegalLes(row, "That one fits! For this step, tap the " + E.NAMES[b.tryIllegal] + ".");
+    if (b.target && b.target !== "any" && (a !== b.target || (b.slot && r.w[1] !== b.slot))) {
+      var m;
+      if (a === b.target) m = "That fits the pair too, but put it with the other " + color + " stones on top.";
+      else if (color === "clear") { var raw = E.rawScore(st.board, a); m = "Allowed, but your " + E.NAMES[a] + " scores " + raw + " now, and " + raw + " × 2 = " + raw * 2 + ". For this step, use the " + E.NAMES[b.target] + "."; }
+      else m = "That fits too, but for this step put it on the " + E.NAMES[b.target] + ".";
+      return illegalLes(row, m);
+    }
+    var fr = $("#lHeld") ? $("#lHeld").getBoundingClientRect() : null, before = E.clone(st.board);
+    E.place(st.board, color, r.w); st.held = null; G.les.board = E.clone(st.board);
+    var pre = color === "clear" || b.showPts ? E.explain(st.board, a) + ". " : cap(E.CNAME[color]) + " → " + E.NAMES[a] + ". ";
+    markDone(pre + txt(b.done));
+    renderLesson();
+    var rowN = $('#gBody .row[data-animal="' + a + '"]'), el = null;
+    if (rowN) {
+      if (r.w[1] === "bonus") el = $('[data-k="bonus"]', rowN);
+      else { var p0 = cellsOf(before, a), p1 = cellsOf(st.board, a); for (var k = 0; k < p1.length; k++) if (p0[k] !== p1[k]) { el = $('[data-k="' + k + '"]', rowN); break; } }
+    }
+    if (el) fly(fr, el);
+    Snd.play("place");
+    if (b.showPts) { var d = E.animalScore(st.board, a) - E.animalScore(before, a), pe = $('#gBody [data-pts="les:' + a + '"]'); if (d) { popAt(pe, E.sign(d), d >= 8 ? "big" : ""); if (pe) { var pr = pe.getBoundingClientRect(); burst(pr.left, pr.top, 14 + d, [cssVar("--gold"), cssVar("--spark")]); } } }
+    afterDoneFx();
+  }
+  function placeReturn() {
+    var b = curBeat(), st = G.les.st;
+    if (G.les.done || !st.held) return;
+    var ok = E.placements(st.board, st.held, b.blocked || null);
+    if (ok.length) return illegalLes(null, "It fits on your " + E.NAMES[ok[0][0]] + ". Only a stone that fits nowhere goes back.");
+    st.held = null; G.les.board = E.clone(st.board);
+    markDone(b.done); renderLesson(); afterDoneFx();
+  }
+
+  /* setup: the player builds the table, every step checked */
+  var SETUP_ORDER = ["bag", "draw", "seats", "deal", "piles", "coyote", "flip"];
+  function setupBase(step) {
+    var i = SETUP_ORDER.indexOf(step), S = E.SETUP;
+    var st = { heap: true, bag: 0, bowl: [], drawn: 0, seats: { you: false, ben: false }, dealt: false, loose: S.spirits.slice(), piles: [[], []], sel: null, coySide: false, flipped: false, fresh: null };
+    if (i > 0) { st.heap = false; st.bag = 56; }
+    if (i > 1) { S.draws.forEach(function (c) { st.drawn++; if (c !== "clear") { st.bowl.push(c); st.bag--; } }); }
+    if (i > 2) st.seats = { you: true, ben: true };
+    if (i > 3) st.dealt = true;
+    if (i > 4) { st.loose = []; st.piles = [S.spirits.slice(0, 3), S.spirits.slice(3)]; }
+    if (i > 5) st.coySide = true;
+    return st;
+  }
+  function setupView(b) {
+    var st = G.les.st, step = b.step, done = G.les.done;
+    var goal = function (on) { return on && !done ? " goal" : ""; };
+    function seat(who) {
+      return '<div class="seatz"><span class="who">' + (who === "ben" ? "Ben's side" : "Your side") + "</span>" +
+        (st.seats[who] ? '<div class="minib" aria-label="Player board">' + A.map(function (a) { return "<span>" + sprite(a) + E.NAMES[a] + "</span>"; }).join("") + "</div>" :
+          '<button type="button" class="spot' + goal(step === "seats") + '" data-z="seat:' + who + '">Board goes here</button>') + "</div>";
+    }
+    var bowl = st.bowl.length ? st.bowl.map(function (c, i) { return stone(c, i === st.fresh ? "drop" : "", "button", 'data-z="bowlst:' + i + '"'); }).join("") : '<span class="none">empty</span>';
+    var spiritIn = st.bowl.indexOf("clear") >= 0;
+    var mid = '<div class="midz">' +
+      '<button type="button" class="zone' + goal(step === "bag" || (step === "draw" && st.bowl.length < 4)) + '" data-z="bag"><span class="pouch"></span><span class="lbl">Bag</span><span class="cnt">' + (st.bag ? st.bag + " STONES" : "EMPTY") + "</span></button>" +
+      '<div class="zone flat' + goal(step === "draw" && spiritIn && st.bowl.length >= 4) + '" data-z="bowl"><span class="lbl">Bowl</span><div class="bowl">' + bowl + "</div></div>" +
+      '<div class="zone flat" data-z="spiritarea"><span class="lbl">Spirit Power piles</span><div class="pilez">' + st.piles.map(function (p, i) {
+        return '<button type="button" class="pilebtn' + (p.length ? " has" : "") + '" data-z="pile:' + i + '">' + (p.length ? cap(p[p.length - 1]) + "<small>" + p.length + " / 3</small>" : "Pile " + (i + 1)) + "</button>";
+      }).join("") + "</div>" + (st.loose.length ? '<div class="loose">' + st.loose.map(function (n) { return '<button type="button" class="spbtn' + (st.sel === n ? " sel" : "") + '" data-z="sp:' + n + '">' + cap(n) + "</button>"; }).join("") + "</div>" : "") + "</div>" +
+      '<button type="button" class="zone coyz' + goal(step === "coyote") + '" data-z="coyote">' + sprite("coyote") + '<span class="lbl">Coyote</span><span class="cnt">' + (st.coySide ? "BESIDE THE TABLE" : "IN THE BOX") + "</span></button></div>";
+    var heap = st.heap ? '<button type="button" class="zone' + goal(step === "bag") + '" data-z="heap"><span class="lbl">56 stones, still in the box</span><span class="heap">' +
+      E.COLORS.concat(["clear"]).map(function (c) { return stone(c) + stone(c); }).join("") + "</span></button>" : "";
+    var cards = "";
+    if (st.dealt) {
+      var row = function (who) {
+        return '<div class="mcards" role="group" aria-label="' + (who === "ben" ? "Ben's" : "Your") + ' action cards">' + E.CARDS.map(function (k) {
+          var down = who === "you" && k === "take2" && st.flipped;
+          return '<button type="button" class="mcard' + (down ? " down" : "") + (st.justDealt ? " deal" : "") + '" data-z="card:' + who + ":" + k + '"' + (down ? ' aria-label="Take Two Stones, face-down"' : "") + ">" + (down ? "face-down" : E.CARD_NAMES[k]) + "</button>";
+        }).join("") + "</div>";
+      };
+      cards = '<div class="qcard"><span class="lbl">Ben’s action cards</span>' + row("ben") + '<span class="lbl">Your action cards</span>' + row("you") +
+        (step === "deal" && !done ? '<div class="qtext" style="font-size:18px">Compare the two rows. Are they the same six cards?</div><div class="yesno"><button class="btn" type="button" data-z="same:yes">Yes, the same</button><button class="btn" type="button" data-z="same:no">No, they’re different</button></div>' : "") + "</div>";
+      st.justDealt = false;
+    } else if (step === "deal") cards = '<div class="qcard"><button class="btn primary" type="button" data-z="deal" style="justify-self:start">Deal cards</button></div>';
+    st.fresh = null;
+    return '<div class="tbl">' + (step === "deal" || step === "flip" ? cards : "") + seat("ben") + heap + mid + seat("you") + (step === "deal" || step === "flip" ? "" : cards) + "</div>";
+  }
+  function setupClick(z, el) {
+    var b = curBeat(), st = G.les.st, step = b.step, S = E.SETUP;
+    if (G.les.done) return;
+    var ok = function (msg) { markDone(msg != null ? msg : b.done); renderLesson(); afterDoneFx(); };
+    var note = function (msg) { G.msg = msg; G.msgCls = ""; renderLesson(); say(msg); };
+    if (step === "bag") {
+      if (z === "bag" || z === "heap") { st.heap = false; st.bag = 56; Snd.play("draw"); return ok(); }
+      return illegalLes(el, "Start with the bag: tap it to put all the stones in.");
+    }
+    if (step === "draw") {
+      var spiritIn = st.bowl.indexOf("clear");
+      if (z === "bag") {
+        if (st.bowl.length >= 4) return illegalLes(el, spiritIn >= 0 ? "The bowl has 4 stones, but one is a Spirit Stone. Put it back in the bag first: tap it in the bowl." : "The bowl already has 4 stones. That's all you need.");
+        var c = S.draws[st.drawn++]; st.bowl.push(c); st.bag--; st.fresh = st.bowl.length - 1; Snd.play("draw");
+        var nowIn = st.bowl.indexOf("clear") >= 0;
+        if (st.bowl.length === 4) return nowIn ? note("4 stones, but one is a Spirit Stone. At the start, a Spirit Stone goes back in the bag. Tap it in the bowl.") : ok();
+        return note((c === "clear" ? "A Spirit Stone! It can't stay in the bowl at the start, but keep drawing for now." : "You drew " + c + ".") + " " + (4 - st.bowl.length) + " more to draw.");
+      }
+      if (z.indexOf("bowlst:") === 0) {
+        var i = +z.split(":")[1];
+        if (st.bowl[i] !== "clear") return illegalLes(el, "Coloured stones stay in the bowl. Only Spirit Stones go back in the bag.");
+        st.bowl.splice(i, 1); st.bag++; Snd.play("flip");
+        return note("The Spirit Stone is back in the bag. Draw again to replace it.");
+      }
+      return illegalLes(el, "Tap the bag to draw a stone.");
+    }
+    if (step === "seats") {
+      var m = /^seat:(you|ben)$/.exec(z);
+      if (!m) return illegalLes(el, "Tap the empty board spots: one in front of you, one in front of Ben.");
+      st.seats[m[1]] = true; Snd.play("place");
+      if (st.seats.you && st.seats.ben) return ok();
+      return note("One board placed. Now the other player.");
+    }
+    if (step === "deal") {
+      if (!st.dealt) {
+        if (z !== "deal") return illegalLes(el, "Tap Deal cards first.");
+        st.dealt = true; st.justDealt = true; Snd.play("card");
+        return note("Each player now has six cards, face-up.");
+      }
+      if (z === "same:yes") return ok();
+      if (z === "same:no") return illegalLes(el, "Look again: the same six names in the same order. Both players get the exact same six cards.");
+      return illegalLes(el, "First answer the question: are the two rows the same?");
+    }
+    if (step === "piles") {
+      if (z.indexOf("sp:") === 0) { st.sel = z.slice(3); Snd.play("select"); return note("Now tap a pile for the " + cap(st.sel) + "."); }
+      if (z.indexOf("pile:") === 0) {
+        var pi = +z.split(":")[1];
+        if (!st.sel) return illegalLes(el, "Tap a Spirit card first, then a pile.");
+        if (st.piles[pi].length >= 3) return illegalLes(el, "That pile already has 3 cards. Each pile gets 3.");
+        st.piles[pi].push(st.sel); st.loose.splice(st.loose.indexOf(st.sel), 1); st.sel = null; Snd.play("card");
+        if (!st.loose.length) return ok("Two piles of 3. Only the top card of each pile can be used: right now the " + cap(st.piles[0][2]) + " and the " + cap(st.piles[1][2]) + ".");
+        return note(st.loose.length + " cards left.");
+      }
+      return illegalLes(el, "Tap a Spirit card, then tap a pile.");
+    }
+    if (step === "coyote") {
+      if (z === "coyote") { st.coySide = true; Snd.play("coyote"); return ok(); }
+      return illegalLes(el, "Tap the Coyote to put him beside the table.");
+    }
+    if (step === "flip") {
+      var k = /^card:(you|ben):(\w+)$/.exec(z);
+      if (!k) return illegalLes(el, "Tap your Take Two Stones card, in the row of your action cards.");
+      if (k[1] === "ben") return illegalLes(el, "Only the start player turns a card face-down, and that's you. Use your own row.");
+      if (k[2] !== "take2") return illegalLes(el, "That's " + E.CARD_NAMES[k[2]] + ". Find Take Two Stones.");
+      st.flipped = true; Snd.play("flip");
+      return ok();
+    }
+  }
 
   /* ---------- tally stage (Count It) ---------- */
   var timers = { raf: 0, to: 0 };
