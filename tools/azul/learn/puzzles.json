@@ -1,0 +1,322 @@
+[
+ {
+  "id": "p1",
+  "title": "Three reds",
+  "kind": "move",
+  "board": {
+   "score": 6,
+   "wall": [
+    ".....",
+    ".....",
+    "...X.",
+    ".....",
+    "....."
+   ],
+   "lines": [
+    null,
+    [
+     "blue",
+     1
+    ],
+    null,
+    [
+     "black",
+     1
+    ],
+    [
+     "red",
+     1
+    ]
+   ]
+  },
+  "factories": [
+   [
+    "red",
+    "red",
+    "red",
+    "yellow"
+   ]
+  ],
+  "centre": [],
+  "centre_marker": true,
+  "level": "Easy",
+  "ask": "You may take from the one factory display. Which move scores the most points this round?",
+  "hint": "Look for a pattern line with exactly as many empty spaces as the tiles you take.",
+  "why": "A line that you fill exactly moves a tile to the wall this round. Tiles that spill onto the floor line cost points, and a line you don't finish scores nothing yet."
+ },
+ {
+  "id": "p2",
+  "title": "Count the cross",
+  "kind": "score",
+  "wall": [
+   "....X",
+   "..X.X",
+   ".X.X.",
+   "..X..",
+   "X...."
+  ],
+  "tile": [
+   2,
+   2
+  ],
+  "level": "Easy",
+  "ask": "The tile with the dashed ring was just placed on the wall. How many points does it score?",
+  "hint": "Count the unbroken line across that includes the new tile. Then count the unbroken line down. Add them.",
+  "why": "A tile that touches tiles across and down scores both lines, so the new tile is counted twice. Tiles that only touch at a corner don't count."
+ },
+ {
+  "id": "p3",
+  "title": "Take what fits",
+  "kind": "move",
+  "board": {
+   "score": 10,
+   "wall": [
+    ".X...",
+    ".....",
+    "...X.",
+    "..X..",
+    "....."
+   ],
+   "lines": [
+    null,
+    [
+     "red",
+     1
+    ],
+    [
+     "black",
+     1
+    ],
+    [
+     "blue",
+     2
+    ],
+    [
+     "white",
+     1
+    ]
+   ]
+  },
+  "factories": [
+   [
+    "blue",
+    "blue",
+    "blue",
+    "black"
+   ],
+   [
+    "blue",
+    "blue",
+    "white",
+    "white"
+   ],
+   [
+    "red",
+    "yellow",
+    "yellow",
+    "black"
+   ]
+  ],
+  "centre": [],
+  "centre_marker": true,
+  "level": "Easy",
+  "ask": "Pattern line 4 already holds 2 blue. Which move scores the most points this round?",
+  "hint": "Pattern line 4 needs exactly 2 more tiles. Which display has exactly 2 blue?",
+  "why": "Take what your line needs. Taking more of the same colour only spills the extra tiles onto the floor line."
+ },
+ {
+  "id": "p4",
+  "title": "Build next door",
+  "kind": "move",
+  "board": {
+   "score": 12,
+   "wall": [
+    "..X..",
+    ".X.X.",
+    "..X..",
+    ".....",
+    "....."
+   ],
+   "lines": [
+    null,
+    null,
+    [
+     "red",
+     1
+    ],
+    null,
+    null
+   ]
+  },
+  "factories": [
+   [
+    "yellow",
+    "yellow",
+    "black",
+    "black"
+   ],
+   [
+    "red",
+    "red",
+    "white",
+    "blue"
+   ]
+  ],
+  "centre": [],
+  "centre_marker": true,
+  "level": "Medium",
+  "ask": "Two displays, many choices. Which move scores the most points this round?",
+  "hint": "A wall tile that touches other tiles scores more. Look at the empty wall spaces next to your tiles.",
+  "why": "Build next to tiles you already have. A tile that joins a line across and a line down scores both lines."
+ },
+ {
+  "id": "p5",
+  "title": "Least bad",
+  "kind": "move",
+  "board": {
+   "score": 15,
+   "wall": [
+    ".XXX.",
+    "X....",
+    "X.X..",
+    ".....",
+    "....."
+   ],
+   "lines": [
+    null,
+    [
+     "white",
+     1
+    ],
+    [
+     "blue",
+     1
+    ],
+    [
+     "red",
+     2
+    ],
+    [
+     "yellow",
+     4
+    ]
+   ],
+   "floor": [
+    "blue"
+   ]
+  },
+  "factories": [],
+  "centre": [
+   "yellow",
+   "yellow",
+   "yellow",
+   "yellow",
+   "red",
+   "red",
+   "red",
+   "black",
+   "black"
+  ],
+  "centre_marker": true,
+  "level": "Medium",
+  "ask": "Only the centre is left, and you must take tiles. Which move loses the fewest points this round?",
+  "hint": "You take the starting player marker whatever you do. Which colour can you place with the smallest spill?",
+  "why": "When every choice hurts, count the floor line for each one. Completing a line can make up for a tile or two on the floor."
+ },
+ {
+  "id": "p6",
+  "title": "Top to bottom",
+  "kind": "move",
+  "board": {
+   "score": 14,
+   "wall": [
+    ".....",
+    "X....",
+    "...X.",
+    ".....",
+    "....."
+   ],
+   "lines": [
+    null,
+    null,
+    [
+     "blue",
+     3
+    ],
+    [
+     "white",
+     1
+    ],
+    null
+   ]
+  },
+  "factories": [
+   [
+    "yellow",
+    "yellow",
+    "black",
+    "red"
+   ],
+   [
+    "white",
+    "white",
+    "white",
+    "red"
+   ]
+  ],
+  "centre": [],
+  "centre_marker": true,
+  "level": "Hard",
+  "ask": "You can complete pattern line 2 or pattern line 4. Which move scores the most points this round?",
+  "hint": "Lines move to the wall from top to bottom. A tile placed earlier counts as a neighbour for the tiles placed after it.",
+  "why": "Order matters in wall-tiling. Here pattern line 3 is already complete, and the tiles above and below it change what it scores."
+ },
+ {
+  "id": "p7",
+  "title": "The last round",
+  "kind": "move",
+  "final": true,
+  "board": {
+   "score": 40,
+   "wall": [
+    "XX.XX",
+    ".XX..",
+    "X....",
+    "XXXX.",
+    "X.X.."
+   ],
+   "lines": [
+    [
+     "red",
+     1
+    ],
+    null,
+    null,
+    null,
+    null
+   ]
+  },
+  "factories": [
+   [
+    "black",
+    "black",
+    "white",
+    "white"
+   ],
+   [
+    "yellow",
+    "yellow",
+    "yellow",
+    "yellow"
+   ]
+  ],
+  "centre": [
+   "blue"
+  ],
+  "centre_marker": false,
+  "level": "Hard",
+  "ask": "Your pattern line 1 completes row 1 of your wall, so the game ends after this round. Which move gives the most points, bonuses included?",
+  "hint": "Look at what each move completes at the end: a row is worth +{ROW_BONUS}, a column +{COLUMN_BONUS}, a full colour +{COLOUR_BONUS}.",
+  "why": "In the last round, add up the end bonuses too. A full column or a full colour is worth far more than a full row, and the points the tile itself scores still count."
+ }
+]

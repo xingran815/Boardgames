@@ -1,0 +1,2127 @@
+<title>Azul Tile School</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Learn to play Azul from zero: eight hands-on lessons, seven scoring puzzles and two quick-fire practice games.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Fredoka:wght@500;600;700&display=swap">
+<style>
+/* Layout: a glazed-tile workshop. A sticky header bar; each screen is a coach panel (what to do) above a
+   table (factory displays, centre, your hand) and your player board. Side by side on wide screens, stacked on phones.
+   Tile fills are fixed (docs/azul/STYLE.md); everything else is a theme token. */
+:root {
+  --bg: #edf1f8;
+  --bg-2: #dfe6f2;
+  --grout: rgba(31, 66, 140, 0.07);
+  --panel: #ffffff;
+  --panel-2: #eef2fa;
+  --ink: #142449;
+  --ink-2: #4b5b80;
+  --line: #c3cee2;
+  --edge: #8d9cbc;
+  --accent: #1f55c0;
+  --accent-ink: #ffffff;
+  --accent-soft: #dbe5fb;
+  --gold: #d29a10;
+  --good: #11795a;
+  --good-bg: #d8f2e8;
+  --bad: #b5372f;
+  --bad-bg: #fbe3e0;
+  --board: #f6f1e7;
+  --board-rim: #d9cdb5;
+  --slot: #e7dfcf;
+  --factory: #d9b38c;
+  --factory-rim: #a87d52;
+  --veil: rgba(16, 26, 54, 0.55);
+  --t-blue: #2f6fb5;
+  --t-yellow: #e8b730;
+  --t-red: #c8423a;
+  --t-black: #2a2d34;
+  --t-white: #eef1f4;
+  --t-white-rim: #9aa4b1;
+  --t-mark-light: #ffffff;
+  --t-mark-dark: #1d2330;
+  --font-display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --cell: clamp(24px, 6.4vw, 38px);
+  --fcell: clamp(20px, 5.2vw, 30px);
+  --radius: 12px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d1528; --bg-2: #131e38; --grout: rgba(140, 170, 255, 0.06); --panel: #16213b; --panel-2: #1c2a4a;
+    --ink: #e8eefb; --ink-2: #a6b4d4; --line: #2f4068; --edge: #08101f; --accent: #7aa2ff; --accent-ink: #0a1430;
+    --accent-soft: #22335c; --gold: #f2c34b; --good: #52d3a3; --good-bg: #123b33; --bad: #ff8073; --bad-bg: #44202a;
+    --board: #22304f; --board-rim: #34466f; --slot: #2b3a5d; --factory: #c9a27a; --factory-rim: #8e6943; --veil: rgba(3, 7, 18, 0.72);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0d1528; --bg-2: #131e38; --grout: rgba(140, 170, 255, 0.06); --panel: #16213b; --panel-2: #1c2a4a;
+  --ink: #e8eefb; --ink-2: #a6b4d4; --line: #2f4068; --edge: #08101f; --accent: #7aa2ff; --accent-ink: #0a1430;
+  --accent-soft: #22335c; --gold: #f2c34b; --good: #52d3a3; --good-bg: #123b33; --bad: #ff8073; --bad-bg: #44202a;
+  --board: #22304f; --board-rim: #34466f; --slot: #2b3a5d; --factory: #c9a27a; --factory-rim: #8e6943; --veil: rgba(3, 7, 18, 0.72);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+html, body { min-height: 100%; }
+body {
+  margin: 0;
+  background-color: var(--bg);
+  background-image:
+    linear-gradient(var(--grout) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grout) 1px, transparent 1px);
+  background-size: 44px 44px;
+  color: var(--ink);
+  font: 16px/1.5 var(--font-body);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--panel); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-family: var(--font-display); font-weight: 600; line-height: 1.15; }
+p { margin: 0; }
+b.w { color: var(--accent); }
+.wrap { max-width: 1160px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+/* ---------- header ---------- */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--panel); border-bottom: 1px solid var(--line); }
+.bar .wrap { display: flex; align-items: center; gap: 8px; padding-block: 8px; }
+.brand { display: flex; align-items: center; gap: 8px; font-family: var(--font-display); font-weight: 600; font-size: 18px; flex: 1 1 auto; min-width: 0; }
+.brand > span:nth-child(2) { white-space: nowrap; }
+@media (max-width: 560px) { .brand .where { display: none; } }
+.brand .where { color: var(--ink-2); font-weight: 500; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.brand-mark { display: inline-grid; grid-template-columns: repeat(2, 9px); gap: 2px; flex: none; }
+.brand-mark i { width: 9px; height: 9px; border-radius: 2px; display: block; }
+
+/* ---------- buttons ---------- */
+.btn {
+  font-family: var(--font-display); font-weight: 600; font-size: 16px; letter-spacing: 0.01em;
+  background: var(--panel); color: var(--ink); border: 2px solid var(--line); border-radius: 10px;
+  padding: 8px 16px; min-height: 44px; cursor: pointer; box-shadow: 0 3px 0 var(--line);
+  transition: transform .08s, box-shadow .08s; touch-action: manipulation; display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+}
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: 0 3px 0 color-mix(in srgb, var(--accent) 55%, #000); }
+.btn.small { font-size: 14px; padding: 5px 11px; min-height: 38px; }
+.btn.ghost { background: transparent; box-shadow: none; border-color: transparent; }
+.btn[disabled] { opacity: .5; cursor: default; }
+.icon-btn { width: 42px; padding: 0; }
+.row-btns { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
+/* ---------- home ---------- */
+.screen { padding-block: 18px 40px; }
+.hero { display: grid; gap: 18px; padding-block: 18px 8px; }
+@media (min-width: 860px) { .hero { grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr); align-items: center; } }
+.hero h1 { font-size: clamp(36px, 7vw, 60px); font-weight: 700; letter-spacing: -0.01em; }
+.hero h1 span { color: var(--accent); }
+.hero .lede { font-size: 18px; color: var(--ink-2); max-width: 46ch; margin-top: 10px; }
+.hero .row-btns { margin-top: 16px; }
+.hero-tiles { display: grid; grid-template-columns: repeat(5, auto); gap: 6px; justify-content: center; padding: 18px;
+  background: var(--board); border: 2px solid var(--board-rim); border-radius: 16px; width: max-content; max-width: 100%; justify-self: center; }
+.hero-tiles .tile { --s: clamp(36px, 10vw, 54px); animation: settle .6s cubic-bezier(.3,1.4,.5,1) both; }
+@keyframes settle { from { transform: translateY(-10px) scale(.85); } }
+.map { display: grid; gap: 18px; margin-top: 26px; }
+@media (min-width: 900px) { .map { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: start; } }
+.chapter { display: grid; gap: 10px; min-width: 0; }
+.chhead { padding: 14px 16px; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); display: grid; gap: 6px; }
+.chhead .eyebrow { font-family: var(--font-display); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); }
+.chhead h2 { font-size: 24px; }
+.chhead p { color: var(--ink-2); font-size: 15px; }
+.meter { height: 8px; border-radius: 99px; background: var(--bg-2); overflow: hidden; }
+.meter i { display: block; height: 100%; background: var(--good); border-radius: 99px; transition: width .4s; }
+.nodes { display: grid; gap: 8px; }
+.node { width: 100%; display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 2px 12px; align-items: center; text-align: left;
+  padding: 9px 12px; border-radius: 10px; border: 2px solid var(--line); background: var(--panel); cursor: pointer; box-shadow: 0 3px 0 var(--line); }
+.node:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--line); }
+.node .n { grid-row: span 2; width: 40px; height: 40px; display: grid; place-items: center; font-family: var(--font-display); font-weight: 600;
+  border-radius: 9px; background: var(--panel-2); border: 2px solid var(--line); font-size: 17px; }
+.node .nm { font-family: var(--font-display); font-weight: 600; font-size: 17px; line-height: 1.2; min-width: 0; }
+.node .ds { color: var(--ink-2); font-size: 14px; line-height: 1.3; grid-column: 2; min-width: 0; }
+.node .st { grid-row: span 2; grid-column: 3; font-size: 15px; color: var(--gold); white-space: nowrap; letter-spacing: 1px; }
+.node.done .n { background: var(--good); border-color: var(--good); color: var(--panel); }
+.node.next { border-color: var(--accent); }
+.node.next .n { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.node.locked { opacity: .55; }
+.locknote { display: grid; gap: 8px; padding: 12px 14px; border: 2px dashed var(--line); border-radius: 10px; font-size: 15px; color: var(--ink-2); }
+.locknote .btn { justify-self: start; }
+.foot { margin-top: 26px; color: var(--ink-2); font-size: 13px; display: grid; gap: 8px; }
+.foot .row-btns { gap: 6px; }
+
+/* ---------- lesson / puzzle layout ---------- */
+.shead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-bottom: 12px; }
+.shead .eyebrow { font-family: var(--font-display); font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: var(--ink-2); width: 100%; }
+.shead h2 { font-size: clamp(22px, 4.4vw, 30px); flex: 1 1 auto; min-width: 0; }
+.dots { display: flex; gap: 5px; flex-wrap: wrap; }
+.dots i { width: 10px; height: 10px; border-radius: 3px; background: var(--line); display: block; }
+.dots i.on { background: var(--accent); }
+.dots i.done { background: var(--good); }
+.coach { position: sticky; top: calc(env(safe-area-inset-top, 0px) + 61px); z-index: 10; background: var(--panel); border: 2px solid var(--accent);
+  border-radius: var(--radius); padding: 12px 14px; display: grid; gap: 10px; box-shadow: 0 6px 18px -10px var(--veil); margin-bottom: 14px; }
+.coach .say { font-size: 17px; line-height: 1.45; max-width: 70ch; }
+.coach .say p + p { margin-top: 6px; }
+.coach .msg { font-size: 15px; padding: 7px 10px; border-radius: 8px; background: var(--bad-bg); color: var(--ink); border-left: 4px solid var(--bad); }
+.coach .msg.ok { background: var(--good-bg); border-left-color: var(--good); }
+.coach .choices { display: flex; flex-wrap: wrap; gap: 8px; }
+.coach .choices .btn { min-width: 56px; }
+.coach .choices .btn.wrong { border-color: var(--bad); color: var(--bad); }
+.coach .choices .btn.right { border-color: var(--good); background: var(--good-bg); }
+@media (max-width: 640px) { .coach .say { font-size: 16px; } .coach { padding: 10px 12px; } }
+.stage { display: grid; gap: 14px; }
+@media (min-width: 920px) { .stage { grid-template-columns: auto minmax(0, 1fr); align-items: start; } .stage > .boardcol { order: -1; } }
+.table { display: grid; gap: 12px; min-width: 0; align-content: start; }
+.panel { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: 12px; min-width: 0; }
+.ptitle { font-family: var(--font-display); font-weight: 600; font-size: 14px; color: var(--ink-2); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 8px; display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.ptitle .cnt { text-transform: none; letter-spacing: 0; font-weight: 500; }
+
+/* ---------- tiles ---------- */
+.tile { --s: var(--cell); width: var(--s); height: var(--s); border-radius: 18%; position: relative; display: inline-block; flex: none;
+  background: var(--fill); color: var(--mark); box-shadow: inset 0 calc(var(--s) * -0.08) 0 rgba(0,0,0,.2), inset 0 calc(var(--s) * 0.05) 0 rgba(255,255,255,.25);
+  vertical-align: middle; }
+.tile svg { position: absolute; inset: 22%; width: 56%; height: 56%; display: block; }
+.tile::after { content: attr(data-l); position: absolute; left: 7%; top: 2%; font: 700 calc(var(--s) * 0.3)/1 var(--font-body); }
+.tile.c-blue { --fill: var(--t-blue); --mark: var(--t-mark-light); }
+.tile.c-yellow { --fill: var(--t-yellow); --mark: var(--t-mark-dark); }
+.tile.c-red { --fill: var(--t-red); --mark: var(--t-mark-light); }
+.tile.c-black { --fill: var(--t-black); --mark: var(--t-mark-light); }
+.tile.c-white { --fill: var(--t-white); --mark: var(--t-mark-dark); outline: 1.5px solid var(--t-white-rim); outline-offset: -1.5px; }
+.tile.marker { --fill: var(--t-white); --mark: var(--t-mark-dark); outline: 2px solid var(--gold); outline-offset: -2px; display: inline-grid; place-items: center;
+  font: 700 calc(var(--s) * .6)/1 var(--font-display); }
+.tile.marker::after { content: none; }
+.tile.ghost { opacity: .26; box-shadow: none; }
+.tile.ghost::after { opacity: .9; }
+.tile.sm { --s: var(--fcell); }
+.tile.xs { --s: 22px; }
+.tile.lift { transform: translateY(-4px); box-shadow: 0 0 0 3px var(--accent), 0 6px 10px -4px var(--veil); }
+.hole { --s: var(--cell); width: var(--s); height: var(--s); border-radius: 18%; display: inline-block; border: 2px dashed var(--board-rim); background: var(--slot); flex: none; }
+
+/* ---------- factories & centre ---------- */
+.factories { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.factory { --d: calc(var(--fcell) * 2 + 26px); width: var(--d); height: var(--d); border-radius: 50%; background: var(--factory);
+  border: 4px solid var(--factory-rim); display: grid; grid-template-columns: repeat(2, var(--fcell)); gap: 4px; align-content: center; justify-content: center;
+  position: relative; padding: 0; box-shadow: inset 0 -4px 0 rgba(0,0,0,.12); }
+.factory .fno { position: absolute; bottom: -9px; left: 50%; translate: -50% 0; font: 600 12px/1 var(--font-display); background: var(--panel); color: var(--ink-2);
+  border: 1px solid var(--line); border-radius: 99px; padding: 2px 6px; }
+.factory.empty { opacity: .8; }
+button.factory, button.tilebtn, .tilebtn { cursor: pointer; }
+.tilebtn { padding: 0; border: 0; background: none; border-radius: 18%; display: inline-block; line-height: 0; }
+.tilebtn:disabled { cursor: default; }
+.centre { display: flex; flex-wrap: wrap; gap: 5px; min-height: calc(var(--fcell) + 22px); align-items: center; align-content: center; justify-content: center;
+  border-radius: 14px; border: 2px dashed var(--line); padding: 10px; background: var(--panel-2); }
+.centre .none { color: var(--ink-2); font-size: 14px; }
+.hand { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 44px; }
+.hand .lbl { color: var(--ink-2); font-size: 15px; }
+.hand .tiles { display: flex; gap: 4px; flex-wrap: wrap; }
+.supply { display: flex; flex-wrap: wrap; gap: 10px; }
+.pile { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 12px; border: 2px solid var(--line); background: var(--panel); font-size: 15px; min-height: 48px; }
+button.pile { cursor: pointer; }
+.pile .ico { width: 34px; height: 34px; display: block; flex: none; }
+.pile .num { font-family: var(--font-display); font-weight: 600; font-variant-numeric: tabular-nums; }
+.palette { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.palette .tilebtn .tile { --s: 48px; }
+.palette figure { margin: 0; display: grid; justify-items: center; gap: 4px; font-size: 14px; color: var(--ink-2); }
+
+/* ---------- player board ---------- */
+.pboard { background: var(--board); border: 3px solid var(--board-rim); border-radius: 16px; padding: 10px; display: grid; gap: 10px; width: max-content; max-width: 100%; justify-self: center; }
+.pb-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.pb-top .who { font-family: var(--font-display); font-weight: 600; font-size: 15px; color: var(--ink-2); }
+.scorebox { display: inline-flex; align-items: baseline; gap: 6px; font-family: var(--font-display); font-weight: 600; padding: 3px 10px; border-radius: 8px; background: var(--panel); border: 2px solid var(--board-rim); }
+.scorebox .v { font-size: 20px; font-variant-numeric: tabular-nums; min-width: 2ch; text-align: right; }
+.scorebox .k { font-size: 13px; color: var(--ink-2); }
+.pb-main { display: grid; grid-template-columns: auto auto auto; gap: 6px; align-items: start; }
+.lines, .wall { display: grid; gap: 3px; }
+.pline { display: flex; justify-content: flex-end; gap: 3px; padding: 0; border: 0; background: none; border-radius: 6px; position: relative; }
+button.pline { cursor: pointer; }
+button.pline:hover .hole, button.pline:focus-visible .hole { border-color: var(--accent); }
+.pline .lno { position: absolute; left: 0; top: 50%; translate: 0 -50%; font: 600 12px/1 var(--font-display); color: var(--ink-2); }
+.wall { grid-template-columns: repeat(5, var(--cell)); padding-left: 6px; border-left: 2px solid var(--board-rim); }
+.wcell { padding: 0; border: 0; background: none; line-height: 0; border-radius: 18%; position: relative; }
+button.wcell { cursor: pointer; }
+.wcell.ring::before { content: ""; position: absolute; inset: -3px; border: 3px dashed var(--accent); border-radius: 24%; z-index: 1; }
+.wcell.run-h .tile, .wcell.run-v .tile { box-shadow: 0 0 0 3px var(--gold); }
+.wcell.pick .tile { box-shadow: 0 0 0 3px var(--good); }
+.floor { display: grid; grid-template-columns: repeat(7, var(--cell)); gap: 3px; padding: 0; border: 0; background: none; justify-content: start; }
+button.floor { cursor: pointer; }
+.floorwrap { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 4px 8px; align-items: center; }
+.floorwrap .flabel { font: 600 12px/1.1 var(--font-display); color: var(--ink-2); text-transform: uppercase; letter-spacing: .05em; }
+.fspace { display: grid; gap: 2px; justify-items: center; }
+.fspace .pen { font: 600 12px/1 var(--font-display); color: var(--bad); font-variant-numeric: tabular-nums; }
+.area { outline: 0; }
+button.area { cursor: pointer; padding: 0; border: 0; background: none; border-radius: 8px; text-align: inherit; }
+button.area:hover, button.area:focus-visible { box-shadow: 0 0 0 3px var(--accent-soft); }
+.hl { box-shadow: 0 0 0 3px var(--gold) !important; border-radius: 8px; }
+
+/* goal pulse: where to look */
+.goal { animation: goal 1.4s ease-in-out infinite; border-radius: 10px; }
+@keyframes goal { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent); } 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--accent) 55%, transparent); } }
+.factory.goal { border-radius: 50%; }
+.tilebtn.goal { border-radius: 18%; }
+
+/* ---------- result / remember cards ---------- */
+.card { background: var(--panel); border: 2px solid var(--line); border-radius: var(--radius); padding: 16px; display: grid; gap: 12px; }
+.remember { border-color: var(--gold); }
+.remember h3 { font-size: 24px; display: flex; align-items: center; gap: 10px; }
+.remember ul { margin: 0; padding-left: 22px; display: grid; gap: 6px; font-size: 17px; }
+.maths { display: grid; gap: 4px; font-variant-numeric: tabular-nums; }
+.maths .ln { display: flex; justify-content: space-between; gap: 12px; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+.maths .ln span:last-child { font-family: var(--font-display); font-weight: 600; white-space: nowrap; }
+.maths .ln.tot { border-bottom: 0; font-weight: 700; }
+.stars { font-size: 28px; letter-spacing: 4px; color: var(--gold); line-height: 1; }
+.stars .off { color: var(--line); }
+.verdict { font-family: var(--font-display); font-size: 24px; font-weight: 600; }
+.why { color: var(--ink-2); }
+.cols2 { display: grid; gap: 14px; }
+@media (min-width: 760px) { .cols2 { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+.cols2 h4 { margin: 0 0 4px; font-family: var(--font-display); font-weight: 600; font-size: 16px; }
+.tag { display: inline-block; font: 600 12px/1 var(--font-display); letter-spacing: .08em; text-transform: uppercase; padding: 4px 8px; border-radius: 99px; background: var(--accent-soft); color: var(--accent); }
+
+/* bridge */
+.bridge { display: grid; gap: 14px; max-width: 760px; }
+.bridge ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-size: 17px; }
+
+/* ---------- quick-fire ---------- */
+.hud { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+.hud .chip { padding: 6px 12px; border-radius: 99px; background: var(--panel); border: 2px solid var(--line); font-family: var(--font-display); font-weight: 600; font-variant-numeric: tabular-nums; }
+@media (max-width: 480px) { .hud .chip { font-size: 14px; padding: 4px 9px; } .hud { gap: 6px; } }
+.hud .lives { color: var(--bad); letter-spacing: 2px; }
+.timer { height: 10px; border-radius: 99px; background: var(--bg-2); overflow: hidden; margin-bottom: 12px; }
+.timer i { display: block; height: 100%; background: var(--accent); width: 100%; transform-origin: left; }
+.qbox { --cell: clamp(28px, 8.4vw, 44px); display: grid; gap: 14px; justify-items: center; }
+.qbox .q { font-family: var(--font-display); font-size: 22px; font-weight: 600; text-align: center; }
+.answers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; width: 100%; max-width: 420px; }
+.answers .btn { font-size: 24px; min-height: 58px; }
+.answers .btn kbd { font: 12px var(--font-body); color: var(--ink-2); border: 1px solid var(--line); border-radius: 4px; padding: 0 4px; }
+.modes { display: grid; gap: 12px; }
+@media (min-width: 700px) { .modes { grid-template-columns: 1fr 1fr; } }
+
+/* ---------- overlay ---------- */
+.overlay { position: fixed; inset: 0; z-index: 40; background: var(--veil); display: grid; place-items: center;
+  padding: max(12px, env(safe-area-inset-top, 0px)) max(12px, env(safe-area-inset-right, 0px)) max(12px, env(safe-area-inset-bottom, 0px)) max(12px, env(safe-area-inset-left, 0px)); }
+.sheet { background: var(--panel); border-radius: 16px; border: 2px solid var(--line); width: min(760px, 100%); max-height: 100%; overflow: auto; padding: 18px; display: grid; gap: 14px; }
+.sheet:focus { outline: none; }
+#pCoach { position: static; }
+#pCard { scroll-margin-top: 76px; }
+.sheet h2 { font-size: 26px; }
+.sheet h3 { font-size: 19px; margin-top: 4px; }
+.sheet ul, .sheet ol { margin: 0; padding-left: 22px; display: grid; gap: 4px; }
+.sheet .sheethead { display: flex; justify-content: space-between; gap: 10px; align-items: center; position: sticky; top: -18px; background: var(--panel); padding-block: 4px; margin-top: -4px; z-index: 1; }
+.tscroll { overflow-x: auto; }
+table.mini { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+table.mini th, table.mini td { border: 1px solid var(--line); padding: 4px 9px; text-align: center; }
+table.mini th { background: var(--panel-2); font-weight: 700; }
+dl.words { display: grid; gap: 6px; margin: 0; }
+dl.words dt { font-weight: 700; display: inline; }
+dl.words dd { display: inline; margin: 0; }
+
+/* ---------- fx ---------- */
+.fly { position: fixed; z-index: 35; pointer-events: none; margin: 0; transition: transform .5s cubic-bezier(.4,.1,.2,1); }
+.pop { position: fixed; z-index: 36; pointer-events: none; font: 700 26px/1 var(--font-display); color: var(--good); text-shadow: 0 2px 0 var(--panel);
+  animation: pop 1.2s ease-out forwards; translate: -50% -50%; }
+.pop.neg { color: var(--bad); }
+@keyframes pop { 0% { transform: translateY(6px) scale(.7); opacity: 0; } 20% { transform: translateY(0) scale(1.1); opacity: 1; } 100% { transform: translateY(-36px) scale(1); opacity: 0; } }
+.shake { animation: shake .35s; }
+@keyframes shake { 20% { translate: -5px 0; } 40% { translate: 5px 0; } 60% { translate: -3px 0; } 80% { translate: 3px 0; } }
+.fadein { animation: fadein .35s ease-out both; }
+@keyframes fadein { from { opacity: 0; transform: translateY(6px); } }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001s !important; animation-iteration-count: 1 !important; transition-duration: 0.001s !important; }
+  .goal { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 55%, transparent); }
+}
+@media print {
+  .bar, .coach .row-btns, .overlay { display: none !important; }
+  body { background: #fff; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="mk-blue" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4.2" fill="currentColor"/></symbol>
+    <symbol id="mk-yellow" viewBox="0 0 20 20"><path d="M10 2.5 L12.2 7.8 L17.5 10 L12.2 12.2 L10 17.5 L7.8 12.2 L2.5 10 L7.8 7.8 Z" fill="currentColor"/></symbol>
+    <symbol id="mk-red" viewBox="0 0 20 20"><path d="M10 3.5 L16.5 10 L10 16.5 L3.5 10 Z" fill="currentColor"/></symbol>
+    <symbol id="mk-black" viewBox="0 0 20 20"><path d="M8.3 3.5 H11.7 V8.3 H16.5 V11.7 H11.7 V16.5 H8.3 V11.7 H3.5 V8.3 H8.3 Z" fill="currentColor"/></symbol>
+    <symbol id="mk-white" viewBox="0 0 20 20"><rect x="5.5" y="5.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+    <symbol id="ico-bag" viewBox="0 0 34 34"><path d="M11 9 C11 5 23 5 23 9 L21 11 H13 Z" fill="var(--factory-rim)"/><path d="M13 11 H21 C29 15 31 24 27 29 C24 32 10 32 7 29 C3 24 5 15 13 11 Z" fill="var(--factory)" stroke="var(--factory-rim)" stroke-width="1.6"/><path d="M12 11 Q17 14 22 11" stroke="var(--ink-2)" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="ico-lid" viewBox="0 0 34 34"><rect x="3" y="11" width="28" height="15" rx="2.5" fill="var(--panel-2)" stroke="var(--ink-2)" stroke-width="1.8"/><path d="M3 15 H31" stroke="var(--ink-2)" stroke-width="1.4"/></symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <div class="wrap">
+    <button class="btn small ghost icon-btn" type="button" id="homeBtn" aria-label="Back to the map" hidden>&#8592;</button>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i style="background:var(--t-blue)"></i><i style="background:var(--t-yellow)"></i><i style="background:var(--t-red)"></i><i style="background:var(--t-black)"></i></span><span>Azul Tile School</span><span class="where" id="where"></span></div>
+    <button class="btn small" type="button" id="rulesBtn" aria-haspopup="dialog">Rules</button>
+    <button class="btn small icon-btn" type="button" id="muteBtn" aria-pressed="false" aria-label="Sound on. Press to mute.">&#9835;</button>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <section class="screen" id="home"></section>
+  <section class="screen" id="lesson" hidden></section>
+  <section class="screen" id="bridge" hidden></section>
+  <section class="screen" id="puzzle" hidden></section>
+  <section class="screen" id="rush" hidden></section>
+</main>
+
+<div class="overlay" id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" hidden></div>
+<div class="sr" id="live" aria-live="polite"></div>
+<script id="azul-engine">
+/* Azul rules engine: a JS port of tools/azul/engine.py (coloured wall only).
+   State keys use the Python names so the two can be compared directly.
+   Checked against the Python engine by tools in the build scratchpad (verify.js). */
+(function (root) {
+  "use strict";
+  var COLOURS = ["blue", "yellow", "red", "black", "white"];
+  var LETTERS = { blue: "B", yellow: "Y", red: "R", black: "K", white: "W" };
+  var SIZE = 5, TILES_PER_FACTORY = 4, TILES_PER_COLOUR = 20;
+  var FACTORIES = { 2: 5, 3: 7, 4: 9 };
+  var FLOOR_VALUES = [-1, -1, -2, -2, -2, -3, -3];
+  var FLOOR_SPACES = FLOOR_VALUES.length;
+  var ROW_BONUS = 2, COLUMN_BONUS = 7, COLOUR_BONUS = 10;
+  var MARKER = "marker", CENTRE = "centre", FLOOR = "floor";
+
+  function clone(x) { return JSON.parse(JSON.stringify(x)); }
+  function wallColour(r, c) { return COLOURS[(((c - r) % SIZE) + SIZE) % SIZE]; }
+  function wallColumn(r, colour) { return (COLOURS.indexOf(colour) + r) % SIZE; }
+  function emptyWall() { var w = []; for (var r = 0; r < SIZE; r++) w.push([null, null, null, null, null]); return w; }
+  function filled(wall, r, c, here) {
+    if (r === here[0] && c === here[1]) return true;
+    return r >= 0 && r < SIZE && c >= 0 && c < SIZE && wall[r][c] !== null && wall[r][c] !== undefined;
+  }
+
+  /* Points for a tile at (row, col), with the runs it makes.
+     across / down: the cells of the unbroken line through the tile (length 1 = no neighbour that way). */
+  function scoreDetail(wall, row, col) {
+    var here = [row, col], across = [[row, col]], down = [[row, col]], c, r;
+    for (c = col - 1; filled(wall, row, c, here); c--) across.unshift([row, c]);
+    for (c = col + 1; filled(wall, row, c, here); c++) across.push([row, c]);
+    for (r = row - 1; filled(wall, r, col, here); r--) down.unshift([r, col]);
+    for (r = row + 1; filled(wall, r, col, here); r++) down.push([r, col]);
+    var h = across.length, v = down.length;
+    var pts = (h === 1 && v === 1) ? 1 : (h > 1 ? h : 0) + (v > 1 ? v : 0);
+    return { points: pts, h: h, v: v, across: across, down: down, lone: h === 1 && v === 1 };
+  }
+  function scorePlacement(wall, row, col) { return scoreDetail(wall, row, col).points; }
+
+  function floorPenalty(n) {
+    var k = Math.max(0, Math.min(n, FLOOR_SPACES)), s = 0;
+    for (var i = 0; i < k; i++) s += FLOOR_VALUES[i];
+    return s;
+  }
+  function completeRows(wall) {
+    var n = 0; for (var r = 0; r < SIZE; r++) if (wall[r].every(function (t) { return t !== null; })) n++; return n;
+  }
+  function completeColumns(wall) {
+    var n = 0; for (var c = 0; c < SIZE; c++) { var ok = true; for (var r = 0; r < SIZE; r++) if (wall[r][c] === null) ok = false; if (ok) n++; } return n;
+  }
+  function completeColours(wall) {
+    var cnt = {}; wall.forEach(function (row) { row.forEach(function (t) { if (t !== null) cnt[t] = (cnt[t] || 0) + 1; }); });
+    return COLOURS.filter(function (c) { return cnt[c] === SIZE; }).length;
+  }
+  function bonusBreakdown(wall) {
+    var rows = completeRows(wall), cols = completeColumns(wall), colours = completeColours(wall);
+    return { rows: rows, columns: cols, colours: colours, row_points: rows * ROW_BONUS,
+      column_points: cols * COLUMN_BONUS, colour_points: colours * COLOUR_BONUS,
+      total: rows * ROW_BONUS + cols * COLUMN_BONUS + colours * COLOUR_BONUS };
+  }
+  function endBonus(wall) { return bonusBreakdown(wall).total; }
+  /* Which rows, columns and colours are complete (for pointing at them). */
+  function bonusParts(wall) {
+    var out = { rows: [], columns: [], colours: [] }, r, c;
+    for (r = 0; r < SIZE; r++) if (wall[r].every(function (t) { return t !== null; })) out.rows.push(r);
+    for (c = 0; c < SIZE; c++) { var ok = true; for (r = 0; r < SIZE; r++) if (wall[r][c] === null) ok = false; if (ok) out.columns.push(c); }
+    COLOURS.forEach(function (col) { var n = 0; for (r = 0; r < SIZE; r++) if (wall[r][wallColumn(r, col)] === col) n++; if (n === SIZE) out.colours.push(col); });
+    return out;
+  }
+  function wallFromRows(rows) {
+    var w = emptyWall(), rev = {};
+    COLOURS.forEach(function (c) { rev[LETTERS[c]] = c; });
+    rows.forEach(function (s, r) { for (var c = 0; c < s.length; c++) if (s[c] !== ".") w[r][c] = rev[s[c]] || wallColour(r, c); });
+    return w;
+  }
+  /* Rows like "..X.." : any non-dot puts the printed colour there. */
+  function wallFromMask(rows) {
+    var w = emptyWall();
+    rows.forEach(function (s, r) { for (var c = 0; c < s.length; c++) if (s[c] !== ".") w[r][c] = wallColour(r, c); });
+    return w;
+  }
+  function wallToRows(wall) { return wall.map(function (row) { return row.map(function (t) { return t ? LETTERS[t] : "."; }).join(""); }); }
+
+  function newBoard() {
+    var lines = []; for (var i = 0; i < SIZE; i++) lines.push({ colour: null, count: 0 });
+    return { score: 0, lines: lines, wall: emptyWall(), floor: [] };
+  }
+  function lineCapacity(line) { return line + 1; }
+  function canPlace(board, line, colour) { return placeReason(board, line, colour) === null; }
+  /* null when allowed, otherwise a code the page turns into words. */
+  function placeReason(board, line, colour) {
+    var pl = board.lines[line];
+    if (pl.count >= lineCapacity(line)) return "full";
+    if (pl.colour !== null && pl.colour !== colour) return "other";
+    if (board.wall[line].indexOf(colour) >= 0) return "wall";
+    return null;
+  }
+
+  function offerOver(state) {
+    return !state.centre.length && !state.factories.some(function (f) { return f.length; });
+  }
+  function legalMoves(state) {
+    var board = state.boards[state.current], sources = [], moves = [];
+    state.factories.forEach(function (f, i) { if (f.length) sources.push([i, f]); });
+    if (state.centre.length) sources.push([CENTRE, state.centre]);
+    sources.forEach(function (s) {
+      COLOURS.forEach(function (colour) {
+        if (s[1].indexOf(colour) < 0) return;
+        for (var line = 0; line < SIZE; line++) if (canPlace(board, line, colour)) moves.push({ source: s[0], colour: colour, line: line });
+        moves.push({ source: s[0], colour: colour, line: FLOOR });
+      });
+    });
+    return moves;
+  }
+  function sameMove(a, b) { return a.source === b.source && a.colour === b.colour && a.line === b.line; }
+
+  function toFloor(state, board, item) {
+    if (board.floor.length < FLOOR_SPACES) { board.floor.push(item); return "floor"; }
+    if (item !== MARKER) state.lid.push(item);
+    return "lid";
+  }
+  /* First half of a turn: take every tile of one colour from one source.
+     Factory leftovers go to the centre; the first take from the centre also takes the marker (onto the floor line). */
+  function takeTiles(state, source, colour) {
+    var p = state.current, board = state.boards[p], taken, pushed = [];
+    var info = { player: p, took_marker: false, marker_beside_board: false };
+    if (source === CENTRE) {
+      taken = state.centre.filter(function (t) { return t === colour; });
+      state.centre = state.centre.filter(function (t) { return t !== colour; });
+      if (state.centre_marker) {
+        state.centre_marker = false;
+        state.marker_holder = p;
+        info.took_marker = true;
+        if (toFloor(state, board, MARKER) === "lid") info.marker_beside_board = true;
+      }
+    } else {
+      var f = state.factories[source];
+      taken = f.filter(function (t) { return t === colour; });
+      pushed = f.filter(function (t) { return t !== colour; });
+      state.centre = state.centre.concat(pushed);
+      state.factories[source] = [];
+    }
+    info.taken = taken.length; info.pushed = pushed.length; info.pushed_colours = pushed;
+    return info;
+  }
+  /* Second half: n tiles of colour into pattern line `line` (0-4) or FLOOR. */
+  function placeTiles(state, colour, n, line) {
+    var board = state.boards[state.current], placed = 0, toF = 0, toL = 0;
+    if (line !== FLOOR) {
+      var pl = board.lines[line];
+      placed = Math.min(n, lineCapacity(line) - pl.count);
+      pl.colour = colour;
+      pl.count += placed;
+    }
+    for (var i = placed; i < n; i++) { if (toFloor(state, board, colour) === "floor") toF++; else toL++; }
+    return { placed: placed, to_floor: toF, to_lid: toL };
+  }
+  function endTurn(state) {
+    if (offerOver(state)) state.phase = "tiling";
+    else state.current = (state.current + 1) % state.n;
+  }
+  function applyMove(state, move) {
+    if (state.phase !== "offer") throw new Error("not in the factory offer phase");
+    if (!legalMoves(state).some(function (m) { return sameMove(m, move); })) throw new Error("illegal move");
+    var info = takeTiles(state, move.source, move.colour);
+    var pl = placeTiles(state, move.colour, info.taken, move.line);
+    info.placed = pl.placed; info.to_floor = pl.to_floor; info.to_lid = pl.to_lid; info.move = move;
+    endTurn(state);
+    return info;
+  }
+
+  /* Phase B for one player (coloured wall). Placements carry their scoreDetail. */
+  function tileWall(state, p) {
+    var board = state.boards[p], wall = board.wall, before = board.score, placements = [];
+    for (var row = 0; row < SIZE; row++) {
+      var pl = board.lines[row];
+      if (pl.count !== lineCapacity(row)) continue;
+      var colour = pl.colour, col = wallColumn(row, colour);
+      if (wall[row][col] !== null) throw new Error("wall space taken");
+      wall[row][col] = colour;
+      var d = scoreDetail(wall, row, col);
+      board.score += d.points;
+      for (var i = 0; i < pl.count - 1; i++) state.lid.push(colour);
+      placements.push({ row: row, colour: colour, col: col, points: d.points, detail: d, to_lid: pl.count - 1 });
+      pl.colour = null; pl.count = 0;
+    }
+    var items = board.floor.slice(), pen = floorPenalty(items.length), afterWall = board.score;
+    board.score = Math.max(0, board.score + pen);
+    items.forEach(function (t) { if (t !== MARKER) state.lid.push(t); });
+    board.floor = [];
+    return { player: p, placements: placements, floor_items: items.length, floor_marker: items.indexOf(MARKER) >= 0,
+      floor_penalty: pen, score_before: before, score_after_wall: afterWall, score: board.score };
+  }
+  function tileWalls(state) {
+    if (state.phase !== "tiling") throw new Error("not in the wall-tiling phase");
+    var res = []; for (var p = 0; p < state.n; p++) res.push(tileWall(state, p));
+    if (state.marker_holder === null) { state.centre_marker = false; state.marker_holder = state.start_player; }
+    if (state.boards.some(function (b) { return completeRows(b.wall) > 0; })) finishGame(state);
+    else state.phase = "prepare";
+    return res;
+  }
+  function finishGame(state) {
+    state.bonuses = [];
+    state.boards.forEach(function (b) { var bd = bonusBreakdown(b.wall); b.score += bd.total; state.bonuses.push(bd); });
+    state.phase = "over"; state.game_over = true;
+  }
+
+  /* A small table for lessons and puzzles: one player (or more), given sources. */
+  function makeState(o) {
+    o = o || {};
+    var boards = o.boards || [o.board || newBoard()];
+    return { n: boards.length, factories: clone(o.factories || []), centre: clone(o.centre || []),
+      centre_marker: o.centre_marker !== undefined ? o.centre_marker : true, marker_holder: null,
+      start_player: 0, current: 0, boards: clone(boards), lid: clone(o.lid || []), bag: clone(o.bag || []),
+      phase: "offer", game_over: false, round: 1 };
+  }
+  function makeBoard(o) {
+    var b = newBoard();
+    if (o.score) b.score = o.score;
+    if (o.wall) b.wall = wallFromMask(o.wall);
+    (o.lines || []).forEach(function (l, i) { if (l) { b.lines[i].colour = l[0]; b.lines[i].count = l[1]; } });
+    if (o.floor) b.floor = o.floor.slice();
+    return b;
+  }
+
+  /* Points this round for one move: apply it, finish the offer, tile the wall (+ end bonuses if final). */
+  function evaluate(state0, move, final) {
+    var s = clone(state0), p = state0.current;
+    var take = applyMove(s, move);
+    var before = state0.boards[p].score;
+    var board = s.boards[p];
+    s.phase = "tiling";
+    var res = tileWall(s, p);
+    var bonus = null;
+    if (final) { bonus = bonusBreakdown(board.wall); board.score += bonus.total; }
+    return { move: move, value: board.score - before, take: take, tiling: res, bonus: bonus, after: s };
+  }
+  function solve(state0, final) {
+    var all = legalMoves(state0).map(function (m) { return evaluate(state0, m, final); });
+    var best = Math.max.apply(null, all.map(function (e) { return e.value; }));
+    var values = all.map(function (e) { return e.value; }).filter(function (v, i, a) { return a.indexOf(v) === i; }).sort(function (a, b) { return b - a; });
+    return { all: all, best: best, values: values, bestMoves: all.filter(function (e) { return e.value === best; }) };
+  }
+
+  root.AzulEngine = {
+    COLOURS: COLOURS, LETTERS: LETTERS, SIZE: SIZE, TILES_PER_FACTORY: TILES_PER_FACTORY, TILES_PER_COLOUR: TILES_PER_COLOUR,
+    FACTORIES: FACTORIES, FLOOR_VALUES: FLOOR_VALUES, FLOOR_SPACES: FLOOR_SPACES, ROW_BONUS: ROW_BONUS,
+    COLUMN_BONUS: COLUMN_BONUS, COLOUR_BONUS: COLOUR_BONUS, MARKER: MARKER, CENTRE: CENTRE, FLOOR: FLOOR,
+    clone: clone, wallColour: wallColour, wallColumn: wallColumn, emptyWall: emptyWall, scoreDetail: scoreDetail,
+    scorePlacement: scorePlacement, floorPenalty: floorPenalty, completeRows: completeRows, completeColumns: completeColumns,
+    completeColours: completeColours, bonusBreakdown: bonusBreakdown, bonusParts: bonusParts, endBonus: endBonus,
+    wallFromRows: wallFromRows, wallFromMask: wallFromMask, wallToRows: wallToRows, newBoard: newBoard,
+    lineCapacity: lineCapacity, canPlace: canPlace, placeReason: placeReason, offerOver: offerOver, legalMoves: legalMoves,
+    sameMove: sameMove, takeTiles: takeTiles, placeTiles: placeTiles, endTurn: endTurn, applyMove: applyMove,
+    tileWall: tileWall, tileWalls: tileWalls, finishGame: finishGame, makeState: makeState, makeBoard: makeBoard,
+    evaluate: evaluate, solve: solve
+  };
+})(typeof window !== "undefined" ? window : globalThis);
+</script>
+<script id="azul-puzzles" type="application/json">
+[{"id": "p1", "title": "Three reds", "kind": "move", "board": {"score": 6, "wall": [".....", ".....", "...X.", ".....", "....."], "lines": [null, ["blue", 1], null, ["black", 1], ["red", 1]]}, "factories": [["red", "red", "red", "yellow"]], "centre": [], "centre_marker": true, "level": "Easy", "ask": "You may take from the one factory display. Which move scores the most points this round?", "hint": "Look for a pattern line with exactly as many empty spaces as the tiles you take.", "why": "A line that you fill exactly moves a tile to the wall this round. Tiles that spill onto the floor line cost points, and a line you don't finish scores nothing yet."}, {"id": "p2", "title": "Count the cross", "kind": "score", "wall": ["....X", "..X.X", ".X.X.", "..X..", "X...."], "tile": [2, 2], "level": "Easy", "ask": "The tile with the dashed ring was just placed on the wall. How many points does it score?", "hint": "Count the unbroken line across that includes the new tile. Then count the unbroken line down. Add them.", "why": "A tile that touches tiles across and down scores both lines, so the new tile is counted twice. Tiles that only touch at a corner don't count."}, {"id": "p3", "title": "Take what fits", "kind": "move", "board": {"score": 10, "wall": [".X...", ".....", "...X.", "..X..", "....."], "lines": [null, ["red", 1], ["black", 1], ["blue", 2], ["white", 1]]}, "factories": [["blue", "blue", "blue", "black"], ["blue", "blue", "white", "white"], ["red", "yellow", "yellow", "black"]], "centre": [], "centre_marker": true, "level": "Easy", "ask": "Pattern line 4 already holds 2 blue. Which move scores the most points this round?", "hint": "Pattern line 4 needs exactly 2 more tiles. Which display has exactly 2 blue?", "why": "Take what your line needs. Taking more of the same colour only spills the extra tiles onto the floor line."}, {"id": "p4", "title": "Build next door", "kind": "move", "board": {"score": 12, "wall": ["..X..", ".X.X.", "..X..", ".....", "....."], "lines": [null, null, ["red", 1], null, null]}, "factories": [["yellow", "yellow", "black", "black"], ["red", "red", "white", "blue"]], "centre": [], "centre_marker": true, "level": "Medium", "ask": "Two displays, many choices. Which move scores the most points this round?", "hint": "A wall tile that touches other tiles scores more. Look at the empty wall spaces next to your tiles.", "why": "Build next to tiles you already have. A tile that joins a line across and a line down scores both lines."}, {"id": "p5", "title": "Least bad", "kind": "move", "board": {"score": 15, "wall": [".XXX.", "X....", "X.X..", ".....", "....."], "lines": [null, ["white", 1], ["blue", 1], ["red", 2], ["yellow", 4]], "floor": ["blue"]}, "factories": [], "centre": ["yellow", "yellow", "yellow", "yellow", "red", "red", "red", "black", "black"], "centre_marker": true, "level": "Medium", "ask": "Only the centre is left, and you must take tiles. Which move loses the fewest points this round?", "hint": "You take the starting player marker whatever you do. Which colour can you place with the smallest spill?", "why": "When every choice hurts, count the floor line for each one. Completing a line can make up for a tile or two on the floor."}, {"id": "p6", "title": "Top to bottom", "kind": "move", "board": {"score": 14, "wall": [".....", "X....", "...X.", ".....", "....."], "lines": [null, null, ["blue", 3], ["white", 1], null]}, "factories": [["yellow", "yellow", "black", "red"], ["white", "white", "white", "red"]], "centre": [], "centre_marker": true, "level": "Hard", "ask": "You can complete pattern line 2 or pattern line 4. Which move scores the most points this round?", "hint": "Lines move to the wall from top to bottom. A tile placed earlier counts as a neighbour for the tiles placed after it.", "why": "Order matters in wall-tiling. Here pattern line 3 is already complete, and the tiles above and below it change what it scores."}, {"id": "p7", "title": "The last round", "kind": "move", "final": true, "board": {"score": 40, "wall": ["XX.XX", ".XX..", "X....", "XXXX.", "X.X.."], "lines": [["red", 1], null, null, null, null]}, "factories": [["black", "black", "white", "white"], ["yellow", "yellow", "yellow", "yellow"]], "centre": ["blue"], "centre_marker": false, "level": "Hard", "ask": "Your pattern line 1 completes row 1 of your wall, so the game ends after this round. Which move gives the most points, bonuses included?", "hint": "Look at what each move completes at the end: a row is worth +{ROW_BONUS}, a column +{COLUMN_BONUS}, a full colour +{COLOUR_BONUS}.", "why": "In the last round, add up the end bonuses too. A full column or a full colour is worth far more than a full row, and the points the tile itself scores still count."}]
+</script>
+<script>
+/* Core: save, sound, rendering of tiles / table / board, animated table actions, rules overlay, navigation. */
+(function () {
+  "use strict";
+  var E = window.AzulEngine;
+  var AZ = window.AZ = {};
+  var LET = E.LETTERS;
+  var $ = AZ.$ = function (s, el) { return (el || document).querySelector(s); };
+  var $$ = AZ.$$ = function (s, el) { return Array.prototype.slice.call((el || document).querySelectorAll(s)); };
+  var reduced = AZ.reduced = !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches);
+  AZ.ABORT = { abort: true };
+
+  function w(t) { return '<b class="w">' + t + "</b>"; }
+  AZ.w = w;
+  AZ.sign = function (n) { return n > 0 ? "+" + n : n < 0 ? "−" + Math.abs(n) : "0"; };
+  AZ.minus = function (n) { return "−" + Math.abs(n); };
+  AZ.cap = function (s) { return s.charAt(0).toUpperCase() + s.slice(1); };
+  AZ.plural = function (n, one, many) { return n + " " + (n === 1 ? one : (many || one + "s")); };
+  AZ.colourName = function (c) { return c + " (" + LET[c] + ")"; };
+  AZ.sleep = function (ms) { return new Promise(function (r) { setTimeout(r, reduced ? Math.min(ms, 60) : ms); }); };
+
+  /* ---------------- save (per-viewer convenience only) ---------------- */
+  var Save = AZ.Save = {
+    key: "azul-tile-school-v1",
+    data: { lessons: {}, stars: {}, rush: { tile: 0, floor: 0 }, muted: false, skipped: false, bridgeSeen: false },
+    load: function () {
+      try { var r = localStorage.getItem(this.key); if (r) { var d = JSON.parse(r); if (d && typeof d === "object") { Object.assign(this.data, d); this.data.rush = Object.assign({ tile: 0, floor: 0 }, d.rush || {}); } } } catch (e) { /* storage unavailable */ }
+    },
+    save: function () { try { localStorage.setItem(this.key, JSON.stringify(this.data)); } catch (e) { /* storage unavailable */ } },
+    reset: function () { this.data = { lessons: {}, stars: {}, rush: { tile: 0, floor: 0 }, muted: this.data.muted, skipped: false, bridgeSeen: false }; this.save(); }
+  };
+  Save.load();
+
+  /* ---------------- sound (Web Audio, starts after a tap) ---------------- */
+  var Snd = AZ.Snd = {
+    ctx: null,
+    ensure: function () {
+      if (this.ctx || Save.data.muted) return;
+      try { var C = window.AudioContext || window.webkitAudioContext; if (C) this.ctx = new C(); } catch (e) { this.ctx = null; }
+    },
+    tone: function (f, dur, type, vol, delay, f2) {
+      var c = this.ctx; if (!c || Save.data.muted) return;
+      try {
+        if (c.state === "suspended") c.resume();
+        var t = c.currentTime + (delay || 0), o = c.createOscillator(), g = c.createGain();
+        o.type = type || "sine"; o.frequency.setValueAtTime(f, t);
+        if (f2) o.frequency.exponentialRampToValueAtTime(f2, t + dur);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol || 0.06, t + 0.012);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+        o.connect(g); g.connect(c.destination); o.start(t); o.stop(t + dur + 0.02);
+      } catch (e) { /* ignore */ }
+    },
+    play: function (n, x) {
+      var T = this.tone.bind(this);
+      switch (n) {
+        case "tap": T(660, 0.06, "triangle", 0.05); break;
+        case "clack": T(1400, 0.035, "square", 0.025); T(900, 0.05, "triangle", 0.04, 0.03); break;
+        case "slide": T(300, 0.18, "sine", 0.04, 0, 520); break;
+        case "place": T(520, 0.07, "triangle", 0.06); T(780, 0.08, "triangle", 0.05, 0.05); break;
+        case "score": var k = Math.min(x || 1, 8); for (var i = 0; i < k; i++) T(523 * Math.pow(1.122, i), 0.09, "triangle", 0.05, i * 0.055); break;
+        case "lose": T(392, 0.16, "sawtooth", 0.025); T(294, 0.22, "sawtooth", 0.025, 0.12); break;
+        case "wrong": T(180, 0.16, "square", 0.03); T(150, 0.18, "square", 0.03, 0.08); break;
+        case "ok": T(784, 0.08, "triangle", 0.05); T(1047, 0.12, "triangle", 0.05, 0.07); break;
+        case "star": T(1047, 0.1, "triangle", 0.05, x || 0); T(1568, 0.14, "triangle", 0.04, (x || 0) + 0.06); break;
+        case "win": [523, 659, 784, 1047, 784, 1047].forEach(function (f, i) { T(f, 0.14, "triangle", 0.05, i * 0.08); }); break;
+        case "tick": T(1200, 0.03, "square", 0.015); break;
+        case "over": [392, 349, 311, 262].forEach(function (f, i) { T(f, 0.2, "triangle", 0.05, i * 0.14); }); break;
+      }
+    }
+  };
+  function syncMute() {
+    var b = $("#muteBtn"), m = Save.data.muted;
+    b.setAttribute("aria-pressed", m ? "true" : "false");
+    b.setAttribute("aria-label", m ? "Sound off. Press to turn sound on." : "Sound on. Press to mute.");
+    b.innerHTML = m ? '<span aria-hidden="true" style="text-decoration:line-through">&#9835;</span>' : '<span aria-hidden="true">&#9835;</span>';
+  }
+  AZ.syncMute = syncMute;
+
+  AZ.say = function (t) { var l = $("#live"); l.textContent = ""; setTimeout(function () { l.textContent = t.replace(/<[^>]+>/g, ""); }, 30); };
+
+  /* ---------------- tile HTML ---------------- */
+  function tileHTML(c, o) {
+    o = o || {};
+    var cls = "tile c-" + c + (o.cls ? " " + o.cls : "");
+    var lab = o.label === false ? ' aria-hidden="true"' : ' role="img" aria-label="' + (o.ghost ? "empty space for " : "") + c + ' tile"';
+    return '<span class="' + cls + '" data-l="' + LET[c] + '"' + (o.k ? ' data-k="' + o.k + '"' : "") + lab +
+      '><svg aria-hidden="true" focusable="false"><use href="#mk-' + c + '"/></svg></span>';
+  }
+  function markerHTML(o) {
+    o = o || {};
+    return '<span class="tile marker' + (o.cls ? " " + o.cls : "") + '"' + (o.k ? ' data-k="' + o.k + '"' : "") +
+      (o.label === false ? ' aria-hidden="true"' : ' role="img" aria-label="starting player marker"') + ">1</span>";
+  }
+  function itemHTML(x, o) { return x === E.MARKER ? markerHTML(o) : tileHTML(x, o); }
+  AZ.tileHTML = tileHTML; AZ.markerHTML = markerHTML; AZ.itemHTML = itemHTML;
+
+  /* ---------------- table + board HTML ---------------- */
+  function factoriesHTML(st, o) {
+    return '<div class="factories">' + st.factories.map(function (f, i) {
+      var inner = f.map(function (c, j) {
+        var k = "f" + i + "-" + j;
+        if (o.takeable) return '<button type="button" class="tilebtn" data-act="take" data-src="' + i + '" data-colour="' + c + '" aria-label="Take ' + c + ' from factory display ' + (i + 1) + '">' + tileHTML(c, { cls: "sm", k: k, label: false }) + "</button>";
+        return tileHTML(c, { cls: "sm", k: k });
+      }).join("");
+      var open = "div", attrs = "";
+      if (o.factoryBtn) { open = "button"; attrs = ' type="button" data-act="fac" data-i="' + i + '" aria-label="Factory display ' + (i + 1) + ", " + AZ.plural(f.length, "tile") + '"'; }
+      else if (o.takeable && !f.length) { open = "button"; attrs = ' type="button" data-act="emptyfac" data-i="' + i + '" aria-label="Factory display ' + (i + 1) + ', empty"'; }
+      var need = o.factoryBtn && f.length < E.TILES_PER_FACTORY ? " need" : "";
+      return "<" + open + attrs + ' class="factory' + (f.length ? "" : " empty") + (o.factoryBtn ? need : "") + '" data-k="fd' + i + '">' + inner + '<span class="fno" aria-hidden="true">' + (i + 1) + "</span></" + open + ">";
+    }).join("") + "</div>";
+  }
+  function centreHTML(st, o) {
+    var h = "";
+    if (st.centre_marker) h += o.takeable ? '<button type="button" class="tilebtn" data-act="marker" aria-label="Starting player marker">' + markerHTML({ cls: "sm", k: "cm", label: false }) + "</button>" : markerHTML({ cls: "sm", k: "cm" });
+    st.centre.forEach(function (c, j) {
+      var k = "c" + j;
+      h += o.takeable ? '<button type="button" class="tilebtn" data-act="take" data-src="centre" data-colour="' + c + '" aria-label="Take ' + c + ' from the centre">' + tileHTML(c, { cls: "sm", k: k, label: false }) + "</button>" : tileHTML(c, { cls: "sm", k: k });
+    });
+    if (!h) h = '<span class="none">empty</span>';
+    return '<div class="centre" data-k="centre" aria-label="Centre of the table">' + h + "</div>";
+  }
+  function handHTML(hand) {
+    var h = '<div class="hand" aria-label="In your hand"><span class="lbl">In your hand:</span><span class="tiles">';
+    if (hand && hand.n) {
+      for (var q = 0; q < hand.n; q++) h += tileHTML(hand.colour, { cls: "sm", k: "h" + q });
+      if (hand.marker) h += markerHTML({ cls: "sm", k: "hm" });
+      h += '</span><span class="lbl"><b>' + hand.n + " " + hand.colour + "</b>" + (hand.marker ? " and the starting player marker" : "") + "</span>";
+    } else h += '</span><span class="lbl">nothing</span>';
+    return h + "</div>";
+  }
+  function supplyHTML(o) {
+    var s = o.supply, h = '<div class="supply">';
+    if (s.bag !== undefined) {
+      var tb = s.bagBtn ? 'button type="button" data-act="bag"' : "div";
+      h += "<" + tb + ' class="pile" data-k="bag"><svg class="ico" aria-hidden="true"><use href="#ico-bag"/></svg><span>Bag <span class="num">' + s.bag + "</span></span></" + tb.split(" ")[0] + ">";
+    }
+    if (s.lid !== undefined) {
+      var tl = s.lidBtn ? 'button type="button" data-act="lid"' : "div";
+      h += "<" + tl + ' class="pile" data-k="lid"><svg class="ico" aria-hidden="true"><use href="#ico-lid"/></svg><span>Box lid <span class="num">' + s.lid + "</span></span></" + tl.split(" ")[0] + ">";
+    }
+    if (s.marker) {
+      h += s.markerBtn ? '<button type="button" class="pile" data-act="marker" aria-label="Starting player marker">' + markerHTML({ k: "ma", label: false }) + "<span>Starting player marker</span></button>"
+        : '<div class="pile">' + markerHTML({ k: "ma" }) + "<span>Starting player marker</span></div>";
+    }
+    return h + "</div>";
+  }
+
+  function lineLabel(b, i) {
+    var pl = b.lines[i], cap = i + 1;
+    return "Pattern line " + (i + 1) + ": " + (pl.count ? pl.count + " " + pl.colour + " of " + cap : "empty, " + AZ.plural(cap, "space"));
+  }
+  function boardHTML(b, o) {
+    o = o || {};
+    var marks = o.marks || {}, i, r, c;
+    var key = function (r, c) { return r + "," + c; };
+    var ring = marks.ring ? key(marks.ring[0], marks.ring[1]) : null, runH = {}, runV = {}, pick = {};
+    (marks.h || []).forEach(function (p) { runH[key(p[0], p[1])] = 1; });
+    (marks.v || []).forEach(function (p) { runV[key(p[0], p[1])] = 1; });
+    (marks.pick || []).forEach(function (p) { pick[key(p[0], p[1])] = 1; });
+    var linesH = "", numsH = "";
+    for (i = 0; i < 5; i++) {
+      var pl = b.lines[i], cap = i + 1, cells = "";
+      for (var pos = 0; pos < cap; pos++) {
+        var slot = cap - 1 - pos, k = "l" + i + "-" + slot;
+        cells += slot < pl.count ? tileHTML(pl.colour, { k: k, label: false }) : '<span class="hole" data-k="' + k + '" aria-hidden="true"></span>';
+      }
+      var hl = o.hlLines && o.hlLines.indexOf(i) >= 0 ? " hl" : "";
+      if (o.linesActive) linesH += '<button type="button" class="pline' + hl + '" data-act="line" data-line="' + i + '" aria-label="' + lineLabel(b, i) + '">' + cells + "</button>";
+      else linesH += '<div class="pline' + hl + '" role="img" aria-label="' + lineLabel(b, i) + '">' + cells + "</div>";
+      numsH += '<span class="lno" style="height:var(--cell);display:flex;align-items:center;font:600 12px/1 var(--font-display);color:var(--ink-2)" aria-hidden="true">' + (i + 1) + "</span>";
+    }
+    var wallH = "";
+    for (r = 0; r < 5; r++) for (c = 0; c < 5; c++) {
+      var t = b.wall[r][c], wc = E.wallColour(r, c), kk = key(r, c);
+      var cls = "wcell" + (ring === kk ? " ring" : "") + (runH[kk] ? " run-h" : "") + (runV[kk] ? " run-v" : "") + (pick[kk] ? " pick" : "");
+      var inner = t ? tileHTML(t, { label: false }) : tileHTML(wc, { cls: "ghost", label: false });
+      var lab = "Wall row " + (r + 1) + ", column " + (c + 1) + ": " + wc + (t ? ", tiled" : ", empty");
+      if (o.wallActive) wallH += '<button type="button" class="' + cls + '" data-act="wall" data-r="' + r + '" data-c="' + c + '" data-k="w' + r + "-" + c + '" aria-label="' + lab + '">' + inner + "</button>";
+      else wallH += '<span class="' + cls + '" data-k="w' + r + "-" + c + '" data-r="' + r + '" data-c="' + c + '"' + (t ? ' data-t="1"' : "") + ' role="img" aria-label="' + lab + '">' + inner + "</span>";
+    }
+    var floorH = "";
+    for (i = 0; i < E.FLOOR_SPACES; i++) {
+      var it = b.floor[i];
+      floorH += '<span class="fspace">' + (it ? itemHTML(it, { k: "fl" + i, label: false }) : '<span class="hole" data-k="fl' + i + '"></span>') + '<span class="pen">' + AZ.minus(E.FLOOR_VALUES[i]) + "</span></span>";
+    }
+    var floorLab = "Floor line: " + AZ.plural(b.floor.length, "item") + " of " + E.FLOOR_SPACES;
+    var floorBox = o.floorActive ? '<button type="button" class="floor" data-act="floor" aria-label="' + floorLab + '">' + floorH + "</button>" : '<div class="floor" role="img" aria-label="' + floorLab + '">' + floorH + "</div>";
+    var A = function (name, inner, label) { return o.areas ? '<button type="button" class="area" data-act="area" data-area="' + name + '" aria-label="' + label + '">' + inner + "</button>" : inner; };
+    var scoreH = '<span class="scorebox" data-k="score"><span class="k">Score</span><span class="v">' + b.score + "</span></span>";
+    var top = '<div class="pb-top"><span class="who">' + (o.who || "Your board") + (o.markerMine ? " " + markerHTML({ cls: "xs", k: "pbm" }) : "") + "</span>" + A("score", scoreH, "Score track") + "</div>";
+    var wallBox = '<div class="wall" data-k="wall">' + wallH + "</div>";
+    if (o.only === "wall") return '<div class="pboard">' + (o.noTop ? "" : top) + wallBox + "</div>";
+    if (o.only === "floor") return '<div class="pboard"><div class="floorwrap"><span class="flabel">Floor<br>line</span>' + floorBox + "</div></div>";
+    return '<div class="pboard" data-k="board">' + top +
+      '<div class="pb-main"><div style="display:grid;gap:3px">' + numsH + "</div>" + A("lines", '<div class="lines">' + linesH + "</div>", "Pattern lines") + A("wall", wallBox, "Wall") + "</div>" +
+      A("floor", '<div class="floorwrap"><span class="flabel">Floor<br>line</span>' + floorBox + "</div>", "Floor line") + "</div>";
+  }
+  AZ.boardHTML = boardHTML;
+  AZ.factoriesHTML = factoriesHTML;
+
+  function paletteHTML(o) {
+    return '<div class="palette">' + E.COLOURS.map(function (c) {
+      var t = tileHTML(c, { k: "pal-" + c, label: false });
+      return "<figure>" + (o.paletteActive ? '<button type="button" class="tilebtn" data-act="pal" data-colour="' + c + '" aria-label="' + c + ' tile, letter ' + LET[c] + '">' + t + "</button>" : t) +
+        "<figcaption>" + c + " " + LET[c] + "</figcaption></figure>";
+    }).join("") + "</div>";
+  }
+
+  /* ---------------- Table: a state + view with animated actions ---------------- */
+  function Table(host, st, opt) {
+    this.host = host; this.st = st; this.opt = opt || {}; this.hand = null; this.goal = null; this.extraMarks = null;
+  }
+  AZ.Table = Table;
+  Table.prototype.board = function () { return this.st.boards[this.st.current]; };
+  Table.prototype.html = function () {
+    var o = this.opt, st = this.st, t = "", panels = [];
+    if (o.palette) panels.push('<div class="panel"><div class="ptitle">Tiles: 20 of each colour</div>' + paletteHTML(o) + "</div>");
+    if (o.factories) {
+      var showCentre = o.centre !== false, hasF = st.factories.length > 0;
+      panels.push('<div class="panel">' + (hasF ? '<div class="ptitle"><span>Factory displays</span><span class="cnt">' + st.factories.length + "</span></div>" + factoriesHTML(st, o) : "") +
+        (showCentre ? '<div class="ptitle"' + (hasF ? ' style="margin-top:14px"' : "") + ">Centre of the table</div>" + centreHTML(st, o) : "") + "</div>");
+    }
+    if (o.hand) panels.push('<div class="panel">' + handHTML(this.hand) + "</div>");
+    if (o.supply) panels.push(supplyHTML(o));
+    if (o.note) panels.push('<div class="panel">' + o.note + "</div>");
+    t += '<div class="table">' + panels.join("") + "</div>";
+    if (o.board !== false) {
+      var bo = Object.assign({}, o.boardOpt || {});
+      ["linesActive", "floorActive", "wallActive", "areas", "markerMine", "only", "who", "hlLines"].forEach(function (k) { if (o[k] !== undefined) bo[k] = o[k]; });
+      if (this.extraMarks) bo.marks = this.extraMarks;
+      t += '<div class="boardcol" style="display:grid;min-width:0">' + boardHTML(this.board(), bo) + "</div>";
+    }
+    return t;
+  };
+  Table.prototype.render = function () {
+    this.host.innerHTML = this.html();
+    if (this.opt.board === false || (this.opt.factories === undefined && !this.opt.palette && !this.opt.hand && !this.opt.supply)) this.host.style.gridTemplateColumns = "minmax(0,1fr)";
+    else this.host.style.gridTemplateColumns = "";
+    this.applyGoal();
+  };
+  Table.prototype.applyGoal = function () {
+    $$(".goal", this.host).forEach(function (e) { e.classList.remove("goal"); });
+    if (this.goal) $$(this.goal, this.host).forEach(function (e) { e.classList.add("goal"); });
+  };
+  Table.prototype.rects = function (keys) {
+    var m = {}, host = this.host;
+    keys.forEach(function (k) { var el = host.querySelector('[data-k="' + k + '"]'); if (el) m[k] = el.getBoundingClientRect(); });
+    return m;
+  };
+  /* moves: [{from: key, to: key, html}] with rects captured before the change */
+  Table.prototype.fly = function (moves, rects) {
+    var host = this.host;
+    if (reduced || !moves.length) return Promise.resolve();
+    return new Promise(function (resolve) {
+      var left = 0;
+      moves.forEach(function (m, i) {
+        var fr = rects[m.from], t = host.querySelector('[data-k="' + m.to + '"]');
+        if (!fr || !t) return;
+        var tr = t.getBoundingClientRect();
+        if (!tr.width) return;
+        left++;
+        t.style.visibility = "hidden";
+        var d = document.createElement("div");
+        d.className = "fly";
+        d.style.left = fr.left + "px"; d.style.top = fr.top + "px"; d.style.width = fr.width + "px"; d.style.height = fr.height + "px";
+        d.innerHTML = m.html; var inner = d.firstChild; if (inner && inner.style) inner.style.setProperty("--s", fr.width + "px");
+        d.style.transitionDelay = (i * 45) + "ms";
+        document.body.appendChild(d);
+        requestAnimationFrame(function () { requestAnimationFrame(function () {
+          d.style.transform = "translate(" + (tr.left - fr.left) + "px," + (tr.top - fr.top) + "px) scale(" + (tr.width / fr.width) + ")";
+          d.style.transformOrigin = "0 0";
+        }); });
+        setTimeout(function () { d.remove(); t.style.visibility = ""; left--; if (!left) resolve(); }, 560 + i * 45);
+      });
+      if (!left) resolve();
+    });
+  };
+  Table.prototype.pop = function (key, text, neg) {
+    var el = this.host.querySelector('[data-k="' + key + '"]');
+    if (!el) return;
+    var r = el.getBoundingClientRect(), d = document.createElement("div");
+    d.className = "pop" + (neg ? " neg" : ""); d.textContent = text;
+    d.style.left = (r.left + r.width / 2) + "px"; d.style.top = (r.top + r.height / 2) + "px";
+    document.body.appendChild(d); setTimeout(function () { d.remove(); }, 1250);
+  };
+
+  /* Take every tile of `colour` from source (factory index or "centre") into the hand. */
+  Table.prototype.take = function (src, colour) {
+    var st = this.st, b = this.board(), from = [], pushedFrom = [], restFrom = [], keys = [];
+    var oldCentre = st.centre.length, floorBefore = b.floor.length, hadMarker = src === E.CENTRE && st.centre_marker;
+    if (src === E.CENTRE) {
+      st.centre.forEach(function (c, j) { if (c === colour) from.push("c" + j); else restFrom.push("c" + j); });
+    } else {
+      st.factories[src].forEach(function (c, j) { if (c === colour) from.push("f" + src + "-" + j); else pushedFrom.push({ k: "f" + src + "-" + j, c: c }); });
+    }
+    keys = from.concat(pushedFrom.map(function (p) { return p.k; }), restFrom, ["cm"]);
+    var rects = this.rects(keys);
+    var restColours = src === E.CENTRE ? st.centre.filter(function (c) { return c !== colour; }) : [];
+    var info = E.takeTiles(st, src, colour);
+    this.hand = { colour: colour, n: info.taken, marker: hadMarker && this.opt.board === false };
+    this.lastTake = info;
+    this.render();
+    var moves = from.map(function (k, q) { return { from: k, to: "h" + q, html: tileHTML(colour, { label: false }) }; });
+    pushedFrom.forEach(function (p, q) { moves.push({ from: p.k, to: "c" + (oldCentre + q), html: tileHTML(p.c, { label: false }) }); });
+    restFrom.forEach(function (k, q) { moves.push({ from: k, to: "c" + q, html: tileHTML(restColours[q], { label: false }) }); });
+    if (hadMarker) moves.push({ from: "cm", to: this.opt.board === false ? "hm" : "fl" + floorBefore, html: markerHTML({ label: false }) });
+    Snd.play(pushedFrom.length ? "slide" : "clack");
+    return this.fly(moves, rects).then(function () { return info; });
+  };
+  /* Put the hand into pattern line `line` (0-4) or E.FLOOR. */
+  Table.prototype.place = function (line) {
+    var st = this.st, b = this.board(), hand = this.hand, self = this;
+    var before = line === E.FLOOR ? 0 : b.lines[line].count, floorBefore = b.floor.length;
+    var keys = []; for (var q = 0; q < hand.n; q++) keys.push("h" + q);
+    var rects = this.rects(keys);
+    var info = E.placeTiles(st, hand.colour, hand.n, line);
+    this.hand = null;
+    this.render();
+    var moves = [];
+    for (q = 0; q < hand.n; q++) {
+      var to = q < info.placed ? "l" + line + "-" + (before + q) : (floorBefore + q - info.placed < E.FLOOR_SPACES ? "fl" + (floorBefore + q - info.placed) : "lid");
+      moves.push({ from: "h" + q, to: to, html: tileHTML(hand.colour, { label: false }) });
+    }
+    Snd.play("place");
+    return this.fly(moves, rects).then(function () {
+      if (info.to_floor) { Snd.play("lose"); }
+      self.lastPlace = info; return info;
+    });
+  };
+  /* Phase B for one complete pattern line: rightmost tile to the wall, score it, the rest to the box lid. */
+  Table.prototype.tileLine = function (row) {
+    var st = this.st, b = this.board(), pl = b.lines[row], colour = pl.colour, n = pl.count, self = this;
+    var col = E.wallColumn(row, colour);
+    var keys = []; for (var s = 0; s < n; s++) keys.push("l" + row + "-" + s);
+    var rects = this.rects(keys);
+    b.wall[row][col] = colour;
+    var d = E.scoreDetail(b.wall, row, col);
+    b.score += d.points;
+    for (s = 0; s < n - 1; s++) st.lid.push(colour);
+    pl.colour = null; pl.count = 0;
+    if (this.opt.supply && this.opt.supply.lid !== undefined) this.opt.supply.lid = st.lid.length;
+    this.extraMarks = { h: d.h > 1 ? d.across : [], v: d.v > 1 ? d.down : [], pick: d.lone ? [[row, col]] : [] };
+    this.render();
+    var moves = [{ from: "l" + row + "-0", to: "w" + row + "-" + col, html: tileHTML(colour, { label: false }) }];
+    for (s = 1; s < n; s++) moves.push({ from: "l" + row + "-" + s, to: "lid", html: tileHTML(colour, { label: false }) });
+    return this.fly(moves, rects).then(function () {
+      self.pop("w" + row + "-" + col, "+" + d.points); Snd.play("score", d.points);
+      return { row: row, col: col, colour: colour, detail: d, points: d.points, to_lid: n - 1 };
+    });
+  };
+  /* Floor line penalty at the end of phase B. */
+  Table.prototype.payFloor = function () {
+    var st = this.st, b = this.board(), items = b.floor.slice(), self = this;
+    var keys = items.map(function (x, i) { return "fl" + i; });
+    var rects = this.rects(keys);
+    var pen = E.floorPenalty(items.length), before = b.score;
+    b.score = Math.max(0, b.score + pen);
+    items.forEach(function (t) { if (t !== E.MARKER) st.lid.push(t); });
+    b.floor = [];
+    var hadMarker = items.indexOf(E.MARKER) >= 0;
+    if (hadMarker) this.opt.markerMine = true;
+    if (this.opt.supply && this.opt.supply.lid !== undefined) this.opt.supply.lid = st.lid.length;
+    this.render();
+    var moves = items.map(function (x, i) { return { from: "fl" + i, to: x === E.MARKER ? "pbm" : "lid", html: itemHTML(x, { label: false }) }; });
+    if (pen) { this.pop("score", AZ.minus(pen), true); Snd.play("lose"); }
+    return this.fly(moves, rects).then(function () { return { items: items.length, penalty: pen, before: before, score: b.score, marker: hadMarker }; });
+  };
+
+  /* Text for a scored tile: "across 3 + down 2 = 5" */
+  AZ.detailText = function (d) {
+    if (d.lone) return "no neighbours = 1";
+    var parts = [];
+    if (d.h > 1) parts.push("across " + d.h);
+    if (d.v > 1) parts.push("down " + d.v);
+    return parts.join(" + ") + " = " + d.points;
+  };
+  AZ.floorText = function (n) {
+    var vals = E.FLOOR_VALUES.slice(0, Math.min(n, E.FLOOR_SPACES)).map(function (v) { return Math.abs(v); });
+    return vals.length ? vals.join(" + ") + " = " + E.floorPenalty(n) * -1 : "0";
+  };
+
+  AZ.parseAct = function (el) {
+    var d = el.dataset, a = { kind: d.act, el: el };
+    if (d.src !== undefined) a.src = d.src === "centre" ? E.CENTRE : +d.src;
+    if (d.colour) a.colour = d.colour;
+    if (d.line !== undefined) a.line = +d.line;
+    if (d.r !== undefined) { a.r = +d.r; a.c = +d.c; }
+    if (d.area) a.area = d.area;
+    if (d.i !== undefined) a.i = +d.i;
+    if (d.id) a.id = d.id;
+    return a;
+  };
+  /* Answer options: the correct number plus up to three distinct positive distractors, in order. */
+  AZ.numOptions = function (correct, cands) {
+    var out = [correct];
+    cands.forEach(function (x) { if (out.length < 4 && x > 0 && out.indexOf(x) < 0) out.push(x); });
+    for (var d = 1; out.length < 4; d++) { if (out.indexOf(correct + d) < 0) out.push(correct + d); if (out.length < 4 && correct - d > 0 && out.indexOf(correct - d) < 0) out.push(correct - d); }
+    return out.sort(function (a, b) { return a - b; });
+  };
+  AZ.placeMsg = function (b, line, colour) {
+    var code = E.placeReason(b, line, colour), pl = b.lines[line], n = line + 1;
+    if (code === "full") return "Pattern line " + n + " is already full.";
+    if (code === "other") return "Pattern line " + n + " already holds " + pl.colour + ". A line holds one colour only.";
+    if (code === "wall") return "Row " + n + " of your wall already has a " + colour + " tile, so " + colour + " can't go in pattern line " + n + ".";
+    return null;
+  };
+
+  /* ---------------- rules overlay ---------------- */
+  function rulesHTML() {
+    var F = E.FACTORIES, fv = E.FLOOR_VALUES, tot = [];
+    for (var n = 1; n <= E.FLOOR_SPACES; n++) tot.push(-E.floorPenalty(n));
+    return '<div class="sheet" tabindex="-1"><div class="sheethead"><h2 id="rulesTitle">Azul rules in plain words</h2><button class="btn small" type="button" data-close>Close</button></div>' +
+      "<p><b>Goal:</b> collect tiles, fill your pattern lines, and move tiles to your wall for points. The game ends after the round in which someone completes a row across their wall. Most points wins.</p>" +
+      '<h3>Words</h3><dl class="words">' +
+      "<div><dt>Tile:</dt> <dd>a square piece. 100 tiles, " + E.TILES_PER_COLOUR + " in each colour: blue B, yellow Y, red R, black K, white W.</dd></div>" +
+      "<div><dt>Factory display:</dt> <dd>a round disc in the middle of the table. Tiles are offered on it.</dd></div>" +
+      "<div><dt>Centre of the table:</dt> <dd>the space inside the ring of factory displays.</dd></div>" +
+      "<div><dt>Pattern lines:</dt> <dd>the five rows of spaces on the left of your board. Line 1 has 1 space, line 5 has 5.</dd></div>" +
+      "<div><dt>Wall:</dt> <dd>the 5 by 5 grid on the right. Each space shows the colour that belongs there.</dd></div>" +
+      "<div><dt>Floor line:</dt> <dd>the seven spaces at the bottom. Tiles you can't use go here and cost points.</dd></div>" +
+      "<div><dt>Starting player marker:</dt> <dd>a token with a 1. Whoever has it goes first next round. It is not a tile.</dd></div>" +
+      "<div><dt>Box lid:</dt> <dd>where used tiles wait until the bag runs empty.</dd></div></dl>" +
+      "<h3>Setup</h3><ul><li>Everyone uses the same side of the player board. Score markers start on 0.</li>" +
+      "<li>Factory displays: " + F[2] + " for 2 players, " + F[3] + " for 3 players, " + F[4] + " for 4 players.</li>" +
+      "<li>All tiles go in the bag. The starting player takes the marker and puts " + E.TILES_PER_FACTORY + " tiles on each factory display.</li></ul>" +
+      "<h3>A. Factory offer (take tiles)</h3><ul><li>The starting player puts the marker in the centre and goes first. Then turns go clockwise (to the left).</li>" +
+      "<li>On your turn, take <b>all</b> tiles of <b>one colour</b> from one factory display. Push the rest of that display into the centre. Or take all tiles of one colour from the centre.</li>" +
+      "<li>The first player to take from the centre also takes the starting player marker. It goes on the leftmost free space of their floor line.</li>" +
+      "<li>Put all the tiles you took into <b>one</b> pattern line, from right to left. A line holds one colour. You can't use a colour that is already in that row of your wall.</li>" +
+      "<li>Tiles that don't fit go to your floor line. You may also put them all on the floor line.</li>" +
+      "<li>This phase ends when every factory display and the centre are empty.</li></ul>" +
+      "<h3>B. Wall-tiling (score)</h3><ul><li>Go through your pattern lines from top to bottom.</li>" +
+      "<li>A <b>complete</b> line (every space full) moves its rightmost tile to the space of the same colour in the wall row beside it. The other tiles of that line go to the box lid.</li>" +
+      "<li>Lines that aren't complete keep their tiles for the next round.</li>" +
+      "<li>A new wall tile with no neighbours scores 1. Otherwise count the unbroken line of tiles across it and the unbroken line down it (each only if it is 2 or more) and add them.</li>" +
+      "<li>Then lose points for your floor line. Your score never goes below 0. Floor tiles go to the box lid; the marker stays with you.</li></ul>" +
+      '<div class="tscroll"><table class="mini"><tr><th>Floor space</th>' + fv.map(function (v, i) { return "<th>" + (i + 1) + "</th>"; }).join("") + "</tr><tr><td>Costs</td>" + fv.map(function (v) { return "<td>" + AZ.minus(v) + "</td>"; }).join("") +
+      "</tr><tr><td>Total lost</td>" + tot.map(function (v) { return "<td>" + v + "</td>"; }).join("") + "</tr></table></div>" +
+      "<p>Tiles beyond the seventh floor space go straight to the box lid and cost nothing more.</p>" +
+      "<h3>C. Prepare the next round</h3><ul><li>If nobody has completed a row across their wall, the player with the marker fills every factory display with " + E.TILES_PER_FACTORY + " tiles again.</li>" +
+      "<li>If the bag runs empty while filling, pour every tile from the box lid into the bag and keep going.</li></ul>" +
+      "<h3>End of the game</h3><ul><li>The game ends after wall-tiling in the round when someone completes a row <b>across</b>. A full column does not end it.</li>" +
+      "<li>Bonuses: +" + E.ROW_BONUS + " for each complete row, +" + E.COLUMN_BONUS + " for each complete column, +" + E.COLOUR_BONUS + " for each colour with all 5 tiles on your wall.</li>" +
+      "<li>Most points wins. If tied, the tied player with more complete rows wins. Still tied: you share the win.</li></ul>" +
+      '<p class="why">Full rules: the English player manual (docs/azul/manual.md). This page is an unofficial learning aid with its own tile designs.</p>' +
+      '<div class="row-btns"><button class="btn primary" type="button" data-close>Back to where I was</button></div></div>';
+  }
+  var lastFocus = null;
+  AZ.openRules = function () {
+    var o = $("#rules");
+    lastFocus = document.activeElement;
+    o.innerHTML = rulesHTML(); o.hidden = false;
+    setTimeout(function () { var s = $(".sheet", o); s.scrollTop = 0; s.focus(); }, 10);
+    Snd.ensure(); Snd.play("tap");
+  };
+  AZ.closeRules = function () { var o = $("#rules"); o.hidden = true; o.innerHTML = ""; if (lastFocus && lastFocus.focus) lastFocus.focus(); };
+
+  /* ---------------- navigation ---------------- */
+  AZ.screens = ["home", "lesson", "bridge", "puzzle", "rush"];
+  AZ.leaveHooks = [];
+  AZ.show = function (id, where) {
+    AZ.leaveHooks.forEach(function (f) { try { f(id); } catch (e) { /* ignore */ } });
+    AZ.screens.forEach(function (s) { $("#" + s).hidden = s !== id; });
+    $("#homeBtn").hidden = id === "home";
+    $("#where").textContent = where ? "· " + where : "";
+    window.scrollTo(0, 0);
+  };
+})();
+</script>
+<script>
+/* Chapter 1: Learn the game. Each lesson is a short script: say, let the player act, check, explain, Remember card. */
+(function () {
+  "use strict";
+  var E = window.AzulEngine, AZ = window.AZ, $ = AZ.$, w = AZ.w, Snd = AZ.Snd, LET = E.LETTERS;
+  var F = E.FACTORIES, PER = E.TILES_PER_FACTORY, TOTAL = E.TILES_PER_COLOUR * E.COLOURS.length;
+
+  function shuffled(n) {
+    var a = []; for (var i = 0; i < n; i++) a.push(E.COLOURS[i % 5]);
+    for (i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; }
+    return a;
+  }
+
+  /* Phase B for one line, without revealing the points yet (the player predicts them first). */
+  AZ.Table.prototype.tileLineQuiet = function (row) {
+    var st = this.st, b = this.board(), pl = b.lines[row], colour = pl.colour, n = pl.count;
+    var col = E.wallColumn(row, colour), keys = [];
+    for (var s = 0; s < n; s++) keys.push("l" + row + "-" + s);
+    var rects = this.rects(keys);
+    b.wall[row][col] = colour;
+    var d = E.scoreDetail(b.wall, row, col);
+    for (s = 0; s < n - 1; s++) st.lid.push(colour);
+    pl.colour = null; pl.count = 0;
+    if (this.opt.supply && this.opt.supply.lid !== undefined) this.opt.supply.lid = st.lid.length;
+    this.extraMarks = { ring: [row, col] };
+    this.render();
+    var moves = [{ from: "l" + row + "-0", to: "w" + row + "-" + col, html: AZ.tileHTML(colour, { label: false }) }];
+    for (s = 1; s < n; s++) moves.push({ from: "l" + row + "-" + s, to: "lid", html: AZ.tileHTML(colour, { label: false }) });
+    return this.fly(moves, rects).then(function () { return { row: row, col: col, colour: colour, detail: d, points: d.points, to_lid: n - 1 }; });
+  };
+  AZ.Table.prototype.reveal = function (res) {
+    var d = res.detail;
+    this.board().score += d.points;
+    this.extraMarks = { h: d.h > 1 ? d.across : [], v: d.v > 1 ? d.down : [], pick: d.lone ? [[res.row, res.col]] : [] };
+    this.render();
+    this.pop("w" + res.row + "-" + res.col, "+" + d.points); Snd.play("score", d.points);
+  };
+  /* Draw up to `n` tiles from bag (array) onto factory i, with flights from the bag. */
+  AZ.Table.prototype.fillFactory = function (i, bag) {
+    var f = this.st.factories[i], need = PER - f.length, moves = [], rects = this.rects(["bag"]);
+    var start = f.length;
+    for (var q = 0; q < need && bag.length; q++) f.push(bag.pop());
+    if (this.opt.supply) this.opt.supply.bag = bag.length;
+    this.render();
+    for (q = start; q < f.length; q++) moves.push({ from: "bag", to: "f" + i + "-" + q, html: AZ.tileHTML(f[q], { label: false }) });
+    if (moves.length) Snd.play("clack");
+    return this.fly(moves, rects);
+  };
+
+  /* ---------------- the lesson runner ---------------- */
+  function Runner(idx) {
+    this.idx = idx; this.dead = false; this.pending = null; this.nextResolve = null; this.choice = null;
+    this.root = $("#lesson");
+    var L = LESSONS[idx];
+    this.root.innerHTML =
+      '<div class="shead"><div class="eyebrow">Learn the game · Lesson ' + (idx + 1) + " of " + LESSONS.length + "</div><h2>" + L.title + '</h2><div class="dots" aria-hidden="true">' +
+      LESSONS.map(function (l, i) { return '<i class="' + (i === idx ? "on" : AZ.Save.data.lessons[l.id] ? "done" : "") + '"></i>'; }).join("") + "</div></div>" +
+      '<div class="coach" id="coach"><div class="say" id="cSay"></div><div class="msg" id="cMsg" role="status" hidden></div><div class="choices" id="cChoices" hidden></div><div class="row-btns" id="cBtns"></div></div>' +
+      '<div class="stage" id="lStage"></div><div id="lEnd"></div>';
+    this.table = new AZ.Table($("#lStage"), E.makeState({}), {});
+  }
+  Runner.prototype.check = function () { if (this.dead) throw AZ.ABORT; };
+  Runner.prototype.scene = function (stateOpts, opt) {
+    this.table.st = E.makeState(stateOpts);
+    this.table.opt = opt; this.table.hand = null; this.table.extraMarks = null; this.table.goal = null;
+    this.table.render();
+  };
+  Runner.prototype.render = function () { this.table.render(); };
+  Runner.prototype.say = function (html) {
+    this.check();
+    $("#cSay").innerHTML = html; this.msg(null);
+    $("#cChoices").hidden = true; $("#cChoices").innerHTML = ""; $("#cBtns").innerHTML = "";
+    AZ.say(html);
+  };
+  Runner.prototype.msg = function (text, ok) {
+    var m = $("#cMsg"); if (!m) return;
+    if (!text) { m.hidden = true; m.textContent = ""; return; }
+    m.hidden = false; m.className = "msg" + (ok ? " ok" : ""); m.innerHTML = text;
+  };
+  Runner.prototype.next = function (label) {
+    this.check();
+    var self = this;
+    $("#cBtns").innerHTML = '<button class="btn primary" type="button" id="cNext">' + (label || "Next") + " &#8594;</button>";
+    return new Promise(function (res, rej) { self.nextResolve = res; self.nextReject = rej; }).then(function () { self.check(); });
+  };
+  /* Wait for a stage action that `validate` accepts (true). A string rejects it with that reason. */
+  Runner.prototype.act = function (validate, goal) {
+    this.check();
+    var self = this;
+    this.table.goal = goal || null; this.table.applyGoal();
+    return new Promise(function (res, rej) { self.pending = { validate: validate, resolve: res, reject: rej }; }).then(function (a) {
+      self.check(); self.table.goal = null; self.table.applyGoal(); return a;
+    });
+  };
+  Runner.prototype.onAction = function (a) {
+    if (!this.pending) return;
+    var r = this.pending.validate(a);
+    if (r === true) { var p = this.pending; this.pending = null; this.msg(null); Snd.play("tap"); p.resolve(a); }
+    else if (typeof r === "string") {
+      this.msg(r); Snd.play("wrong");
+      if (a.el && !AZ.reduced) { a.el.classList.remove("shake"); void a.el.offsetWidth; a.el.classList.add("shake"); }
+    }
+  };
+  /* Multiple choice in the coach panel. options: [{label, ok, why, value}] */
+  Runner.prototype.choose = function (options) {
+    this.check();
+    var self = this, box = $("#cChoices");
+    box.hidden = false;
+    box.innerHTML = options.map(function (o, i) { return '<button class="btn" type="button" data-choice="' + i + '">' + o.label + "</button>"; }).join("");
+    return new Promise(function (res, rej) { self.choice = { options: options, resolve: res, reject: rej }; }).then(function (v) { self.check(); return v; });
+  };
+  Runner.prototype.onChoice = function (i, el) {
+    if (!this.choice) return;
+    var o = this.choice.options[i];
+    if (o.ok) {
+      el.classList.add("right"); Snd.play("ok");
+      $$all("#cChoices .btn").forEach(function (b) { b.disabled = true; });
+      if (o.why) this.msg(o.why, true);
+      var c = this.choice; this.choice = null;
+      setTimeout(function () { c.resolve(o.value !== undefined ? o.value : o.label); }, AZ.reduced ? 50 : 450);
+    } else {
+      el.classList.add("wrong"); Snd.play("wrong"); this.msg(o.why || "Not quite. Try again.");
+    }
+  };
+  function $$all(s) { return AZ.$$(s); }
+  Runner.prototype.abort = function () {
+    this.dead = true;
+    if (this.pending) this.pending.reject(AZ.ABORT);
+    if (this.nextReject) this.nextReject(AZ.ABORT);
+    if (this.choice) this.choice.reject(AZ.ABORT);
+  };
+  Runner.prototype.remember = function (lines) {
+    this.check();
+    var idx = this.idx, L = LESSONS[idx], last = idx === LESSONS.length - 1;
+    AZ.Save.data.lessons[L.id] = true; AZ.Save.save();
+    $("#coach").hidden = true; $("#lStage").hidden = true;
+    $("#lEnd").innerHTML = '<div class="card remember fadein"><h3><span class="tag">Lesson ' + (idx + 1) + " done</span> Remember</h3><ul>" +
+      lines.map(function (l) { return "<li>" + l + "</li>"; }).join("") + '</ul><div class="row-btns">' +
+      (last ? '<button class="btn primary" type="button" id="lnCh2">Next: Score better &#8594;</button>'
+        : '<button class="btn primary" type="button" id="lnNext">Next: ' + LESSONS[idx + 1].title + " &#8594;</button>") +
+      '<button class="btn" type="button" id="lnAgain">Play this lesson again</button><button class="btn ghost" type="button" id="lnMap">Back to the map</button></div></div>';
+    Snd.play("win");
+    var f = $("#lnCh2") || $("#lnNext"); if (f) f.focus();
+  };
+
+  function areaWrong(a) {
+    return { lines: "That's the pattern lines: the staircase of rows on the left.", wall: "That's the wall: the 5 by 5 grid.",
+      floor: "That's the floor line, along the bottom.", score: "That's your score." }[a.area];
+  }
+  function wantArea(name) { return function (a) { return a.kind === "area" ? (a.area === name || areaWrong(a)) : false; }; }
+  function lineAct(T, target, extra) {
+    return function (a) {
+      if (a.kind === "floor") return extra && extra.floor ? extra.floor : "That's allowed, but those tiles would cost points. Use pattern line " + (target + 1) + ".";
+      if (a.kind !== "line") return false;
+      var b = T.table.board(), h = T.table.hand, why = AZ.placeMsg(b, a.line, h.colour);
+      if (why) return why;
+      if (a.line === target) return true;
+      if (extra && extra[a.line]) return extra[a.line];
+      var room = a.line + 1 - b.lines[a.line].count, spill = h.n - room;
+      if (spill > 0) return "That's allowed, but pattern line " + (a.line + 1) + " has room for only " + AZ.plural(room, "tile") + ". " + AZ.cap(AZ.plural(spill, "tile")) + " would spill onto the floor line. Use pattern line " + (target + 1) + ".";
+      return "That's allowed too, but for this lesson use pattern line " + (target + 1) + ".";
+    };
+  }
+  function floorChoice(n) {
+    var lost = -E.floorPenalty(n);
+    var cands = [n, -E.floorPenalty(n + 1), -E.floorPenalty(Math.max(1, n - 1)), lost + 1];
+    return AZ.numOptions(lost, cands).map(function (v) {
+      return { label: String(v), ok: v === lost, why: v === lost ? "Yes: " + AZ.floorText(n) + "." : "Add the numbers under the filled spaces, from the left." };
+    });
+  }
+  function scoreChoice(d, wrongWhy) {
+    var cands = [d.h + d.v - 1, d.h > 1 ? d.h : 0, d.v > 1 ? d.v : 0, d.points + 1, d.points - 1];
+    return AZ.numOptions(d.points, cands).map(function (v) {
+      var why;
+      if (v === d.points) why = "Yes: " + AZ.detailText(d) + ".";
+      else if (d.h > 1 && d.v > 1 && v === d.h + d.v - 1) why = "Close. The new tile counts in both lines, so it is counted twice.";
+      else if (d.h > 1 && d.v > 1 && (v === d.h || v === d.v)) why = "It touches tiles across and down. Count both lines and add them.";
+      else why = wrongWhy;
+      return { label: String(v), ok: v === d.points, why: why };
+    });
+  }
+  function wallSpaceAct(T, row, colour) {
+    var col = E.wallColumn(row, colour);
+    return function (a) {
+      if (a.kind !== "wall") return false;
+      if (a.r !== row) return "The tile from pattern line " + (row + 1) + " goes into row " + (row + 1) + " of the wall, the row right beside it.";
+      if (T.table.board().wall[a.r][a.c]) return "That space already has a tile.";
+      if (a.c !== col) return "That space is for " + E.wallColour(a.r, a.c) + ". The " + colour + " tile goes on the " + colour + " space.";
+      return true;
+    };
+  }
+
+  /* ---------------- the eight lessons ---------------- */
+  var LESSONS = AZ.LESSONS = [
+    { id: "l1", title: "What's in the box", blurb: "Tiles, factory displays and your player board.",
+      run: async function (T) {
+        T.scene({ factories: [[]], board: E.newBoard() }, { palette: true, factories: true, centre: false, supply: { bag: TOTAL } });
+        T.say("<p>Azul is a game about decorating a palace wall with " + w("tiles") + ". A tile is a small square piece.</p><p>There are " + TOTAL + " tiles: " + E.TILES_PER_COLOUR + " in each of 5 colours.</p>");
+        await T.next();
+        T.table.opt.paletteActive = true; T.render();
+        T.say("Each colour has a letter and a mark, so you never need to tell colours apart by colour alone. Tap the <b>red</b> tile. Its letter is R and its mark is a diamond.");
+        var a = await T.act(function (a) { return a.kind === "pal" ? (a.colour === "red" || "That is the " + a.colour + " tile, letter " + LET[a.colour] + ". Red has the letter R and a diamond.") : false; }, '[data-act="pal"][data-colour="red"]');
+        T.msg("Right: red, letter R.", true);
+        T.say("Now tap the <b>black</b> tile. Its letter is K, because B already means blue.");
+        await T.act(function (a) { return a.kind === "pal" ? (a.colour === "black" || "That is the " + a.colour + " tile, letter " + LET[a.colour] + ". Black has the letter K and a plus sign.") : false; }, '[data-act="pal"][data-colour="black"]');
+        T.table.opt.paletteActive = false; T.render();
+        T.say("<p>All tiles start in the " + w("bag") + ". To " + w("draw") + " means to reach into the bag without looking and take tiles out.</p><p>Tiles are offered on round cardboard discs called " + w("factory displays") + ".</p>");
+        await T.next();
+        T.table.opt.areas = true; T.render();
+        T.say("This is your " + w("player board") + ". Every player has the same board. Tap the " + w("pattern lines") + ": the five rows on the left, shaped like a staircase. Tiles you collect wait here.");
+        await T.act(wantArea("lines"), '[data-area="lines"]');
+        T.say("Tap the " + w("wall") + ": the 5 by 5 grid on the right. Each space shows the colour of the tile that belongs there. Tiles on the wall score points.");
+        await T.act(wantArea("wall"), '[data-area="wall"]');
+        T.say("Tap the " + w("floor line") + ": the seven spaces along the bottom. Tiles you can't use land here, and each space costs the points printed under it.");
+        await T.act(wantArea("floor"), '[data-area="floor"]');
+        T.say("Tap your " + w("score") + ". On the real board this is the " + w("score track") + " around the edge, where a marker counts your points.");
+        await T.act(wantArea("score"), '[data-area="score"]');
+        T.table.opt.areas = false; T.render();
+        T.say("<p><b>The goal:</b> collect tiles, fill your pattern lines, and move tiles onto your wall for points. The player with the most points at the end wins.</p>");
+        await T.next("Finish lesson");
+        T.remember([TOTAL + " tiles in 5 colours, each with a letter: B blue, Y yellow, R red, K black, W white.",
+          "Your board: pattern lines on the left, the wall on the right, the floor line at the bottom.",
+          "Tiles on the wall score points. Most points wins."]);
+      } },
+
+    { id: "l2", title: "Set up the table", blurb: "Count the factory displays and fill them.",
+      run: async function (T) {
+        T.scene({ factories: [], board: E.newBoard() }, { supply: { bag: TOTAL } });
+        T.say("Let's set up a game. First: how many players?");
+        var n = await T.choose([2, 3, 4].map(function (k) { return { label: k + " players", ok: true, value: k }; }));
+        var bag = shuffled(TOTAL);
+        T.table.st.factories = []; for (var i = 0; i < F[n]; i++) T.table.st.factories.push([]);
+        T.table.opt = { factories: true, centre: false, supply: { bag: bag.length, marker: true }, who: "Your board" };
+        T.render();
+        T.say("With " + n + " players you use " + w(F[n] + " factory displays") + ". (2 players: " + F[2] + ", 3 players: " + F[3] + ", 4 players: " + F[4] + ".) Put them in a ring in the middle of the table.");
+        await T.next();
+        T.say("<p>Every player takes a player board. <b>Everyone uses the same side</b>: the coloured side. Every board is identical.</p><p>Each player's score starts at 0.</p>");
+        await T.next();
+        T.table.opt.factoryBtn = true; T.render();
+        T.say("All " + TOTAL + " tiles go in the bag. Now fill the factory displays: tap each one to draw " + PER + " tiles from the bag onto it.");
+        var filled = 0;
+        while (filled < F[n]) {
+          var a = await T.act(function (a) { return a.kind === "fac" ? (T.table.st.factories[a.i].length >= PER ? "That display already has " + PER + " tiles. Each factory display gets exactly " + PER + "." : true) : false; }, '[data-act="fac"].need');
+          await T.table.fillFactory(a.i, bag); T.check();
+          filled++;
+          T.msg(filled < F[n] ? filled + " of " + F[n] + " filled." : "All " + F[n] + " displays have " + PER + " tiles each.", true);
+        }
+        T.table.opt.factoryBtn = false; T.table.opt.supply.markerBtn = true; T.render();
+        T.say("Last step: choose who starts. That player is the " + w("starting player") + " and takes the " + w("starting player marker") + ", the token with a 1. Let's say it's you: tap the marker.");
+        await T.act(function (a) { return a.kind === "marker" || (a.kind === "fac" ? "The displays are ready. Now tap the starting player marker." : false); }, '[data-act="marker"]');
+        var r = T.table.rects(["ma"]);
+        T.table.opt.supply.marker = false; T.table.opt.markerMine = true; T.render();
+        await T.table.fly([{ from: "ma", to: "pbm", html: AZ.markerHTML({ label: false }) }], r);
+        T.say("You are the starting player. The table is ready to play.");
+        await T.next("Finish lesson");
+        T.remember(["2, 3 or 4 players use " + F[2] + ", " + F[3] + " or " + F[4] + " factory displays.",
+          "Draw " + PER + " tiles from the bag onto each factory display.",
+          "Everyone uses the same board side and starts on 0. The starting player takes the marker."]);
+      } },
+
+    { id: "l3", title: "Take tiles", blurb: "Take one colour; the rest slides to the centre.",
+      run: async function (T) {
+        T.scene({ factories: [["red", "red", "blue", "yellow"], ["black", "black", "black", "white"], ["blue", "blue", "red", "red"], ["yellow", "white", "white", "black"], ["red", "yellow", "yellow", "yellow"]], centre: [], centre_marker: true },
+          { factories: true, hand: true, board: false });
+        T.say("<p>Players take " + w("turns") + ": a turn is one player's go. Turns go " + w("clockwise") + ", to the player on your left.</p><p>The starting player first puts the marker in the " + w("centre of the table") + ": the space inside the ring of displays.</p>");
+        await T.next();
+        T.table.opt.takeable = true; T.render();
+        T.say("On your turn you <b>must</b> take tiles. Pick one colour on one factory display, and you take <b>every</b> tile of that colour there. Try it: tap the red tiles on display 1.");
+        var a = await T.act(function (a) {
+          if (a.kind === "marker") return "The marker isn't a tile. You only take it together with tiles from the centre.";
+          if (a.kind === "emptyfac") return "That display is empty. Pick one with tiles.";
+          return a.kind === "take" && a.src !== E.CENTRE ? true : false;
+        }, '[data-act="take"][data-src="0"][data-colour="red"]');
+        var info = await T.table.take(a.src, a.colour); T.check();
+        T.say("You took " + AZ.plural(info.taken, a.colour + " tile") + ". The other " + AZ.plural(info.pushed, "tile") + " on display " + (a.src + 1) + " slid into the centre. That display is now empty.");
+        await T.next();
+        T.table.hand = null; T.render();
+        T.say("Your tiles go on your board; the next lesson shows how. On a later turn, you may take from the <b>centre</b> instead. Tap a colour in the centre.");
+        a = await T.act(function (a) {
+          if (a.kind === "marker") return "The marker isn't a tile. Tap a tile in the centre; the marker comes along by itself.";
+          if (a.kind === "emptyfac") return "That display is empty. This time, take from the centre.";
+          if (a.kind === "take" && a.src !== E.CENTRE) return "This time, take from the centre of the table.";
+          return a.kind === "take";
+        }, '.centre [data-act="take"]');
+        info = await T.table.take(a.src, a.colour); T.check();
+        T.say("You took " + AZ.plural(info.taken, a.colour + " tile") + " from the centre. You were the first to take from the centre this round, so you also took the " + w("starting player marker") + ". It costs a point or two, but you go first next round.");
+        await T.next();
+        T.table.hand = null; T.render();
+        T.say("Quick check. A display shows 2 blue tiles and 2 red tiles. What may you take?");
+        await T.choose([
+          { label: "One blue tile", ok: false, why: "You must take <b>all</b> tiles of the colour you pick." },
+          { label: "One blue and one red", ok: false, why: "Only <b>one</b> colour per turn." },
+          { label: "Both blue tiles", ok: true, why: "Yes. All tiles of one colour. The 2 red slide to the centre." }]);
+        T.say("When you take from a factory display, where do its other tiles go?");
+        await T.choose([
+          { label: "Back in the bag", ok: false, why: "No. They stay in play for this round." },
+          { label: "Into the centre", ok: true, why: "Yes. Anyone can take them from the centre later." },
+          { label: "They stay on the display", ok: false, why: "No. A display is always emptied when someone takes from it." }]);
+        await T.next("Finish lesson");
+        T.remember(["Take <b>all</b> tiles of <b>one</b> colour, from one factory display or from the centre.",
+          "The rest of that display slides into the centre.",
+          "The first player to take from the centre also takes the starting player marker."]);
+      } },
+
+    { id: "l4", title: "Pattern lines", blurb: "Choose a line; see which lines are not allowed.",
+      run: async function (T) {
+        var b = E.makeBoard({ lines: [null, ["blue", 1], null, null, ["yellow", 2]] });
+        b.wall[3][E.wallColumn(3, "red")] = "red";
+        T.scene({ board: b }, { hand: true });
+        T.table.hand = { colour: "red", n: 3 }; T.render();
+        T.say("<p>Right after you take tiles, you put <b>all</b> of them into <b>one</b> " + w("pattern line") + ". Line 1 has 1 space, line 5 has 5.</p><p>Tiles fill a line from right to left, starting next to the wall.</p>");
+        await T.next();
+        T.table.opt.linesActive = true; T.table.opt.floorActive = true; T.render();
+        T.say("You hold 3 red tiles. Put them in pattern line 3. (Try another line first if you like: you'll see why it doesn't work.)");
+        await T.act(lineAct(T, 2), '[data-act="line"][data-line="2"]');
+        await T.table.place(2); T.check();
+        T.say("Pattern line 3 is full. A full line is called " + w("complete") + ". At the end of the round, each complete line moves one tile to the wall.");
+        await T.next();
+        T.table.hand = { colour: "blue", n: 2 }; T.render();
+        T.say("Now you hold 2 blue tiles. Put them in a line where both fit, so nothing spills.");
+        await T.act(lineAct(T, 3, { 1: "Pattern line 2 already has 1 blue, so it has room for only 1 more. The other tile would spill onto the floor line.", 0: "Pattern line 1 has room for only 1 tile. The other would spill onto the floor line." }), '[data-act="line"][data-line="3"]');
+        await T.table.place(3); T.check();
+        T.table.opt.linesActive = false; T.table.opt.floorActive = false; T.render();
+        T.say("Pattern line 4 is not complete yet. That's fine: an unfinished line keeps its tiles, and you can add more blue on a later turn.");
+        await T.next("Finish lesson");
+        T.remember(["Put all the tiles you take into one pattern line, filling it from the right.",
+          "One colour per line, and never a colour that is already in that row of your wall.",
+          "Line 1 holds 1 tile, line 5 holds 5. A full line is complete."]);
+      } },
+
+    { id: "l5", title: "The floor line", blurb: "Extra tiles fall to the floor and cost points.",
+      run: async function (T) {
+        var b = E.makeBoard({ score: 12, lines: [["black", 1], null, ["blue", 3], ["red", 1], ["white", 2]] });
+        T.scene({ board: b, factories: [], centre: ["red", "red", "red", "blue"], centre_marker: true }, { hand: true, factories: true });
+        T.table.hand = { colour: "yellow", n: 4 }; T.render();
+        T.say("<p>Sometimes you take more tiles than your line can hold. The extra tiles fall to the " + w("floor line") + ", filling it from the left.</p><p>Each floor space costs the points printed under it: " + E.FLOOR_VALUES.map(AZ.minus).join(" ") + ".</p>");
+        await T.next();
+        T.table.opt.linesActive = true; T.table.opt.floorActive = true; T.render();
+        T.say("You hold 4 yellow tiles. Put them in pattern line 2.");
+        await T.act(lineAct(T, 1, { floor: "That's allowed, but let's fill pattern line 2 first." }), '[data-act="line"][data-line="1"]');
+        var pi = await T.table.place(1); T.check();
+        T.table.opt.linesActive = false; T.table.opt.floorActive = false; T.render();
+        T.say("Pattern line 2 took " + pi.placed + ". The other " + pi.to_floor + " fell to the floor line. How many points will the floor line cost you so far?");
+        await T.choose(floorChoice(T.table.board().floor.length));
+        T.table.opt.takeable = true; T.render();
+        T.say("On a later turn, you take tiles from the centre. Tap the red tiles in the centre.");
+        var a = await T.act(function (a) {
+          if (a.kind === "marker") return "The marker isn't a tile. Tap the red tiles; the marker comes along by itself.";
+          return a.kind === "take" ? (a.colour === "red" || "Take the red tiles this time.") : false;
+        }, '[data-act="take"][data-colour="red"]');
+        await T.table.take(a.src, a.colour); T.check();
+        T.table.opt.takeable = false; T.table.opt.linesActive = true; T.table.opt.floorActive = true; T.render();
+        T.say("You were first to take from the centre, so the " + w("starting player marker") + " went onto your floor line first. It counts like a tile there. Now put the 3 red tiles in pattern line 4.");
+        await T.act(lineAct(T, 3), '[data-act="line"][data-line="3"]');
+        await T.table.place(3); T.check();
+        T.table.opt.linesActive = false; T.table.opt.floorActive = false; T.render();
+        var n = T.table.board().floor.length;
+        T.say("Your floor line now holds " + AZ.plural(n, "item") + ". How many points do you lose?");
+        await T.choose(floorChoice(n));
+        T.say("<p>You may also put the tiles you take straight onto the floor line. If all " + E.FLOOR_SPACES + " spaces are full, extra tiles go to the " + w("box lid") + " and cost nothing more.</p><p>Your score can never drop below 0.</p>");
+        await T.next("Finish lesson");
+        T.remember(["Tiles that don't fit fall to the floor line, from left to right.",
+          "Floor spaces cost " + E.FLOOR_VALUES.map(AZ.minus).join(" ") + ": the first items are cheap, later ones hurt.",
+          "The starting player marker counts as an item on the floor line."]);
+      } },
+
+    { id: "l6", title: "Tiles to the wall", blurb: "Move a tile to the wall and count its points.",
+      run: async function (T) {
+        var b = E.makeBoard({ score: 4, wall: [".....", "..X.X", "X....", ".X...", ".X..."], lines: [["blue", 1], ["red", 2], ["white", 3], null, null] });
+        T.scene({ board: b }, { supply: { lid: 0 }, hlLines: [0, 1, 2] });
+        T.say("<p>When every factory display and the centre are empty, collecting stops. Now comes " + w("wall-tiling") + ".</p><p>Each complete pattern line moves its <b>rightmost</b> tile onto the wall, to the space of the same colour in the row beside it.</p>");
+        await T.next();
+        T.table.opt.wallActive = true; T.render();
+        T.say("Pattern line 1 is complete. Tap the wall space where its blue tile goes: row 1, the blue space.");
+        await T.act(wallSpaceAct(T, 0, "blue"), '[data-act="wall"][data-r="0"][data-c="' + E.wallColumn(0, "blue") + '"]');
+        T.table.opt.hlLines = [1, 2];
+        var r = await T.table.tileLine(0); T.check();
+        T.say("The blue tile touches no other tile across or down. A tile with no neighbours scores " + w(r.points + " point") + ".");
+        await T.next();
+        T.say("Pattern line 2 is complete too. Tap the space for its red tile.");
+        await T.act(wallSpaceAct(T, 1, "red"), '[data-act="wall"][data-r="1"][data-c="' + E.wallColumn(1, "red") + '"]');
+        T.table.opt.hlLines = [2];
+        r = await T.table.tileLineQuiet(1); T.check();
+        T.say("The other red tile from that line went into the " + w("box lid") + ". Now count: how many tiles are in the unbroken line across that includes the new tile? That's its points.");
+        await T.choose(scoreChoice(r.detail, "Count the tiles side by side in row 2, including the new one. Stop at a gap."));
+        T.table.reveal(r);
+        T.say("Across: " + AZ.detailText(r.detail) + ". An empty space stops the count.");
+        await T.next();
+        T.say("Last one: pattern line 3. Tap the space for its white tile.");
+        await T.act(wallSpaceAct(T, 2, "white"), '[data-act="wall"][data-r="2"][data-c="' + E.wallColumn(2, "white") + '"]');
+        T.table.opt.hlLines = [];
+        r = await T.table.tileLineQuiet(2); T.check();
+        T.say("This tile touches tiles across <b>and</b> down. Count the unbroken line across, then the unbroken line down, and add them. How many points?");
+        await T.choose(scoreChoice(r.detail, "Count both lines. Across: tiles side by side. Down: tiles above and below."));
+        T.table.reveal(r);
+        T.say("Across and down: " + AZ.detailText(r.detail) + ". The new tile counts in both lines.");
+        T.table.opt.wallActive = false;
+        await T.next("Finish lesson");
+        T.remember(["A complete line moves its rightmost tile to the wall space of the same colour. The rest go to the box lid.",
+          "A tile with no neighbours scores 1.",
+          "Otherwise count the unbroken line across and the unbroken line down, and add them."]);
+      } },
+
+    { id: "l7", title: "End of a round", blurb: "Top to bottom, pay the floor, refill from the bag.",
+      run: async function (T) {
+        var b = E.makeBoard({ score: 9, wall: ["X....", "....X", ".X...", ".....", "....."], lines: [["yellow", 1], ["white", 1], ["red", 3], ["blue", 2], null], floor: [E.MARKER, "white"] });
+        var bag = shuffled(6), lidStart = shuffled(14);
+        T.scene({ board: b, factories: [[], [], [], [], []], centre: [], centre_marker: false, lid: lidStart }, { factories: true, centre: false, supply: { bag: bag.length, lid: lidStart.length } });
+        T.say("<p>Every factory display and the centre are empty, so collecting is over for this round. Now: " + w("wall-tiling") + ".</p><p>Go through your pattern lines <b>from top to bottom</b>. Only complete lines move a tile.</p>");
+        await T.next();
+        T.table.opt.linesActive = true; T.render();
+        var todo = [0, 2];
+        while (todo.length) {
+          T.say(todo.length === 2 ? "Tap the first complete pattern line, starting from the top." : "Tap the next complete pattern line.");
+          var want = todo[0];
+          await T.act(function (a) {
+            if (a.kind !== "line") return false;
+            var pl = T.table.board().lines[a.line], cap = a.line + 1;
+            if (pl.count < cap) return "Pattern line " + (a.line + 1) + " isn't complete (" + pl.count + " of " + cap + "). Its tiles stay for the next round.";
+            if (a.line !== want) return "Go from top to bottom: pattern line " + (want + 1) + " comes first.";
+            return true;
+          }, '[data-act="line"][data-line="' + want + '"]');
+          var r = await T.table.tileLine(want); T.check();
+          T.msg("Pattern line " + (want + 1) + ": " + r.colour + " to the wall, " + AZ.detailText(r.detail) + (r.to_lid ? ". " + AZ.cap(AZ.plural(r.to_lid, "leftover tile")) + " to the box lid." : "."), true);
+          todo.shift();
+        }
+        T.table.opt.linesActive = false; T.render();
+        T.say("Pattern lines 2 and 4 were not complete. Their tiles stay where they are, ready for the next round.");
+        await T.next();
+        T.table.opt.floorActive = true; T.render();
+        T.say("Now pay for your floor line. Tap it.");
+        await T.act(function (a) { return a.kind === "floor"; }, '[data-act="floor"]');
+        var fr = await T.table.payFloor(); T.check();
+        T.table.opt.floorActive = false; T.render();
+        T.say("You lost " + AZ.floorText(fr.items) + " points. The floor tiles went to the box lid. The starting player marker stays with you: you start the next round.");
+        await T.next();
+        T.table.opt.factoryBtn = true; T.table.opt.supply.bag = bag.length; T.render();
+        T.say("Nobody has a complete row across, so the game goes on: " + w("prepare the next round") + ". You hold the marker, so you fill every factory display with " + PER + " tiles again. Tap each display.");
+        var lid = T.table.st.lid, poured = false;
+        while (T.table.st.factories.some(function (f) { return f.length < PER; })) {
+          var a = await T.act(function (a) {
+            if (a.kind === "lid") return "Fill the displays first. You only use the box lid when the bag runs empty.";
+            return a.kind === "fac" ? (T.table.st.factories[a.i].length >= PER ? "That display already has " + PER + " tiles." : true) : false;
+          }, '[data-act="fac"].need');
+          await T.table.fillFactory(a.i, bag); T.check();
+          if (!bag.length && T.table.st.factories.some(function (f) { return f.length < PER; }) && !poured) {
+            T.table.opt.supply.lidBtn = true; T.table.opt.factoryBtn = false; T.render();
+            T.say("The bag is empty, but a display still needs tiles! Tap the " + w("box lid") + " to pour all its tiles into the bag. Then keep filling.");
+            await T.act(function (a) { return a.kind === "lid" || (a.kind === "fac" ? "The bag is empty. Pour in the box lid first." : false); }, '[data-act="lid"]');
+            var rr = T.table.rects(["lid"]);
+            while (lid.length) bag.push(lid.pop());
+            T.table.opt.supply = { bag: bag.length, lid: 0 }; T.table.opt.factoryBtn = true; T.render();
+            Snd.play("slide");
+            await T.table.fly([{ from: "lid", to: "bag", html: '<svg class="ico" style="width:34px;height:34px"><use href="#ico-lid"/></svg>' }], rr);
+            poured = true;
+            T.say("Mixed into the bag. Now finish filling the displays.");
+          }
+        }
+        T.table.opt.factoryBtn = false; T.render();
+        T.say("Every display has " + PER + " tiles. The new round begins: you put the marker in the centre and take the first turn.");
+        await T.next("Finish lesson");
+        T.remember(["Wall-tiling goes from top to bottom. Unfinished lines keep their tiles.",
+          "Pay the floor line. Floor tiles and leftovers go to the box lid; the marker holder starts next round.",
+          "If the bag runs empty while filling, pour the box lid into the bag."]);
+      } },
+
+    { id: "l8", title: "End of the game", blurb: "A full row ends it. Then bonuses.",
+      run: async function (T) {
+        var b = E.makeBoard({ score: 52, wall: ["X.X..", "XXX.X", "X.X.X", "X..X.", "X..XX"], lines: [null, ["red", 2], null, null, null] });
+        T.scene({ board: b }, { hlLines: [1] });
+        T.say("The game ends after the round in which any player completes a " + w("row") + ": 5 tiles side by side across the wall. Here it is the last wall-tiling of the game.");
+        await T.next();
+        T.table.opt.linesActive = true; T.render();
+        T.say("Tap pattern line 2 to move its red tile to the wall.");
+        await T.act(function (a) { return a.kind === "line" ? (a.line === 1 || "Pattern line " + (a.line + 1) + " isn't complete. Tap pattern line 2.") : false; }, '[data-act="line"][data-line="1"]');
+        T.table.opt.linesActive = false; T.table.opt.hlLines = [];
+        var r = await T.table.tileLine(1); T.check();
+        T.say("Row 2 is complete! The tile scored " + AZ.detailText(r.detail) + ". Everyone finishes this wall-tiling and the floor line. Then the game ends: no new round.");
+        await T.next();
+        T.say("Does a full " + w("column") + " (5 tiles straight down) end the game?");
+        await T.choose([{ label: "Yes", ok: false, why: "No. Only a complete row <b>across</b> ends the game." }, { label: "No", ok: true, why: "Right. Only a complete row across ends it." }]);
+        T.table.extraMarks = null; T.table.opt.wallActive = true; T.render();
+        var wall = T.table.board().wall, parts = E.bonusParts(wall), picked = [], bonus = 0;
+        function cellsOf(kind, x) {
+          var out = [], i;
+          for (i = 0; i < 5; i++) {
+            if (kind === "rows") out.push([x, i]);
+            else if (kind === "columns") out.push([i, x]);
+            else out.push([i, E.wallColumn(i, x)]);
+          }
+          return out;
+        }
+        var steps = [
+          { kind: "rows", ask: "Now the " + w("end bonuses") + ". Each complete row is worth +" + E.ROW_BONUS + ". Tap a tile in each complete row.", value: E.ROW_BONUS,
+            key: function (a) { return a.r; }, name: function (x) { return "row " + (x + 1); }, miss: function (a) { return "Row " + (a.r + 1) + " has only " + wall[a.r].filter(Boolean).length + " tiles."; } },
+          { kind: "columns", ask: "Each complete column (5 down) is worth +" + E.COLUMN_BONUS + ". Tap a tile in each complete column.", value: E.COLUMN_BONUS,
+            key: function (a) { return a.c; }, name: function (x) { return "column " + (x + 1); }, miss: function (a) { var n = 0; for (var i = 0; i < 5; i++) if (wall[i][a.c]) n++; return "Column " + (a.c + 1) + " has only " + n + " tiles."; } },
+          { kind: "colours", ask: "Each colour with all 5 of its tiles on your wall is worth +" + E.COLOUR_BONUS + ". Tap a tile of each such colour.", value: E.COLOUR_BONUS,
+            key: function (a) { return wall[a.r][a.c]; }, name: function (x) { return "all 5 " + x; }, miss: function (a) { var c = wall[a.r][a.c], n = 0; for (var i = 0; i < 5; i++) if (wall[i][E.wallColumn(i, c)]) n++; return "Only " + n + " of the 5 " + c + " tiles are on your wall."; } }];
+        for (var s = 0; s < steps.length; s++) {
+          var st = steps[s], found = [];
+          T.say(st.ask);
+          while (found.length < parts[st.kind].length) {
+            var a = await T.act(function (a) {
+              if (a.kind !== "wall") return false;
+              if (!wall[a.r][a.c]) return "That space is empty. Tap a tile.";
+              var k = st.key(a);
+              if (parts[st.kind].indexOf(k) < 0) return st.miss(a);
+              if (found.indexOf(k) >= 0) return "Already counted. " + (found.length < parts[st.kind].length ? "Find another." : "");
+              return true;
+            }, null);
+            var k = st.key(a); found.push(k); bonus += st.value;
+            picked = picked.concat(cellsOf(st.kind, k));
+            T.table.extraMarks = { pick: picked }; T.render();
+            T.table.pop("w" + a.r + "-" + a.c, "+" + st.value); Snd.play("score", 3);
+            T.msg(AZ.cap(st.name(k)) + ": +" + st.value + ".", true);
+          }
+          if (!parts[st.kind].length) { T.msg("None this time.", true); await T.next(); }
+        }
+        T.table.opt.wallActive = false;
+        var bd = E.bonusBreakdown(wall);
+        T.table.board().score += bd.total; T.render();
+        T.table.pop("score", "+" + bd.total); Snd.play("win");
+        T.say("Bonus: " + AZ.plural(bd.rows, "row") + " × " + E.ROW_BONUS + " + " + AZ.plural(bd.columns, "column") + " × " + E.COLUMN_BONUS + " + " + AZ.plural(bd.colours, "colour") + " × " + E.COLOUR_BONUS + " = <b>" + bd.total + "</b>. Final score: <b>" + T.table.board().score + "</b>.");
+        await T.next();
+        T.say("<p>The player with the most points wins.</p><p>If players tie, the tied player with more complete rows wins. Still tied? You share the victory.</p>");
+        await T.next("Finish lesson");
+        T.remember(["The game ends after the round in which someone completes a row across.",
+          "Bonuses: +" + E.ROW_BONUS + " per complete row, +" + E.COLUMN_BONUS + " per complete column, +" + E.COLOUR_BONUS + " per colour with all 5 tiles.",
+          "Most points wins. Tie: more complete rows wins."]);
+      } }
+  ];
+
+  /* ---------------- open / close ---------------- */
+  var cur = null;
+  AZ.openLesson = function (idx) {
+    if (cur) cur.abort();
+    AZ.show("lesson", "Lesson " + (idx + 1));
+    var T = cur = new Runner(idx);
+    LESSONS[idx].run(T).catch(function (e) { if (e !== AZ.ABORT) console.error(e); });
+  };
+  AZ.leaveHooks.push(function (to) { if (to !== "lesson" && cur) { cur.abort(); cur = null; } });
+
+  $("#lesson").addEventListener("click", function (ev) {
+    var t = ev.target;
+    if (!cur) return;
+    if (t.closest("#cNext")) { var r = cur.nextResolve; cur.nextResolve = null; $("#cBtns").innerHTML = ""; Snd.play("tap"); if (r) r(); return; }
+    var ch = t.closest("[data-choice]");
+    if (ch) { cur.onChoice(+ch.dataset.choice, ch); return; }
+    if (t.closest("#lnNext")) { AZ.openLesson(cur.idx + 1); return; }
+    if (t.closest("#lnAgain")) { AZ.openLesson(cur.idx); return; }
+    if (t.closest("#lnCh2")) { AZ.openBridge(); return; }
+    if (t.closest("#lnMap")) { AZ.goHome(); return; }
+    var el = t.closest("[data-act]");
+    if (el && $("#lStage").contains(el)) cur.onAction(AZ.parseAct(el));
+  });
+  AZ.lessonKey = function (ev) {
+    if (!cur) return false;
+    var k = ev.key;
+    if (/^[1-5]$/.test(k)) { var el = $('#lStage [data-act="line"][data-line="' + (+k - 1) + '"]'); if (el) { cur.onAction(AZ.parseAct(el)); return true; } }
+    if (k === "f" || k === "F" || k === "0") { var fl = $('#lStage [data-act="floor"]'); if (fl) { cur.onAction(AZ.parseAct(fl)); return true; } }
+    return false;
+  };
+})();
+</script>
+<script>
+/* Chapter 2 (bridge + Score better puzzles), Chapter 3 (Quick-fire), home map and start-up. */
+(function () {
+  "use strict";
+  var E = window.AzulEngine, AZ = window.AZ, $ = AZ.$, $$ = AZ.$$, Snd = AZ.Snd, Save = AZ.Save;
+  var PUZZLES = AZ.PUZZLES = JSON.parse(document.getElementById("azul-puzzles").textContent);
+  var CONST = { ROW_BONUS: E.ROW_BONUS, COLUMN_BONUS: E.COLUMN_BONUS, COLOUR_BONUS: E.COLOUR_BONUS };
+  function fill(t) { return t.replace(/\{(\w+)\}/g, function (m, k) { return CONST[k] !== undefined ? CONST[k] : m; }); }
+  function starStr(n, of) { var s = ""; for (var i = 0; i < (of || 3); i++) s += i < n ? "★" : '<span class="off">★</span>'; return '<span class="stars" aria-label="' + n + ' of 3 stars">' + s + "</span>"; }
+  AZ.starStr = starStr;
+
+  function lessonsDone() { return AZ.LESSONS.every(function (l) { return Save.data.lessons[l.id]; }); }
+  function unlocked() { return Save.data.skipped || lessonsDone(); }
+
+  /* ---------------- bridge ---------------- */
+  AZ.openBridge = function () {
+    AZ.show("bridge", "Score better");
+    Save.data.bridgeSeen = true; Save.save();
+    $("#bridge").innerHTML = '<div class="bridge fadein"><div class="shead"><div class="eyebrow">Chapter 2 · Before you start</div><h2>Score better: what’s new</h2></div>' +
+      '<div class="card"><p>You know the rules. Now each puzzle shows one moment of a game, and <b>you choose the move</b>.</p><ol>' +
+      "<li><b>Points this round</b> means: points from tiles that reach your wall in this round's wall-tiling, minus your floor line. Lines you don't finish score nothing yet.</li>" +
+      "<li>The page tries <b>every legal move</b> and finds the best one. The best move earns 3 stars, the second-best result 2 stars, anything else 1 star.</li>" +
+      "<li>Stuck? Press <b>Hint</b>. After your move you see the point maths, step by step, for your move and for the best one.</li>" +
+      "<li>You can always open <b>Rules</b> at the top, or press <b>Start over</b> to try again.</li></ol>" +
+      '<div class="row-btns"><button class="btn primary" type="button" data-go="puzzle:0">Start puzzle 1 &#8594;</button><button class="btn ghost" type="button" data-go="home">Back to the map</button></div></div></div>';
+    $("#bridge [data-go]").focus();
+  };
+
+  /* ---------------- puzzles ---------------- */
+  var P = null;
+  function puzzleState(def) {
+    return E.makeState({ board: E.makeBoard(def.board), factories: def.factories || [], centre: def.centre || [], centre_marker: def.centre_marker !== false });
+  }
+  function moveText(m, take) {
+    var src = m.source === E.CENTRE ? "the centre" : "factory display " + (m.source + 1);
+    var dst = m.line === E.FLOOR ? "the floor line" : "pattern line " + (m.line + 1);
+    return "Take " + AZ.plural(take.taken, m.colour + " tile") + " from " + src + " → " + dst;
+  }
+  function mathsHTML(ev) {
+    var L = [], t = ev.take, pl = ev.tiling;
+    L.push([moveText(ev.move, t), ""]);
+    if (t.took_marker) L.push(["Also take the starting player marker (to the floor line)", ""]);
+    if (t.to_floor) L.push([AZ.cap(AZ.plural(t.to_floor, "tile")) + (t.to_floor === 1 ? " spills" : " spill") + " onto the floor line", ""]);
+    if (!pl.placements.length) L.push(["No pattern line is complete: no wall tiles this round", "0"]);
+    pl.placements.forEach(function (p) {
+      L.push(["Pattern line " + (p.row + 1) + ": " + p.colour + " to the wall, " + AZ.detailText(p.detail).replace(/ = \d+$/, ""), "+" + p.points]);
+    });
+    if (pl.floor_items) L.push(["Floor line: " + AZ.plural(pl.floor_items, "item") + " (" + AZ.floorText(pl.floor_items).replace(/ = \d+$/, "") + ")", AZ.minus(pl.floor_penalty)]);
+    else L.push(["Floor line: empty", "0"]);
+    if (ev.bonus) {
+      var b = ev.bonus;
+      L.push(["End bonus: " + AZ.plural(b.rows, "row") + " × " + E.ROW_BONUS + ", " + AZ.plural(b.columns, "column") + " × " + E.COLUMN_BONUS + ", " + AZ.plural(b.colours, "colour") + " × " + E.COLOUR_BONUS, "+" + b.total]);
+    }
+    return '<div class="maths">' + L.map(function (x) { return '<div class="ln"><span>' + x[0] + "</span><span>" + x[1] + "</span></div>"; }).join("") +
+      '<div class="ln tot"><span>' + (ev.bonus ? "Points this round, bonuses included" : "Points this round") + "</span><span>" + AZ.sign(ev.value) + "</span></div></div>";
+  }
+
+  AZ.openPuzzle = function (i) {
+    if (!unlocked()) { AZ.goHome(); return; }
+    var def = PUZZLES[i];
+    AZ.show("puzzle", "Puzzle " + (i + 1));
+    P = { i: i, def: def, phase: "pick", tries: 0, busy: false };
+    var best = Save.data.stars[def.id] || 0;
+    $("#puzzle").innerHTML = '<div class="shead"><div class="eyebrow">Score better · Puzzle ' + (i + 1) + " of " + PUZZLES.length + " · " + def.level + "</div><h2>" + def.title + "</h2>" + starStr(best) + "</div>" +
+      '<div class="coach" id="pCoach"><div class="say" id="pAsk">' + def.ask + '</div><div class="msg" id="pMsg" role="status" hidden></div><div class="choices" id="pChoices" hidden></div>' +
+      '<div class="row-btns"><button class="btn small" type="button" id="pHint">Hint</button><button class="btn small" type="button" id="pReset">Start over</button></div></div>' +
+      '<div class="stage" id="pStage"></div><div id="pResult"></div>';
+    P.table = new AZ.Table($("#pStage"), null, {});
+    if (def.kind === "score") setupScore(); else setupMove();
+  };
+  function pmsg(t, ok) { var m = $("#pMsg"); if (!t) { m.hidden = true; return; } m.hidden = false; m.className = "msg" + (ok ? " ok" : ""); m.innerHTML = t; }
+
+  function setupMove() {
+    var def = P.def;
+    P.st0 = puzzleState(def);
+    P.solved = E.solve(P.st0, !!def.final);
+    P.table.st = E.clone(P.st0); P.table.hand = null; P.table.extraMarks = null;
+    P.table.opt = { factories: true, takeable: true, hand: true, who: "Your board" };
+    P.phase = "pick"; P.busy = false;
+    P.table.render();
+    $("#pResult").innerHTML = ""; pmsg(null);
+    $("#pAsk").innerHTML = P.def.ask + " <span class=\"why\">Tap a tile to take that colour.</span>";
+  }
+  async function onMoveAction(a) {
+    if (P.busy || P.phase === "done") return;
+    var T = P.table;
+    if (P.phase === "pick") {
+      if (a.kind === "marker") { pmsg("The marker isn't a tile. Tap a tile; the marker comes along when you are first to take from the centre."); Snd.play("wrong"); return; }
+      if (a.kind === "emptyfac") { pmsg("That display is empty."); Snd.play("wrong"); return; }
+      if (a.kind !== "take") return;
+      P.busy = true; pmsg(null);
+      P.move = { source: a.src, colour: a.colour };
+      T.opt.takeable = false;
+      await T.take(a.src, a.colour);
+      T.opt.linesActive = true; T.opt.floorActive = true; T.render();
+      P.phase = "place"; P.busy = false;
+      $("#pAsk").innerHTML = "You hold " + AZ.plural(T.hand.n, a.colour + " tile") + ". Choose a pattern line, or the floor line. <span class=\"why\">(Keys 1–5, F for floor.)</span>";
+      return;
+    }
+    if (P.phase === "place") {
+      var line;
+      if (a.kind === "floor") line = E.FLOOR;
+      else if (a.kind === "line") {
+        var why = AZ.placeMsg(T.board(), a.line, T.hand.colour);
+        if (why) { pmsg(why); Snd.play("wrong"); if (a.el && !AZ.reduced) { a.el.classList.remove("shake"); void a.el.offsetWidth; a.el.classList.add("shake"); } return; }
+        line = a.line;
+      } else return;
+      P.busy = true; pmsg(null);
+      P.move.line = line;
+      T.opt.linesActive = false; T.opt.floorActive = false;
+      await T.place(line);
+      await playTiling(T);
+      finishMove(P.move);
+    }
+  }
+  async function playTiling(T) {
+    var b = T.board();
+    $("#pAsk").innerHTML = "Wall-tiling: complete lines move to the wall, top to bottom.";
+    await AZ.sleep(300);
+    for (var row = 0; row < 5; row++) {
+      if (b.lines[row].count === row + 1) { await T.tileLine(row); await AZ.sleep(350); }
+    }
+    if (b.floor.length) { await T.payFloor(); await AZ.sleep(300); }
+    if (P.def.final) {
+      var bd = E.bonusBreakdown(b.wall);
+      T.extraMarks = null;
+      b.score += bd.total; T.render();
+      if (bd.total) { T.pop("score", "+" + bd.total); Snd.play("score", 6); }
+      await AZ.sleep(300);
+    }
+  }
+  function finishMove(move) {
+    var def = P.def, ev = E.evaluate(P.st0, move, !!def.final), S = P.solved;
+    var shown = P.table.board().score - P.st0.boards[0].score;
+    if (shown !== ev.value) console.error("animated score differs from engine evaluate", shown, ev.value);
+    var rank = S.values.indexOf(ev.value), stars = rank === 0 ? 3 : rank === 1 ? 2 : 1;
+    var prev = Save.data.stars[def.id] || 0;
+    if (stars > prev) { Save.data.stars[def.id] = stars; Save.save(); }
+    P.phase = "done"; P.busy = false; P.lastStars = stars;
+    var bestEv = S.bestMoves[0], isBest = ev.value === S.best;
+    var diff = S.best - ev.value;
+    var verdict = isBest ? "Best possible move!" : AZ.plural(diff, "point") + " short of the best.";
+    var others = S.bestMoves.length > 1 ? '<p class="why">' + AZ.plural(S.bestMoves.length, "move") + " share the best result.</p>" : "";
+    renderResult(stars, verdict,
+      '<div class="cols2"><div><h4>Your move</h4>' + mathsHTML(ev) + "</div>" +
+      (isBest ? '<div><h4>Why it works</h4><p>' + def.why + "</p>" + others + "</div>" :
+        "<div><h4>Best move</h4>" + mathsHTML(bestEv) + '<p class="why" style="margin-top:8px">' + def.why + "</p></div>") + "</div>", true);
+  }
+  function renderResult(stars, verdict, body, canWatch) {
+    var last = P.i === PUZZLES.length - 1;
+    $("#pAsk").innerHTML = P.def.ask;
+    $("#pResult").innerHTML = '<div class="card fadein" style="margin-top:14px" id="pCard"><div class="row-btns" style="justify-content:space-between"><span class="verdict">' + verdict + "</span>" + (stars ? starStr(stars) : "") + "</div>" + body +
+      '<div class="row-btns">' + (last ? '<button class="btn primary" type="button" data-go="rush">Next: Quick-fire &#8594;</button>' : '<button class="btn primary" type="button" id="pNext">Next puzzle &#8594;</button>') +
+      '<button class="btn" type="button" id="pAgain">Try again</button>' + (canWatch ? '<button class="btn" type="button" id="pWatch">Show the best move</button>' : "") +
+      '<button class="btn ghost" type="button" data-go="home">Map</button></div></div>';
+    $$(".shead .stars", $("#puzzle")).forEach(function (s) { s.outerHTML = starStr(Math.max(stars || 0, Save.data.stars[P.def.id] || 0)); });
+    for (var k = 0; k < stars; k++) Snd.play("star", 0.15 * k);
+    AZ.say(verdict + (stars ? " " + stars + " stars." : ""));
+    var card = $("#pCard");
+    if (card && card.scrollIntoView) card.scrollIntoView({ block: "nearest", behavior: AZ.reduced ? "auto" : "smooth" });
+    var nb = $("#pNext") || $('#pCard [data-go="rush"]'); if (nb) nb.focus({ preventScroll: true });
+  }
+  async function watchBest() {
+    var S = P.solved, m = S.bestMoves[0].move;
+    setupMove();
+    P.busy = true; P.phase = "watch";
+    $("#pResult").innerHTML = "";
+    $("#pAsk").innerHTML = "Watch the best move.";
+    await AZ.sleep(500);
+    await P.table.take(m.source, m.colour);
+    P.table.render(); await AZ.sleep(500);
+    await P.table.place(m.line);
+    await playTiling(P.table);
+    var ev = S.bestMoves[0];
+    P.phase = "done"; P.busy = false;
+    renderResult(0, "The best move", '<div class="cols2"><div><h4>Best move</h4>' + mathsHTML(ev) + '</div><div><h4>Why it works</h4><p>' + P.def.why + "</p></div></div>", false);
+  }
+
+  /* "What does this tile score?" puzzles */
+  function setupScore() {
+    var def = P.def, b = E.newBoard();
+    b.wall = E.wallFromMask(def.wall);
+    var r = def.tile[0], c = def.tile[1];
+    b.wall[r][c] = E.wallColour(r, c);
+    P.detail = E.scoreDetail(b.wall, r, c);
+    P.table.st = E.makeState({ board: b }); P.table.opt = { only: "wall", who: "Your wall" }; P.table.extraMarks = { ring: [r, c] };
+    P.table.render(); P.tries = 0; P.phase = "pick";
+    $("#pResult").innerHTML = ""; pmsg(null);
+    var d = P.detail, opts = AZ.numOptions(d.points, [d.h + d.v - 1, d.h, d.v, d.points + 2]);
+    var box = $("#pChoices"); box.hidden = false;
+    box.innerHTML = opts.map(function (v) { return '<button class="btn" type="button" data-ans="' + v + '">' + v + "</button>"; }).join("");
+  }
+  function onScoreAnswer(v, el) {
+    if (P.phase === "done") return;
+    var d = P.detail;
+    P.tries++;
+    if (v !== d.points) {
+      el.classList.add("wrong"); el.disabled = true; Snd.play("wrong");
+      pmsg(d.h > 1 && d.v > 1 && v === d.h + d.v - 1 ? "Close. The new tile counts in both lines, so it is counted twice." :
+        d.h > 1 && d.v > 1 && (v === d.h || v === d.v) ? "It touches tiles across and down. Count both lines and add them." : "Not quite. Count the unbroken line across, then the unbroken line down.");
+      return;
+    }
+    el.classList.add("right"); Snd.play("ok"); pmsg(null);
+    $$("#pChoices .btn").forEach(function (b) { b.disabled = true; });
+    P.table.extraMarks = { ring: P.def.tile, h: d.h > 1 ? d.across : [], v: d.v > 1 ? d.down : [] }; P.table.render();
+    var stars = P.tries === 1 ? 3 : P.tries === 2 ? 2 : 1;
+    if (stars > (Save.data.stars[P.def.id] || 0)) { Save.data.stars[P.def.id] = stars; Save.save(); }
+    P.phase = "done"; P.lastStars = stars;
+    var body = '<div class="cols2"><div><h4>The maths</h4><div class="maths">' +
+      (d.h > 1 ? '<div class="ln"><span>Across: the unbroken line has ' + d.h + " tiles</span><span>+" + d.h + "</span></div>" : '<div class="ln"><span>Across: no neighbour</span><span>0</span></div>') +
+      (d.v > 1 ? '<div class="ln"><span>Down: the unbroken line has ' + d.v + " tiles</span><span>+" + d.v + "</span></div>" : '<div class="ln"><span>Down: no neighbour</span><span>0</span></div>') +
+      '<div class="ln tot"><span>Points</span><span>' + d.points + '</span></div></div></div><div><h4>Why</h4><p>' + P.def.why + "</p></div></div>";
+    renderResult(stars, P.tries === 1 ? "Right first time!" : "Right, on try " + P.tries + ".", body, false);
+  }
+
+  $("#puzzle").addEventListener("click", function (ev) {
+    if (!P) return;
+    var t = ev.target;
+    if (t.closest("#pHint")) { pmsg("Hint: " + fill(P.def.hint), true); Snd.play("tap"); return; }
+    if (t.closest("#pReset")) { if (P.busy) return; Snd.play("tap"); if (P.def.kind === "score") setupScore(); else setupMove(); return; }
+    if (t.closest("#pAgain")) { Snd.play("tap"); if (P.def.kind === "score") setupScore(); else setupMove(); return; }
+    if (t.closest("#pNext")) { AZ.openPuzzle(P.i + 1); return; }
+    if (t.closest("#pWatch")) { watchBest(); return; }
+    var ans = t.closest("[data-ans]");
+    if (ans) { onScoreAnswer(+ans.dataset.ans, ans); return; }
+    var el = t.closest("[data-act]");
+    if (el && $("#pStage").contains(el) && P.def.kind === "move") onMoveAction(AZ.parseAct(el));
+  });
+  AZ.puzzleKey = function (ev) {
+    if ($("#puzzle").hidden || !P || P.def.kind !== "move") return false;
+    var k = ev.key, el = null;
+    if (/^[1-5]$/.test(k)) el = $('#pStage [data-act="line"][data-line="' + (+k - 1) + '"]');
+    else if (k === "f" || k === "F" || k === "0") el = $('#pStage [data-act="floor"]');
+    if (el) { onMoveAction(AZ.parseAct(el)); return true; }
+    return false;
+  };
+
+  /* ---------------- quick-fire ---------------- */
+  var R = null, raf = 0;
+  var MODES = {
+    tile: { name: "Score the tile", blurb: "A tile lands on a wall. How many points does it score?" },
+    floor: { name: "Floor penalty", blurb: "Count what a floor line costs, fast." }
+  };
+  function randInt(n) { return Math.floor(Math.random() * n); }
+  function genTile(level) {
+    var dens = 0.22 + Math.min(0.4, level * 0.07);
+    for (var tries = 0; tries < 200; tries++) {
+      var wall = E.emptyWall(), r, c, empties = [];
+      for (r = 0; r < 5; r++) for (c = 0; c < 5; c++) if (Math.random() < dens) wall[r][c] = E.wallColour(r, c); else empties.push([r, c]);
+      if (!empties.length) continue;
+      var near = empties.filter(function (p) { return [[0, 1], [1, 0], [0, -1], [-1, 0]].some(function (d) { var y = p[0] + d[0], x = p[1] + d[1]; return y >= 0 && y < 5 && x >= 0 && x < 5 && wall[y][x]; }); });
+      var pool = near.length && Math.random() < 0.85 ? near : empties, pick = pool[randInt(pool.length)];
+      var d = E.scoreDetail(wall, pick[0], pick[1]);
+      wall[pick[0]][pick[1]] = E.wallColour(pick[0], pick[1]);
+      return { kind: "tile", wall: wall, at: pick, detail: d, answer: d.points,
+        options: AZ.numOptions(d.points, [d.h + d.v - 1, d.h, d.v, d.points + 1, d.points + 2]) };
+    }
+  }
+  function genFloor(level) {
+    var n = 1 + randInt(7), extra = level >= 2 && n === 7 && Math.random() < 0.5 ? 1 + randInt(2) : 0;
+    var items = []; for (var i = 0; i < n; i++) items.push(E.COLOURS[randInt(5)]);
+    if (Math.random() < 0.35) items[0] = E.MARKER;
+    var lost = -E.floorPenalty(n + extra);
+    return { kind: "floor", items: items, extra: extra, answer: lost,
+      options: AZ.numOptions(lost, [n + extra, -E.floorPenalty(n + 1), -E.floorPenalty(Math.max(1, n - 1)), lost + 1]) };
+  }
+  function rushMenu() {
+    AZ.show("rush", "Quick-fire");
+    stopTimer(); R = null;
+    $("#rush").innerHTML = '<div class="shead"><div class="eyebrow">Chapter 3 · Quick-fire practice</div><h2>Quick-fire</h2></div>' +
+      '<p style="margin-bottom:14px;max-width:62ch">Answer before the bar runs out. You have 3 lives. Every 3 right answers in a row raise your multiplier. Keys 1–4 pick an answer.</p><div class="modes">' +
+      Object.keys(MODES).map(function (k) {
+        return '<div class="card"><h3>' + MODES[k].name + "</h3><p>" + MODES[k].blurb + '</p><p class="why">Best score: <b>' + (Save.data.rush[k] || 0) + '</b></p><div class="row-btns"><button class="btn primary" type="button" data-rush="' + k + '">Play ' + MODES[k].name + "</button></div></div>";
+      }).join("") + "</div>";
+  }
+  AZ.openRush = function (mode) {
+    if (!mode) { rushMenu(); return; }
+    AZ.show("rush", MODES[mode].name);
+    R = { mode: mode, score: 0, lives: 3, streak: 0, bestStreak: 0, right: 0, q: null, locked: false };
+    nextQ();
+  };
+  function mult() { return 1 + Math.min(3, Math.floor(R.streak / 3)); }
+  function nextQ() {
+    var level = Math.floor(R.right / 5);
+    R.q = R.mode === "tile" ? genTile(level) : genFloor(level);
+    R.dur = Math.max(6, 15 - level) * 1000; R.locked = false;
+    renderRush();
+    startTimer();
+  }
+  function hud() {
+    var hearts = ""; for (var i = 0; i < 3; i++) hearts += i < R.lives ? "♥" : "♡";
+    return '<div class="hud"><span class="chip">Score <span id="rScore">' + R.score + '</span></span><span class="chip">Streak ' + R.streak + " · ×" + mult() + '</span><span class="chip lives" aria-label="' + R.lives + ' lives">' + hearts + '</span><span class="chip">Best ' + (Save.data.rush[R.mode] || 0) + "</span></div>";
+  }
+  function qVisual(q, marks) {
+    if (q.kind === "tile") {
+      var b = E.newBoard(); b.wall = q.wall;
+      return AZ.boardHTML(b, { only: "wall", noTop: true, marks: marks || { ring: q.at } });
+    }
+    var b2 = E.newBoard(); b2.floor = q.items;
+    return AZ.boardHTML(b2, { only: "floor" }) + (q.extra ? '<p class="why">…and ' + AZ.plural(q.extra, "more tile") + " that didn’t fit on the floor line.</p>" : "");
+  }
+  function renderRush(feedback) {
+    var q = R.q;
+    $("#rush").innerHTML = '<div class="shead"><div class="eyebrow">Quick-fire · ' + MODES[R.mode].name + '</div></div>' + hud() +
+      '<div class="timer" aria-hidden="true"><i id="rBar"></i></div><div class="qbox" id="rBox"><div class="q">' +
+      (q.kind === "tile" ? "How many points does the ringed tile score?" : "How many points does this floor line lose?") + '</div><div id="rVis">' + qVisual(q) + '</div>' +
+      '<div class="answers">' + q.options.map(function (v, i) { return '<button class="btn" type="button" data-rans="' + v + '"><kbd>' + (i + 1) + "</kbd> " + v + "</button>"; }).join("") + '</div><div id="rFb" role="status"></div></div>';
+  }
+  function startTimer() {
+    stopTimer();
+    var t0 = performance.now(), bar = $("#rBar"), lastTick = 0;
+    function step(now) {
+      if (!R || R.locked) return;
+      var f = Math.max(0, 1 - (now - t0) / R.dur);
+      if (bar) bar.style.transform = "scaleX(" + f + ")";
+      var secs = Math.ceil((R.dur - (now - t0)) / 1000);
+      if (secs <= 3 && secs !== lastTick && secs > 0) { lastTick = secs; Snd.play("tick"); }
+      if (f <= 0) { answer(null, null); return; }
+      raf = requestAnimationFrame(step);
+    }
+    raf = requestAnimationFrame(step);
+  }
+  function stopTimer() { if (raf) cancelAnimationFrame(raf); raf = 0; }
+  function explain(q) {
+    if (q.kind === "tile") return "It scores " + AZ.detailText(q.detail) + ".";
+    var n = Math.min(q.items.length + q.extra, E.FLOOR_SPACES);
+    return "Lose " + AZ.floorText(n) + "." + (q.extra ? " Tiles beyond the seventh space cost nothing." : "");
+  }
+  function answer(v, el) {
+    if (!R || R.locked) return;
+    R.locked = true; stopTimer();
+    var q = R.q, ok = v === q.answer, fb = $("#rFb");
+    $$("#rBox [data-rans]").forEach(function (b) { b.disabled = true; if (+b.dataset.rans === q.answer) b.classList.add("right"); });
+    if (q.kind === "tile") { var d = q.detail; $("#rVis").innerHTML = qVisual(q, { ring: q.at, h: d.h > 1 ? d.across : [], v: d.v > 1 ? d.down : [] }); }
+    if (ok) {
+      var gain = 10 * mult();
+      R.score += gain; R.streak++; R.right++; R.bestStreak = Math.max(R.bestStreak, R.streak);
+      fb.innerHTML = '<p class="msg ok">Right! +' + gain + ". " + explain(q) + "</p>";
+      Snd.play("ok");
+      if (el) { var r = el.getBoundingClientRect(), p = document.createElement("div"); p.className = "pop"; p.textContent = "+" + gain; p.style.left = (r.left + r.width / 2) + "px"; p.style.top = r.top + "px"; document.body.appendChild(p); setTimeout(function () { p.remove(); }, 1250); }
+    } else {
+      R.lives--; R.streak = 0;
+      if (el) el.classList.add("wrong");
+      fb.innerHTML = '<p class="msg">' + (v === null ? "Time's up. " : "Not quite. ") + "The answer is " + q.answer + ". " + explain(q) + "</p>";
+      Snd.play("wrong");
+    }
+    var chips = $(".hud", $("#rush")); if (chips) chips.outerHTML = hud();
+    var wait = ok ? 900 : 2200;
+    R.timeout = setTimeout(function () { if (!R) return; if (R.lives <= 0) gameOver(); else nextQ(); }, AZ.reduced ? Math.min(wait, 1200) : wait);
+  }
+  function gameOver() {
+    var best = Save.data.rush[R.mode] || 0, isNew = R.score > best;
+    if (isNew) { Save.data.rush[R.mode] = R.score; Save.save(); }
+    Snd.play(isNew ? "win" : "over");
+    var other = R.mode === "tile" ? "floor" : "tile";
+    $("#rush").innerHTML = '<div class="shead"><div class="eyebrow">Quick-fire · ' + MODES[R.mode].name + '</div><h2>Game over</h2></div><div class="card fadein" style="max-width:560px"><div class="verdict">' +
+      (isNew ? "New best score!" : "Well played.") + '</div><div class="maths"><div class="ln"><span>Score</span><span>' + R.score + '</span></div><div class="ln"><span>Right answers</span><span>' + R.right +
+      '</span></div><div class="ln"><span>Longest streak</span><span>' + R.bestStreak + '</span></div><div class="ln"><span>Best score</span><span>' + Math.max(best, R.score) + "</span></div></div>" +
+      '<div class="row-btns"><button class="btn primary" type="button" data-rush="' + R.mode + '" id="rAgain">Play again</button><button class="btn" type="button" data-rush="' + other + '">Try ' + MODES[other].name + '</button><button class="btn ghost" type="button" data-go="home">Map</button></div></div>';
+    $("#rAgain").focus();
+    R = null;
+  }
+  $("#rush").addEventListener("click", function (ev) {
+    var t = ev.target, m = t.closest("[data-rush]");
+    if (m) { Snd.ensure(); AZ.openRush(m.dataset.rush); return; }
+    var a = t.closest("[data-rans]");
+    if (a && R) answer(+a.dataset.rans, a);
+  });
+  AZ.rushKey = function (ev) {
+    if ($("#rush").hidden || !R || R.locked) return false;
+    if (/^[1-4]$/.test(ev.key)) { var b = $$("#rBox [data-rans]")[+ev.key - 1]; if (b) { answer(+b.dataset.rans, b); return true; } }
+    return false;
+  };
+  AZ.rushState = function () { return R; };
+  AZ.leaveHooks.push(function (to) { if (to !== "rush") { stopTimer(); if (R && R.timeout) clearTimeout(R.timeout); R = null; } });
+
+  /* ---------------- home / map ---------------- */
+  function heroWall() {
+    var h = "", filled = ["XX.X.", ".XXXX", "X.XX.", "XX..X", ".X.XX"];
+    for (var r = 0; r < 5; r++) for (var c = 0; c < 5; c++) {
+      var col = E.wallColour(r, c);
+      h += AZ.tileHTML(col, { cls: filled[r][c] === "X" ? "" : "ghost", label: false }).replace('class="tile', 'style="animation-delay:' + ((r + c) * 50) + 'ms" class="tile');
+    }
+    return '<div class="hero-tiles" role="img" aria-label="A player wall: 25 spaces in five colours, some tiled">' + h + "</div>";
+  }
+  AZ.goHome = function () {
+    AZ.show("home", "");
+    var L = AZ.LESSONS, done = L.filter(function (l) { return Save.data.lessons[l.id]; }).length;
+    var nextL = L.findIndex(function (l) { return !Save.data.lessons[l.id]; });
+    var stars = PUZZLES.reduce(function (n, p) { return n + (Save.data.stars[p.id] || 0); }, 0);
+    var open = unlocked();
+    var nextP = PUZZLES.findIndex(function (p) { return !Save.data.stars[p.id]; });
+    var primary = nextL >= 0 ? '<button class="btn primary" type="button" data-go="lesson:' + nextL + '">' + (done ? "Continue: lesson " + (nextL + 1) : "Start learning") + " &#8594;</button>"
+      : '<button class="btn primary" type="button" data-go="' + (nextP >= 0 ? "puzzle:" + nextP : "rush") + '">' + (nextP >= 0 ? "Continue: puzzle " + (nextP + 1) : "Play Quick-fire") + " &#8594;</button>";
+    $("#home").innerHTML = '<div class="hero"><div><h1>Azul <span>Tile School</span></h1><p class="lede">Learn the tile-laying game Azul from zero. Short lessons where you move the tiles yourself, then puzzles that make you score better.</p><div class="row-btns">' +
+      primary + (open && nextL >= 0 || Save.data.skipped ? "" : '<button class="btn" type="button" data-go="skip">Skip, I know the rules</button>') + '<button class="btn ghost" type="button" data-go="rules">Read the rules</button></div></div>' + heroWall() + "</div>" +
+      '<div class="map">' +
+      '<div class="chapter"><div class="chhead"><span class="eyebrow">Chapter 1</span><h2>Learn the game</h2><p>' + L.length + " short lessons. One idea each, and you do it.</p>" +
+      '<div class="meter" aria-label="' + done + " of " + L.length + ' lessons done"><i style="width:' + (100 * done / L.length) + '%"></i></div></div><div class="nodes">' +
+      L.map(function (l, i) {
+        var d = Save.data.lessons[l.id];
+        return '<button class="node' + (d ? " done" : i === nextL ? " next" : "") + '" type="button" data-go="lesson:' + i + '"><span class="n">' + (d ? "✓" : i + 1) + '</span><span class="nm">' + l.title + '</span><span class="ds">' + l.blurb + "</span></button>";
+      }).join("") + "</div></div>" +
+      '<div class="chapter' + (open ? "" : " locked") + '"><div class="chhead"><span class="eyebrow">Chapter 2</span><h2>Score better</h2><p>' + PUZZLES.length + " puzzles, easy to hard. Stars: " + stars + " of " + PUZZLES.length * 3 + ".</p></div>" +
+      (open ? "" : '<div class="locknote">Finish the lessons first, or skip them if you already know how to play.<button class="btn small" type="button" data-go="skip">Skip, I know the rules</button></div>') +
+      '<div class="nodes"><button class="node" type="button" data-go="bridge"' + (open ? "" : " disabled") + '><span class="n">?</span><span class="nm">What’s new</span><span class="ds">How puzzles, hints and stars work.</span></button>' +
+      PUZZLES.map(function (p, i) {
+        var s = Save.data.stars[p.id] || 0;
+        return '<button class="node' + (s ? " done" : "") + '" type="button" data-go="puzzle:' + i + '"' + (open ? "" : " disabled") + '><span class="n">' + (i + 1) + '</span><span class="nm">' + p.title + '</span><span class="ds">' + p.level + '</span><span class="st">' + (s ? starStr(s).replace('class="stars"', 'class="stars" style="font-size:15px"') : "") + "</span></button>";
+      }).join("") + "</div></div>" +
+      '<div class="chapter' + (open ? "" : " locked") + '"><div class="chhead"><span class="eyebrow">Chapter 3</span><h2>Quick-fire</h2><p>Speed rounds with a timer, 3 lives and streaks.</p></div><div class="nodes">' +
+      Object.keys(MODES).map(function (k, i) {
+        return '<button class="node" type="button" data-go="rush:' + k + '"' + (open ? "" : " disabled") + '><span class="n">' + ["⌖", "↓"][i] + '</span><span class="nm">' + MODES[k].name + '</span><span class="ds">' + MODES[k].blurb + '</span><span class="st" style="color:var(--ink-2)">Best ' + (Save.data.rush[k] || 0) + "</span></button>";
+      }).join("") + "</div></div></div>" +
+      '<div class="foot"><p>An unofficial learning page for Azul (Michael Kiesling, Plan B Games / Next Move). The tile designs here are our own. Every point value on this page is computed by a rules engine that matches the repo’s Python engine.</p>' +
+      '<div class="row-btns" id="resetRow"><button class="btn small ghost" type="button" id="resetBtn">Reset my progress</button></div></div>';
+  };
+  function resetAsk() {
+    $("#resetRow").innerHTML = '<span>Clear lessons, stars and best scores on this device?</span><button class="btn small" type="button" id="resetYes">Yes, reset</button><button class="btn small ghost" type="button" id="resetNo">Keep them</button>';
+    $("#resetNo").focus();
+  }
+
+  function go(target) {
+    Snd.ensure();
+    var p = target.split(":");
+    if (p[0] === "home") AZ.goHome();
+    else if (p[0] === "lesson") AZ.openLesson(+p[1]);
+    else if (p[0] === "puzzle") AZ.openPuzzle(+p[1]);
+    else if (p[0] === "bridge") AZ.openBridge();
+    else if (p[0] === "rush") AZ.openRush(p[1]);
+    else if (p[0] === "rules") AZ.openRules();
+    else if (p[0] === "skip") { Save.data.skipped = true; Save.save(); AZ.openBridge(); }
+  }
+  document.addEventListener("click", function (ev) {
+    var t = ev.target;
+    var g = t.closest("[data-go]");
+    if (g && !g.disabled) { Snd.play("tap"); go(g.dataset.go); return; }
+    if (t.closest("#resetBtn")) { resetAsk(); return; }
+    if (t.closest("#resetYes")) { Save.reset(); AZ.goHome(); return; }
+    if (t.closest("#resetNo")) { AZ.goHome(); return; }
+  });
+
+  /* ---------------- start-up ---------------- */
+  $("#homeBtn").addEventListener("click", function () { Snd.play("tap"); AZ.goHome(); });
+  $("#rulesBtn").addEventListener("click", function () { AZ.openRules(); });
+  $("#muteBtn").addEventListener("click", function () { Save.data.muted = !Save.data.muted; Save.save(); AZ.syncMute(); if (!Save.data.muted) { Snd.ensure(); Snd.play("ok"); } });
+  $("#rules").addEventListener("click", function (ev) { if (ev.target.id === "rules" || ev.target.closest("[data-close]")) AZ.closeRules(); });
+  document.addEventListener("pointerdown", function () { Snd.ensure(); }, { once: true });
+  document.addEventListener("keydown", function (ev) {
+    if (!$("#rules").hidden) { if (ev.key === "Escape") { AZ.closeRules(); ev.preventDefault(); } return; }
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    var tag = (ev.target.tagName || "").toLowerCase();
+    if (tag === "input" || tag === "textarea") return;
+    if (ev.key === "Enter" && tag !== "button") { var n = $("#cNext"); if (n && !$("#lesson").hidden) { n.click(); ev.preventDefault(); return; } }
+    if (!$("#lesson").hidden && AZ.lessonKey(ev)) { ev.preventDefault(); return; }
+    if (AZ.puzzleKey(ev)) { ev.preventDefault(); return; }
+    if (AZ.rushKey(ev)) { ev.preventDefault(); return; }
+  });
+  AZ.syncMute();
+  AZ.goHome();
+})();
+</script>

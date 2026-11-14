@@ -1,0 +1,32 @@
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <symbol id="mk-blue" viewBox="0 0 20 20"><circle cx="10" cy="10" r="4.2" fill="currentColor"/></symbol>
+    <symbol id="mk-yellow" viewBox="0 0 20 20"><path d="M10 2.5 L12.2 7.8 L17.5 10 L12.2 12.2 L10 17.5 L7.8 12.2 L2.5 10 L7.8 7.8 Z" fill="currentColor"/></symbol>
+    <symbol id="mk-red" viewBox="0 0 20 20"><path d="M10 3.5 L16.5 10 L10 16.5 L3.5 10 Z" fill="currentColor"/></symbol>
+    <symbol id="mk-black" viewBox="0 0 20 20"><path d="M8.3 3.5 H11.7 V8.3 H16.5 V11.7 H11.7 V16.5 H8.3 V11.7 H3.5 V8.3 H8.3 Z" fill="currentColor"/></symbol>
+    <symbol id="mk-white" viewBox="0 0 20 20"><rect x="5.5" y="5.5" width="9" height="9" rx="1" fill="none" stroke="currentColor" stroke-width="2.4"/></symbol>
+    <symbol id="ico-bag" viewBox="0 0 34 34"><path d="M11 9 C11 5 23 5 23 9 L21 11 H13 Z" fill="var(--factory-rim)"/><path d="M13 11 H21 C29 15 31 24 27 29 C24 32 10 32 7 29 C3 24 5 15 13 11 Z" fill="var(--factory)" stroke="var(--factory-rim)" stroke-width="1.6"/><path d="M12 11 Q17 14 22 11" stroke="var(--ink-2)" stroke-width="1.6" fill="none"/></symbol>
+    <symbol id="ico-lid" viewBox="0 0 34 34"><rect x="3" y="11" width="28" height="15" rx="2.5" fill="var(--panel-2)" stroke="var(--ink-2)" stroke-width="1.8"/><path d="M3 15 H31" stroke="var(--ink-2)" stroke-width="1.4"/></symbol>
+  </defs>
+</svg>
+
+<header class="bar">
+  <div class="wrap">
+    <button class="btn small ghost icon-btn" type="button" id="homeBtn" aria-label="Back to the map" hidden>&#8592;</button>
+    <div class="brand"><span class="brand-mark" aria-hidden="true"><i style="background:var(--t-blue)"></i><i style="background:var(--t-yellow)"></i><i style="background:var(--t-red)"></i><i style="background:var(--t-black)"></i></span><span>Azul Tile School</span><span class="where" id="where"></span></div>
+    <button class="btn small" type="button" id="rulesBtn" aria-haspopup="dialog">Rules</button>
+    <button class="btn small icon-btn" type="button" id="muteBtn" aria-pressed="false" aria-label="Sound on. Press to mute.">&#9835;</button>
+  </div>
+</header>
+
+<main class="wrap" id="app">
+  <section class="screen" id="home"></section>
+  <section class="screen" id="lesson" hidden></section>
+  <section class="screen" id="bridge" hidden></section>
+  <section class="screen" id="puzzle" hidden></section>
+  <section class="screen" id="rush" hidden></section>
+</main>
+
+<div class="overlay" id="rules" role="dialog" aria-modal="true" aria-labelledby="rulesTitle" hidden></div>
+<div class="sr" id="live" aria-live="polite"></div>
