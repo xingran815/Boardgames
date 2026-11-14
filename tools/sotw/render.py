@@ -493,3 +493,43 @@ def recap_card(lines, nxt=None, title="Remember"):
         d.rounded_rectangle((W / 2 - tw / 2 - 40, 900, W / 2 + tw / 2 + 40, 990), 45, fill=ACCENT)
         d.text((W / 2 - tw / 2, 916), s, font=F["mid"], fill=(10, 20, 40))
     return im
+
+
+def card_rows(names=("Ana", "Ben"), hl=None, note=None):
+    """Both players' six action cards, one row each, side by side for comparison.
+    hl: list of card ids to highlight in both rows."""
+    im, d = new_canvas()
+    w, h, g = 230, 236, 22
+    x0 = (W - (6 * w + 5 * g)) / 2 + 80
+    for r, nm in enumerate(names):
+        y = 150 + r * 330
+        d.text((x0 - 210, y + h / 2 - 30), nm, font=F["h1"], fill=GOLD)
+        for i, c in enumerate(E.CARD_ORDER):
+            x = x0 + i * (w + g)
+            on = bool(hl and c in hl)
+            d.rounded_rectangle((x, y, x + w, y + h), 18, fill=CARD_UP,
+                                outline=HL if on else (230, 200, 160), width=8 if on else 3)
+            lines = CARD_SHORT[c]
+            top = y + h / 2 - len(lines) * 46 / 2
+            for j, ln in enumerate(lines):
+                text_center(d, (x + w / 2, top + j * 46), ln, F["h3"], fill=(255, 240, 220))
+    if note:
+        text_center(d, (W / 2, 840), note, F["h2"], fill=INK)
+    return im
+
+
+def stones_card(spirit=False):
+    """The six colours in a row; with spirit=True also the Spirit Stone, set apart."""
+    im, d = new_canvas()
+    text_center(d, (W / 2, 110), "Six colors", F["h1"], fill=GOLD)
+    for i, c in enumerate(E.COLORS):
+        x = W / 2 + (i - 2.5) * 230
+        stone(d, x, 330, 70, c)
+        text_center(d, (x, 430), c, F["h2"], fill=INK)
+    if spirit:
+        d.rounded_rectangle((W / 2 - 520, 560, W / 2 + 520, 960), 40, fill=PANEL, outline=GOLD, width=4)
+        stone(d, W / 2 - 330, 760, 90, "clear")
+        d.text((W / 2 - 180, 650), "Spirit Stone", font=F["h1"], fill=GOLD)
+        d.text((W / 2 - 180, 750), "special and shiny", font=F["h2"], fill=INK)
+        d.text((W / 2 - 180, 815), "not a color", font=F["h2"], fill=MUTED)
+    return im

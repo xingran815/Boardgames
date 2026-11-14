@@ -1,0 +1,319 @@
+1
+00:00:00,200 --> 00:00:04,509
+Now let's watch Ana and Ben play a whole game, using everything you learned.
+
+2
+00:00:04,829 --> 00:00:08,562
+We'll slow down for the big moments, and skip quickly through the rest.
+
+3
+00:00:09,566 --> 00:00:11,060
+Ana is at the bottom.
+
+4
+00:00:11,379 --> 00:00:12,638
+Ben is at the top.
+
+5
+00:00:12,958 --> 00:00:16,457
+The bowl starts with a green, a purple, a blue and a red.
+
+6
+00:00:16,777 --> 00:00:20,574
+Ana goes first, so her Take Two Stones card starts face-down.
+
+7
+00:00:21,500 --> 00:00:22,460
+Turn 1.
+
+8
+00:00:22,780 --> 00:00:25,233
+Ana plays Add Two Stones and Take One.
+
+9
+00:00:25,900 --> 00:00:28,652
+Into the bowl: a Spirit Stone and a white.
+
+10
+00:00:29,333 --> 00:00:31,296
+She gives a green stone to the Salmon.
+
+11
+00:00:31,966 --> 00:00:33,737
+Let's skip ahead a few turns.
+
+12
+00:00:37,400 --> 00:00:38,424
+Turn 5.
+
+13
+00:00:38,744 --> 00:00:40,386
+Ana plays Spirit Power.
+
+14
+00:00:40,706 --> 00:00:41,944
+She picks the Wolf.
+
+15
+00:00:42,600 --> 00:00:45,373
+Into the bowl: a red, two purple and a blue.
+
+16
+00:00:46,033 --> 00:00:48,081
+She gives a yellow stone to the Salmon.
+
+17
+00:00:49,733 --> 00:00:51,056
+A few quick turns.
+
+18
+00:00:53,233 --> 00:00:54,193
+Turn 8.
+
+19
+00:00:54,513 --> 00:00:56,092
+Ben plays Spirit Power.
+
+20
+00:00:56,412 --> 00:00:57,798
+He picks the Bison.
+
+21
+00:00:58,466 --> 00:01:01,240
+Into the bowl: two Spirit Stones and a red.
+
+22
+00:01:01,900 --> 00:01:03,820
+He gives a red stone to the Rabbit.
+
+23
+00:01:04,500 --> 00:01:07,444
+Then the Bison sends a Spirit Stone back into the bag.
+
+24
+00:01:07,763 --> 00:01:09,598
+That makes the game last longer.
+
+25
+00:01:11,266 --> 00:01:12,269
+Turn 9.
+
+26
+00:01:12,589 --> 00:01:14,338
+Ana plays Take One Stone.
+
+27
+00:01:15,000 --> 00:01:18,157
+She puts a Spirit Stone on the Salmon's times-two space.
+
+28
+00:01:18,477 --> 00:01:19,565
+Double points!
+
+29
+00:01:19,885 --> 00:01:21,656
+That animal is now closed.
+
+30
+00:01:22,333 --> 00:01:23,463
+Fast forward.
+
+31
+00:01:24,133 --> 00:01:25,157
+Turn 11.
+
+32
+00:01:25,477 --> 00:01:28,463
+Ana plays Add Three Stones and Move Coyote.
+
+33
+00:01:29,133 --> 00:01:32,567
+Into the bowl: a Spirit Stone, a white and a purple.
+
+34
+00:01:33,233 --> 00:01:35,814
+Ana moves the Coyote onto Ben's Turtle.
+
+35
+00:01:36,466 --> 00:01:38,770
+That's three Spirit Stones out of the bag.
+
+36
+00:01:39,433 --> 00:01:40,563
+Skipping ahead.
+
+37
+00:01:41,233 --> 00:01:42,385
+Turn 13.
+
+38
+00:01:42,705 --> 00:01:44,347
+Ana plays Spirit Power.
+
+39
+00:01:44,667 --> 00:01:45,990
+She picks the Eagle.
+
+40
+00:01:46,666 --> 00:01:48,693
+She gives a white stone to the Beaver.
+
+41
+00:01:50,366 --> 00:01:52,371
+The Eagle gives Ana another turn!
+
+42
+00:01:53,033 --> 00:01:54,227
+Quick turns now.
+
+43
+00:01:57,899 --> 00:01:59,158
+Turn 17.
+
+44
+00:01:59,478 --> 00:02:01,057
+Ben plays Spirit Power.
+
+45
+00:02:01,377 --> 00:02:02,550
+He picks the Deer.
+
+46
+00:02:03,233 --> 00:02:06,603
+The Deer moves a red stone from his Rabbit back to the bowl.
+
+47
+00:02:07,266 --> 00:02:09,186
+He gives a white stone to the Turtle.
+
+48
+00:02:09,506 --> 00:02:11,469
+He gives a blue stone to the Rabbit.
+
+49
+00:02:13,133 --> 00:02:14,903
+Let's skip ahead a few turns.
+
+50
+00:02:15,566 --> 00:02:16,718
+Turn 19.
+
+51
+00:02:17,038 --> 00:02:18,745
+Ben plays Take Two Stones.
+
+52
+00:02:19,399 --> 00:02:21,319
+He gives a red stone to the Rabbit.
+
+53
+00:02:21,639 --> 00:02:23,687
+He gives a yellow stone to the Rabbit.
+
+54
+00:02:24,366 --> 00:02:25,369
+Turn 20.
+
+55
+00:02:25,689 --> 00:02:27,331
+Ana plays Spirit Power.
+
+56
+00:02:27,651 --> 00:02:28,910
+She picks the Ram.
+
+57
+00:02:29,566 --> 00:02:33,129
+The Ram draws a red and a Spirit Stone straight from the bag.
+
+58
+00:02:33,449 --> 00:02:35,454
+She gives a red stone to the Rabbit.
+
+59
+00:02:35,774 --> 00:02:38,846
+She puts a Spirit Stone on the Rabbit's times-two space.
+
+60
+00:02:39,166 --> 00:02:40,254
+Double points!
+
+61
+00:02:40,574 --> 00:02:42,345
+That animal is now closed.
+
+62
+00:02:43,999 --> 00:02:46,239
+That's four Spirit Stones out of the bag.
+
+63
+00:02:46,559 --> 00:02:48,415
+One more, and the game ends.
+
+64
+00:02:49,066 --> 00:02:50,261
+Turn 21.
+
+65
+00:02:50,581 --> 00:02:52,266
+Ben plays Take One Stone.
+
+66
+00:02:52,933 --> 00:02:56,005
+He puts a Spirit Stone on the Rabbit's times-two space.
+
+67
+00:02:56,325 --> 00:02:57,413
+Double points!
+
+68
+00:02:57,733 --> 00:02:59,503
+That animal is now closed.
+
+69
+00:03:00,166 --> 00:03:01,361
+Turn 22.
+
+70
+00:03:01,681 --> 00:03:04,134
+Ana plays Add Two Stones and Take One.
+
+71
+00:03:04,799 --> 00:03:07,423
+Into the bowl: a Spirit Stone and a blue.
+
+72
+00:03:08,099 --> 00:03:10,041
+She gives a green stone to the Owl.
+
+73
+00:03:10,699 --> 00:03:13,579
+Five Spirit Stones are out at the end of the turn.
+
+74
+00:03:13,899 --> 00:03:14,902
+Game over!
+
+75
+00:03:15,566 --> 00:03:18,809
+Ana: Rabbit 12, Turtle 1 and Salmon 18.
+
+76
+00:03:19,129 --> 00:03:20,387
+31 points.
+
+77
+00:03:21,066 --> 00:03:24,842
+Ben: Rabbit 12, Turtle 3, Owl 4 and Beaver 10.
+
+78
+00:03:25,162 --> 00:03:26,463
+29 points.
+
+79
+00:03:27,133 --> 00:03:29,565
+Ana wins, 31 to 29!
+
+80
+00:03:29,885 --> 00:03:31,250
+Thanks for watching.

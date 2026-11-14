@@ -5,6 +5,7 @@ import pytest
 
 import engine as E
 import render as R
+import anim as A
 import videos as V
 from conftest import SWEEP_SEEDS
 
@@ -169,9 +170,19 @@ def test_seg_builder(base_state):
     pre = V.Demo(base_state).snap()
     post = V.Demo(pre).direct(0, "red", ("turtle", None)).snap()
     s = V.seg("hello", post, pre, cam=V.CAM_MID, bar="b", hl={"mid": "bowl"})
-    assert set(s) == {"text", "post", "pre", "tk", "cam", "hold", "sfx"}
+    assert set(s) == {"text", "post", "pre", "tk", "cam", "hold", "sfx", "ov"}
     assert s["tk"]["deltas"] == {(0, "turtle"): 1}
-    assert s["tk"]["names"] == V.NAMES and s["tk"]["bar"] == "b"
+    assert s["tk"]["names"] == V.NAMES and s["ov"]["bar"] == "b"
+    assert s["tk"]["ticker"] is False          # scores are drawn in screen space instead
+    t = V.seg("x", post, ticker=True, cap=("A", "b"), cap_pos="mid", focus=[(0, 0, 10, 10)],
+              arrows=[V.arrow((5, 5), "L")], show=["bowl"], fade_from=[], xfade=True,
+              say_after=True, pause=1.0)
+    assert t["ov"]["score"] == f"Ana {post['scores'][0]}  ·  Ben {post['scores'][1]}"
+    assert t["ov"]["cap"] == ("A", "b") and t["ov"]["cap_pos"] == "mid"
+    assert t["ov"]["focus"] == [(-10, -10, 20, 20)] and t["ov"]["arrows"] == [(5, 5, "L", "down")]
+    assert t["tk"]["show"] == ["bowl"] and t["fade_from"] == {"show": []}
+    assert t["xfade"] and t["say_after"] and t["pause"] == 1.0
+    assert V.T("x", post)["pause"] == V.TEACH_PAUSE
     assert "deltas" not in V.seg("x", post, pre, pops=False)["tk"]
     assert "deltas" not in V.seg("x", post)["tk"]
 
@@ -275,80 +286,209 @@ def check_segment(s):
 
 
 @pytest.fixture(scope="module")
-def learn():
-    return V.learn_to_play()
+def episodes():
+    return {k: f() for k, f in V.CLIPS.items()}
 
 
 @pytest.fixture(scope="module")
-def spirits():
-    return V.spirit_powers()
+def spirits(episodes):
+    return episodes["10-spirit-powers"]
 
 
 @pytest.fixture(scope="module")
-def sample():
-    return V.sample_game()
+def sample(episodes):
+    return episodes["11-sample-game"]
+
+
+TEACHING = [k for k, _ in V.EPISODES[:9]]
+
+
+def by_text(S, sub):
+    hits = [s for s in S if sub in s["text"]]
+    assert len(hits) == 1, (sub, len(hits))
+    return hits[0]
+
+
+def cap_title(s):
+    c = s.get("ov", {}).get("cap")
+    return c if isinstance(c, str) or c is None else c[0]
 
 
 def test_clips_registry():
-    assert set(V.CLIPS) == {"learn-to-play", "sample-game", "spirit-powers"}
+    assert list(V.CLIPS) == [k for k, _ in V.EPISODES]
+    assert len(V.CLIPS) == 11
     assert all(callable(f) for f in V.CLIPS.values())
+    for i, k in enumerate(V.CLIPS, 1):
+        assert k.startswith(f"{i:02d}-")
 
 
-class TestLearnToPlay:
-    def test_segments_well_formed(self, learn):
-        assert len(learn) > 20
-        for s in learn:
+class TestEpisodes:
+    @pytest.mark.parametrize("name", list(V.CLIPS))
+    def test_segments_well_formed(self, episodes, name):
+        for s in episodes[name]:
             check_segment(s)
 
-    def test_every_segment_is_narrated(self, learn):
-        for s in learn:
-            assert s["text"].strip(), s
+    @pytest.mark.parametrize("name", TEACHING + ["10-spirit-powers"])
+    def test_every_segment_is_narrated(self, episodes, name):
+        for s in episodes[name]:
+            assert s["text"].strip(), s.get("ov")
 
-    def test_starts_and_ends_with_cards(self, learn):
-        assert "image" in learn[0] and "image" in learn[-1]
-        assert "Spirits of the Wild" in learn[0]["text"]
+    @pytest.mark.parametrize("name", list(V.CLIPS))
+    def test_starts_with_numbered_title_card(self, episodes, name):
+        first = episodes[name][0]
+        assert "image" in first and first.get("fade")
+        assert first["text"].strip()
 
-    def test_state_snapshots_are_conserved_where_stones_move(self, learn):
-        """Scripted demos place stones from the bag directly (animals demo), so only the
-        board legality is checked here."""
+    @pytest.mark.parametrize("name", TEACHING + ["10-spirit-powers"])
+    def test_ends_with_recap_and_next(self, episodes, name):
+        last = episodes[name][-1]
+        assert "image" in last and last["text"].startswith("Remember.")
+        n = list(V.CLIPS).index(name)
+        nxt = V.EPISODES[n + 1][1]
+        assert "Next" in last["text"]
+
+    @pytest.mark.parametrize("name", TEACHING)
+    def test_one_idea_per_sentence(self, episodes, name):
+        """Beginner narration: short sentences, at most 16 words each."""
+        for s in episodes[name]:
+            for sent in A.sentences(s["text"]):
+                assert len(sent.split()) <= 16, sent
+
+    @pytest.mark.parametrize("name", TEACHING + ["10-spirit-powers"])
+    def test_episode_is_short(self, episodes, name):
+        """One idea per episode: roughly 1-2.5 minutes of narration (~120-150 words/min)."""
+        words = sum(len(s["text"].split()) for s in episodes[name])
+        assert 120 <= words <= 320, words
+
+    @pytest.mark.parametrize("name", TEACHING)
+    def test_table_shots_carry_a_caption(self, episodes, name):
+        for s in episodes[name]:
+            if "post" in s:
+                assert s["ov"].get("cap"), s["text"]
+
+    @pytest.mark.parametrize("name", list(V.CLIPS))
+    def test_never_says_clear_stones(self, episodes, name):
+        """Spirit Stones are always called Spirit Stones, never 'clear' stones."""
+        import re
+        for s in episodes[name]:
+            cap = s.get("ov", {}).get("cap")
+            words = s["text"] + " " + (" ".join(cap) if isinstance(cap, tuple) else (cap or ""))
+            assert not re.search(r"\bclear\b", words, re.I), words
+
+    @pytest.mark.parametrize("name", list(V.CLIPS))
+    def test_captions_fit_on_screen(self, episodes, name):
+        d = R.SDraw(R.new_canvas()[0], 1)
+        for s in episodes[name]:
+            cap = s.get("ov", {}).get("cap")
+            if cap:
+                t, sub = (cap, None) if isinstance(cap, str) else cap
+                assert d.textlength(t, R.F["big"]) + 110 < R.W - 40, t
+                if sub:
+                    assert d.textlength(sub, R.F["mid"]) + 110 < R.W - 40, sub
+
+    @pytest.mark.parametrize("name", list(V.CLIPS))
+    def test_arrows_and_focus_are_in_view(self, episodes, name):
+        for s in episodes[name]:
+            x, y, w = s.get("cam") or V.FULL
+            h = w * 9 / 16
+            for ax, ay, label, side in s.get("ov", {}).get("arrows", []):
+                assert x <= ax <= x + w and y <= ay <= y + h, (label, s["text"])
+                assert side in ("up", "down", "left", "right")
+            for x0, y0, x1, y1 in s.get("ov", {}).get("focus", []):
+                assert x0 < x1 and y0 < y1
+                assert x1 > x and x0 < x + w and y1 > y and y0 < y + h, s["text"]
+
+    def test_game_words_are_explained_on_first_use(self, episodes):
+        """Each game word is explained the first time the series uses it."""
+        text = " ".join(s["text"] for k in V.CLIPS for s in episodes[k])
+        for word, explain in [("turn", "Each go is called a turn"),
+                              ("face-up", "Face-up means"),
+                              ("face-down", "Face-down means"),
+                              ("without looking", "without looking"),
+                              ("section", "Each part is called a section"),
+                              ("points", "Animals give you points"),
+                              ("winner", "That player is the winner"),
+                              ("opponent", "Your opponent is the other player"),
+                              ("blocked", "Blocked means"),
+                              ("closed", "Closed means")]:
+            first = text.lower().find(word)
+            assert first >= 0, word
+            assert text.find(explain) >= 0, explain
+            assert text.find(explain) <= first + 200, (word, text[first - 80:first + 80])
+
+    def test_setup_says_both_players_have_the_same_cards(self, episodes):
+        S = episodes["02-getting-ready"]
+        same = by_text(S, "exact same six cards")
+        assert "image" in same
+        assert by_text(S, "two Take One Stone cards")
+
+    def test_spirit_stone_is_not_a_color(self, episodes):
+        s = by_text(episodes["02-getting-ready"], "A Spirit Stone is not a color")
+        assert isinstance(s["fade"], R.Image.Image)   # crossfades in from the six-colors card
+
+    def test_numbers_in_the_animal_episodes_match_the_engine(self, episodes):
+        S = episodes["05-rabbit-turtle-salmon"] + episodes["06-owl-and-beaver"]
+        claims = [("That's six points", "rabbit", 6), ("One green stone. One point", "turtle", 1),
+                  ("Three green stones. Six points", "turtle", 6),
+                  ("Fourteen points", "turtle", 14), ("Three different colors. Four points", "salmon", 4),
+                  ("Thirteen points", "salmon", 13),
+                  ("That's a pair", "owl", E.OWL_POINTS), ("Another pair", "owl", 2 * E.OWL_POINTS),
+                  ("make five points", "beaver", 5), ("fourteen in all", "beaver", 14)]
+        for sub, a, pts in claims:
+            s = by_text(S, sub)
+            assert E.animal_score(s["post"]["boards"][0], a) == pts, sub
+        owl = by_text(S, "That's a pair")
+        assert V.NUM[E.OWL_POINTS].capitalize() in owl["text"]
+
+    def test_turn_episode_and_points_shots(self, episodes):
+        S = episodes["01-what-is-this-game"]
+        s = by_text(S, "It just went up")
+        assert E.animal_score(s["post"]["boards"][0], "turtle") == 3
+        assert s["tk"]["deltas"] == {(0, "turtle"): 2}
+        S = episodes["03-your-turn"]
+        flip = by_text(S, "Then she turns the card face-down")
+        assert flip["post"]["cards"][0][E.TAKE1A] is False and flip["pre"]["cards"][0][E.TAKE1A]
+        s = by_text(S, "Three are face-down")
+        assert sum(not v for v in s["post"]["cards"][0].values()) == 3
+
+    def test_spirit_stone_doubling(self, episodes):
+        S = episodes["09-spirit-stones-and-the-end"]
+        dbl = by_text(S, "Nine becomes eighteen")
+        assert E.animal_score(dbl["pre"]["boards"][0], "turtle") == 9
+        assert E.animal_score(dbl["post"]["boards"][0], "turtle") == 18
+        assert dbl["post"]["boards"][0]["bonus"]["turtle"]
+        end = by_text(S, "the fifth one comes out")
+        assert end["pre"]["clear_out"] == 4 and end["post"]["clear_out"] == 5
+
+    def test_cards_back_episode_recovers_all_cards(self, episodes):
+        S = episodes["07-getting-cards-back"]
+        need = by_text(S, "Three of them are face-down")
+        assert sum(not v for c, v in need["post"]["cards"][0].items() if c != E.SPIRIT) >= 3
+        up = by_text(S, "turn face-up again")
+        assert all(up["post"]["cards"][0].values())
+        wolf = by_text(S, "She picks the Wolf")
+        assert wolf["post"]["piles"][0][0] == "wolf"
+
+    def test_coyote_episode(self, episodes):
+        S = episodes["08-the-coyote"]
+        assert by_text(S, "moves the Coyote onto Ben's Turtle")["post"]["coyote"] == (1, "turtle")
+        whole = by_text(S, "whole Coyote")
+        c = whole["post"]["cards"][1]
+        assert not c[E.TAKE1A] and not c[E.TAKE1B]
+        assert by_text(S, "He puts it on Ana's Rabbit")["post"]["coyote"] == (0, "rabbit")
+
+    @pytest.mark.parametrize("name", TEACHING)
+    def test_board_states_are_legal(self, episodes, name):
         from test_engine import assert_board_legal
-        for s in learn:
+        for s in episodes[name]:
             if "post" in s:
                 for b in s["post"]["boards"]:
                     assert_board_legal(b)
 
-    def test_scripted_scores_match_the_narration(self, learn):
-        by_text = {s["text"][:30]: s for s in learn if "post" in s}
-        turtle = next(s for s in learn if "Two whites for her Turtle" in s["text"])
-        assert turtle["post"]["scores"][0] == E.animal_score(turtle["post"]["boards"][0], "turtle") \
-            + E.animal_score(turtle["post"]["boards"][0], "rabbit")
-        assert E.animal_score(turtle["post"]["boards"][0], "turtle") == 3  # "three points"
-        dbl = next(s for s in learn if "jumps from nine to eighteen" in s["text"])
-        assert E.animal_score(dbl["pre"]["boards"][0], "turtle") == 9
-        assert E.animal_score(dbl["post"]["boards"][0], "turtle") == 18
-        assert dbl["post"]["boards"][0]["bonus"]["turtle"]
-        assert by_text
-
-    def test_animal_demos_match_stated_points(self, learn):
-        claims = {"Rabbit": ("rabbit", 6), "Turtle": ("turtle", 14), "Salmon": ("salmon", 13),
-                  "Owl": ("owl", 2 * E.OWL_POINTS), "Beaver": ("beaver", 14)}
-        for s in learn:
-            if "post" not in s or not s["tk"].get("hl", {}).get("sections"):
-                continue
-            p, animals = s["tk"]["hl"]["sections"]
-            bar = s["tk"]["bar"] or ""
-            for key, (a, pts) in claims.items():
-                if bar.startswith(key + ":") and len(animals) == 1 and animals[0] == a.lower():
-                    assert E.animal_score(s["post"]["boards"][p], a) == pts, bar
-
-    def test_owl_text_matches_engine_points(self, learn):
-        owl = next(s for s in learn if s["text"].startswith("The Owl loves pairs"))
-        assert V.NUM[E.OWL_POINTS] in owl["text"]
-
 
 class TestSpiritPowers:
     def test_segments_well_formed(self, spirits):
-        assert len(spirits) == 1 + len(V.SPIRIT_GRID) + 1
+        assert len(spirits) == 1 + 1 + len(V.SPIRIT_GRID) + 1 + 1
         for s in spirits:
             check_segment(s)
             assert s["text"].strip()
@@ -357,12 +497,12 @@ class TestSpiritPowers:
         assert set(V.SPIRIT_GRID) == set(E.SPIRITS) == set(V.SPIRIT_SAY)
 
     def test_each_spirit_is_mentioned_by_name(self, spirits):
-        for seg, k in zip(spirits[1:-1], V.SPIRIT_GRID):
-            assert k.capitalize() in seg["text"] or k.capitalize() in V.SPIRIT_GRID[k][0]
+        for seg, k in zip(spirits[2:-2], V.SPIRIT_GRID):
+            assert seg["text"].startswith(f"The {k.capitalize()}.")
             assert V.SPIRIT_GRID[k][0] == k.capitalize()
 
     def test_spirit_cameras_zoom_on_their_card(self, spirits):
-        for seg in spirits[1:-1]:
+        for seg in spirits[2:-2]:
             x, y, w = seg["cam"]
             assert w == 900
 
@@ -374,7 +514,7 @@ class TestSampleGame:
             check_segment(s)
 
     def test_intro_and_setup_narrated(self, sample):
-        assert sample[0]["text"] and "image" in sample[0]
+        assert sample[0]["text"] and "image" in sample[0] and sample[0].get("fade")
         g = E.Game(seed=V.GAME_SEED, names=V.NAMES)
         log = g.play()
         setup = log[0]["state"]
@@ -386,7 +526,8 @@ class TestSampleGame:
         empty = [s for s in sample[1:] if not s["text"].strip()]
         # silent segments are only the fast-forwarded turns / recover steps
         for s in empty:
-            assert s["tk"]["bar"] and (s["tk"]["bar"].startswith("Turn "))
+            assert s["ov"]["bar"] and (s["ov"]["bar"].startswith("Turn "))
+            assert s["ov"]["score"].startswith("Ana ")
         assert sample[-1]["text"].strip() and sample[-2]["text"].strip()
 
     def test_final_script_matches_engine_result(self, sample):

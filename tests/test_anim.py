@@ -4,6 +4,7 @@ import math
 from pathlib import Path
 
 import numpy as np
+from PIL import Image
 import pytest
 
 import anim as A
@@ -251,7 +252,7 @@ def test_every_sfx_used_by_videos_exists():
     import videos
     bank = A._sfx_bank()
     used = set()
-    for fn in (videos.learn_to_play, videos.spirit_powers, videos.sample_game):
+    for fn in videos.CLIPS.values():
         for s in fn():
             used.update(s.get("sfx", []))
     assert used and used <= set(bank)
@@ -318,3 +319,118 @@ def test_build_with_mocked_tts_and_ffmpeg(tmp_path, monkeypatch):
     for line in lst.splitlines():
         if line.startswith("file '"):
             assert Path(line[6:-1]).exists()
+
+
+# ============================================================ narration + overlays
+def test_sentences_split():
+    assert A.sentences("Hi there. Look! Okay? Yes.") == ["Hi there.", "Look!", "Okay?", "Yes."]
+    assert A.sentences("  One idea.  ") == ["One idea."]
+    assert A.sentences("") == []
+
+
+def test_narrate_joins_sentences_with_gaps(tmp_path, monkeypatch):
+    lens = {"First one.": A.SR, "Second!": A.SR // 2}
+    monkeypatch.setattr(A, "tts", lambda s, d: np.full(lens[s], 0.1, np.float32))
+    audio, cues = A.narrate("First one. Second!", tmp_path)
+    gap = int(A.GAP * A.SR)
+    assert len(audio) == A.SR + gap + A.SR // 2
+    assert np.all(audio[A.SR:A.SR + gap] == 0)
+    assert [c[0] for c in cues] == ["First one.", "Second!"]
+    assert cues[0][1] == 0 and math.isclose(cues[0][2], 1.0)
+    assert math.isclose(cues[1][1], 1.0 + A.GAP) and math.isclose(cues[1][2], 1.5 + A.GAP)
+
+
+def test_default_speed_is_slower_for_beginners():
+    assert A.SPEED <= 0.95 or "SOTW_SPEED" in __import__("os").environ
+
+
+def _frame():
+    return Image.new("RGB", (R.W, R.H), (20, 20, 20))
+
+
+def test_overlay_noop_and_size():
+    im = _frame()
+    assert A.overlay(im, {}, A.FULL) is im
+    out = A.overlay(im, {"cap": ("Big", "small"), "bar": "Turn 1", "score": "Ana 1 · Ben 0"}, A.FULL)
+    assert out.size == (R.W, R.H) and out.mode == "RGB"
+
+
+@pytest.mark.parametrize("pos,band", [("top", (0, 300)), ("mid", (380, 700)), ("bottom", (780, 1080))])
+def test_caption_position(pos, band):
+    out = np.asarray(A.overlay(_frame(), {"cap": "Hello", "cap_pos": pos}, A.FULL)).astype(int)
+    changed = np.abs(out - 20).sum(axis=2).sum(axis=1) > 0
+    rows = np.nonzero(changed)[0]
+    assert band[0] <= rows.min() and rows.max() <= band[1]
+
+
+def test_focus_dims_outside_only():
+    out = np.asarray(A.overlay(Image.new("RGB", (R.W, R.H), (200, 200, 200)),
+                               {"focus": [(100, 100, 500, 400)]}, A.FULL)).astype(int)
+    assert out[250, 300].tolist() == [200, 200, 200]      # inside the spotlight
+    assert out[800, 1500].sum() < 300                      # outside is dimmed
+
+
+def test_focus_and_arrows_follow_the_camera():
+    cam = (400, 200, 960)                                  # 2x zoom
+    assert A._screen(cam, 400, 200) == (0, 0)
+    assert A._screen(cam, 880, 470) == (960, 540)
+    out = np.asarray(A.overlay(_frame(), {"arrows": [(880, 470, "Here", "down")]}, cam)).astype(int)
+    assert np.abs(out[540 + 40:540 + 300, 900:1020] - 20).sum() > 0   # arrow + label below target
+
+
+def test_overlay_fade_alpha():
+    full = np.asarray(A.overlay(_frame(), {"cap": "Hi"}, A.FULL)).astype(int)
+    half = np.asarray(A.overlay(_frame(), {"cap": "Hi"}, A.FULL, {"cap": 0.5})).astype(int)
+    assert 0 < np.abs(half - 20).sum() < np.abs(full - 20).sum()
+
+
+def test_new_parts_only_when_changed():
+    assert A._new_parts({"cap": "A"}, None) == ["cap"]
+    assert A._new_parts({"cap": "A"}, {"cap": "A"}) == []
+    assert A._new_parts({"cap": "A", "focus": [(0, 0, 1, 1)]}, {"cap": "A"}) == ["focus"]
+    assert A._new_parts({"cap": "A", "cap_pos": "mid"}, {"cap": "A"}) == ["cap"]
+    assert A._new_parts({}, {"cap": "A"}) == []
+
+
+def test_start_frames_fades(base_state):
+    card = dict(text="x", image=R.title_card("A"), fade=True)
+    fr, _ = A._start_frames(card)
+    assert len(fr) == A.FADE_FRAMES // 2 + 1 and fr[-1][0] is card["image"]
+    a, b = R.title_card("A"), R.title_card("B")
+    fr, _ = A._start_frames(dict(text="x", image=b, fade=a))       # crossfade from a given image
+    assert fr[0][0].tobytes() == a.tobytes() and fr[-1][0] is b
+    st = rescore(copy.deepcopy(base_state))
+    reveal = dict(text="x", post=st, tk={"names": ("Ana", "Ben"), "show": ["bowl"]},
+                  fade_from={"show": []})
+    fr, _ = A._start_frames(reveal)
+    assert len(fr) == A.FADE_FRAMES // 2 + 1
+    post = copy.deepcopy(st)
+    post["cards"][0][E.TAKE1A] = False
+    flip = dict(text="x", pre=st, post=post, tk={"names": ("Ana", "Ben")}, xfade=True)
+    fr, _ = A._start_frames(flip)
+    assert len(fr) == A.FADE_FRAMES // 2 + 1
+
+
+def test_build_timing_pause_say_after_and_srt_per_sentence(tmp_path, monkeypatch):
+    monkeypatch.setattr(A, "tts", lambda text, d: np.full(A.SR // 2, 0.1, np.float32))
+    monkeypatch.setattr(A.subprocess, "run", lambda cmd, **kw: None)
+    monkeypatch.setattr(A, "ProcessPoolExecutor", _SerialExecutor)
+    segs = [dict(text="One. Two.", image=R.title_card("A"), hold=0.2, fade=True, pause=1.0),
+            dict(text="Three.", image=R.title_card("B"), hold=0.2, fade=True, say_after=True)]
+    A.build("t", segs, tmp_path / "out", tmp_path / "work", music=False)
+    srt = (tmp_path / "out" / "t.srt").read_text()
+    assert srt.count("-->") == 3 and "One." in srt and "Two." in srt
+    starts = [l.split(" --> ")[0] for l in srt.splitlines() if "-->" in l]
+    assert starts[0] == "00:00:00,200"
+    assert starts[1] == A._ts(0.2 + 0.5 + A.GAP)
+    # seg 1 lasts lead + 2 sentences + gap + pause; seg 2's narration waits for its fade-in
+    seg1 = math.ceil((0.2 + 1.0 + A.GAP + 1.0) * A.FPS) / A.FPS
+    fade = (A.FADE_FRAMES // 2) * 2 / A.FPS
+    secs = lambda ts: int(ts[:2]) * 3600 + int(ts[3:5]) * 60 + float(ts[6:].replace(",", "."))
+    assert abs(secs(starts[2]) - (seg1 + fade + 0.15)) < 0.01
+
+
+@pytest.mark.parametrize("n", [1988800, 24001, 12345])
+def test_ambient_length_is_exact_for_float_durations(n):
+    """int(seconds * SR) used to drop a sample (e.g. 1988800 / SR), crashing the music mix."""
+    assert len(A.ambient(n / A.SR)) == n

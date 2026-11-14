@@ -1,0 +1,131 @@
+1
+00:00:00,200 --> 00:00:02,290
+Each animal wants different stones.
+
+2
+00:00:02,610 --> 00:00:05,767
+Let's meet the first three: Rabbit, Turtle and Salmon.
+
+3
+00:00:06,799 --> 00:00:08,122
+This is the Rabbit.
+
+4
+00:00:08,442 --> 00:00:11,493
+The Rabbit wants three stones, each a different color.
+
+5
+00:00:13,549 --> 00:00:14,744
+Red, then blue.
+
+6
+00:00:15,064 --> 00:00:16,301
+No points yet.
+
+7
+00:00:18,183 --> 00:00:19,185
+Then yellow.
+
+8
+00:00:19,505 --> 00:00:20,892
+Three different colors!
+
+9
+00:00:21,212 --> 00:00:22,428
+That's six points.
+
+10
+00:00:23,533 --> 00:00:26,050
+The Rabbit only scores when all three are there.
+
+11
+00:00:27,166 --> 00:00:28,382
+Next, the Turtle.
+
+12
+00:00:28,702 --> 00:00:31,774
+The Turtle wants stones that are all the same color.
+
+13
+00:00:33,649 --> 00:00:34,908
+One green stone.
+
+14
+00:00:35,228 --> 00:00:36,188
+One point.
+
+15
+00:00:38,249 --> 00:00:39,636
+Three green stones.
+
+16
+00:00:39,956 --> 00:00:41,023
+Six points.
+
+17
+00:00:43,083 --> 00:00:44,533
+Five green stones.
+
+18
+00:00:44,853 --> 00:00:46,027
+Fourteen points!
+
+19
+00:00:46,347 --> 00:00:47,947
+More stones, more points.
+
+20
+00:00:49,066 --> 00:00:50,197
+Now the Salmon.
+
+21
+00:00:50,517 --> 00:00:52,885
+The Salmon is the opposite of the Turtle.
+
+22
+00:00:53,205 --> 00:00:55,338
+Every stone must be a different color.
+
+23
+00:00:57,616 --> 00:00:58,981
+Three different colors.
+
+24
+00:00:59,301 --> 00:01:00,325
+Four points.
+
+25
+00:01:02,583 --> 00:01:03,884
+All six colors.
+
+26
+00:01:04,204 --> 00:01:05,378
+Thirteen points!
+
+27
+00:01:06,500 --> 00:01:09,038
+A tip: the last stones are worth the most.
+
+28
+00:01:09,358 --> 00:01:11,171
+So try to fill your animals up.
+
+29
+00:01:12,299 --> 00:01:13,195
+Remember.
+
+30
+00:01:13,515 --> 00:01:16,758
+The Rabbit wants three different colors, for six points.
+
+31
+00:01:17,078 --> 00:01:18,956
+The Turtle wants all one color.
+
+32
+00:01:19,275 --> 00:01:21,430
+The Salmon wants all different colors.
+
+33
+00:01:21,750 --> 00:01:23,670
+Next: the Owl and the Beaver.

@@ -13,11 +13,21 @@ English rules, cheat sheets and narrated how-to-play videos for board games.
 | Arcade trainer (7 playable stages + Score Rush quick-fire mode) | [docs/spirits-of-the-wild/arcade.html](docs/spirits-of-the-wild/arcade.html) |
 | Videos (with .srt subtitles) | [docs/spirits-of-the-wild/videos/](docs/spirits-of-the-wild/videos/) |
 
-Videos (narrated, animated, with .srt subtitles):
+Videos (narrated, animated, with .srt subtitles). A short series for complete beginners: each
+episode teaches one idea in 1–2½ minutes and ends with a "Remember" recap and a "Next" teaser.
+Watch them in order:
 
-1. `learn-to-play.mp4` – everything you need to start playing, on one animated board
-2. `sample-game.mp4` – a complete game between Ana and Ben: big moments explained, routine turns fast-forwarded
-3. `spirit-powers.mp4` – quick reference for the six Spirit Power cards
+1. `01-what-is-this-game.mp4` – two players, taking turns, stones, animals, points, the winner
+2. `02-getting-ready.mp4` – setting up the table step by step (both players get the same six cards)
+3. `03-your-turn.mp4` – pick a card, do it, turn it face-down
+4. `04-placing-stones.mp4` – sections, each animal's rule, stones that fit nowhere, reading the points
+5. `05-rabbit-turtle-salmon.mp4` – meet the animals, part 1
+6. `06-owl-and-beaver.mp4` – meet the animals, part 2
+7. `07-getting-cards-back.mp4` – the Spirit Power card: turn all your cards face-up again
+8. `08-the-coyote.mp4` – blocking an animal, and the two ways to move the Coyote
+9. `09-spirit-stones-and-the-end.mp4` – double points with Spirit Stones, the end of the game, ties
+10. `10-spirit-powers.mp4` – the six Spirit Power cards, one at a time
+11. `11-sample-game.mp4` – a complete game between Ana and Ben: big moments explained, routine turns fast-forwarded
 
 Owl pairs score **4** in the 2019 German edition (used here) and **3** in the 2017 English printing.
 
@@ -25,12 +35,17 @@ Owl pairs score **4** in the 2019 German edition (used here) and **3** in the 20
 
 ```bash
 bash tools/setup_env.sh                 # from the parent dir of the checkout: Kokoro TTS + voice model
-cd tools/sotw && python3 videos.py      # all videos; or name some, e.g. python3 videos.py sample-game
+cd tools/sotw && python3 videos.py      # all 11 episodes (~25 min of building)
+python3 videos.py 03-your-turn          # or just some episodes, by file name without .mp4
+SOTW_WORK=/tmp/sotw python3 videos.py   # scratch dir for frames and the TTS cache (default /tmp/sotw-build)
 node tools/build_manual_pdf.js          # manual.md -> manual.pdf
 ```
 
 - `engine.py` – rules engine and simple AI that plays the sample game (seed in `videos.py`)
 - `render.py` – draws the table at 2× resolution so the camera can zoom without blur
-- `anim.py` – stone/Coyote animations, camera moves, sound effects, music, narration (Kokoro `af_heart`;
-  change with `SOTW_VOICE=bm_george` etc.) and ffmpeg assembly
-- `videos.py` – the scripts for each video
+- `anim.py` – stone/Coyote animations, crossfades, camera moves, on-screen captions/arrows/spotlights
+  (drawn after the camera crop, so they stay large at any zoom), sound effects, music, narration and
+  ffmpeg assembly. Narration is Kokoro `af_heart` at speed 0.9, voiced one sentence at a time with a
+  short pause between sentences (one subtitle cue per sentence); change with `SOTW_VOICE=bm_george`,
+  `SOTW_SPEED=1.0`
+- `videos.py` – the scripts for each episode (`EPISODES` / `CLIPS`); one short sentence per idea

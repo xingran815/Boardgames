@@ -158,7 +158,7 @@ def tts(text, cache_dir):
 # ================================================================== music
 def ambient(seconds, seed=3):
     """Soft synthesized pad (original), Am-F-C-G, very low in the mix."""
-    n = int(seconds * SR)
+    n = int(round(seconds * SR))
     t = np.arange(n) / SR
     chords = [[220.0, 261.63, 329.63], [174.61, 220.0, 261.63],
               [130.81, 196.0, 261.63], [196.0, 246.94, 293.66]]
@@ -247,7 +247,8 @@ def _draw_caption(ov):
     fb, fm = R.F["big"], R.F["mid"]
     w = max(d.textlength(title, fb), d.textlength(sub, fm) if sub else 0) + 110
     h = 120 + (64 if sub else 0)
-    y0 = 28 if ov.get("cap_pos", "top") == "top" else R.H - h - 34
+    pos = ov.get("cap_pos", "top")
+    y0 = 28 if pos == "top" else (R.H - h) / 2 - 20 if pos == "mid" else R.H - h - 34
     x0 = (R.W - w) / 2
     _pill(d, (x0, y0, x0 + w, y0 + h), (8, 14, 36, 232), outline=R.GOLD + (255,), width=4, r=34)
     R.text_center(d, (R.W / 2, y0 + 12), title, fb, fill=R.GOLD)
@@ -347,7 +348,12 @@ def _start_frames(seg):
     """Supersampled frames for the segment: [(image, n)] (last = settled) and sfx."""
     if "image" in seg:
         frames, sfx = [(seg["image"], 1)], []
-        start = R.new_canvas()[0] if seg.get("fade") else None
+        f = seg.get("fade")
+        start = f if isinstance(f, Image.Image) else R.new_canvas()[0] if f else None
+    elif seg.get("pre") is not None and seg.get("xfade"):
+        tk = seg.get("tk", {})
+        frames, sfx = [(R.table(seg["post"], **tk), 1)], []
+        start = R.table(seg["pre"], **{**tk, "deltas": None})
     elif seg.get("pre") is not None:
         return anim_frames(seg["pre"], seg["post"], seg.get("tk", {}))
     else:
@@ -414,7 +420,8 @@ def build(name, segments, out_dir, work_dir, music=True, pad=0.45):
     kwargs), cam (x, y, w), hold (min seconds after the animation), sfx [names],
     ov (screen overlays: cap, cap_pos, arrows, focus, bar, score), pause (silence
     after the narration, default pad), say_after (narration waits for the animation),
-    fade (cards fade in) / fade_from (table kwargs to crossfade from)."""
+    fade (cards fade in from a blank canvas, or from the given image) / fade_from (table
+    kwargs to crossfade from) / xfade (crossfade pre -> post instead of moving stones)."""
     seg_dir = Path(work_dir) / name
     seg_dir.mkdir(parents=True, exist_ok=True)
     for f in seg_dir.glob("*.png"):
@@ -463,7 +470,9 @@ def build(name, segments, out_dir, work_dir, music=True, pad=0.45):
     if music:
         env = np.convolve(np.abs(voice), np.ones(SR // 4) / (SR // 4), mode="same")
         duck = 1 - 0.7 * np.clip(env / 0.02, 0, 1)
-        mix = mix + ambient(len(voice) / SR)[:len(voice)] * 0.09 * duck
+        amb = ambient(len(voice) / SR)
+        amb = np.pad(amb, (0, max(0, len(voice) - len(amb))))[:len(voice)]
+        mix = mix + amb * 0.09 * duck
     mix = mix / max(1.0, np.abs(mix).max() / 0.95)
     wav = seg_dir / "audio.wav"
     with wave.open(str(wav), "wb") as w:
