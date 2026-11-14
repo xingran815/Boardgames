@@ -117,7 +117,7 @@ def cam_board(p):
 def cam_wall(p):
     """Pattern lines and wall of player p; the top band is free for a caption."""
     bx = R.BOARD_X[p]
-    return clamp_cam(bx + 594 - 480, R.BOARD_Y + R.LINES_DY + 170 - 274, 960)
+    return clamp_cam(bx + 395 - 480, R.BOARD_Y + R.LINES_DY + 170 - 274, 960)
 
 
 def cam_lines(p):
@@ -221,6 +221,8 @@ class Demo:
 
     def line(self, p, row, colour, count):
         pl = self.st["boards"][p]["lines"][row]
+        assert colour not in self.st["boards"][p]["wall"][row], "colour already in that wall row"
+        assert pl["count"] + count <= E.line_capacity(row)
         for _ in range(count):
             self._pull(colour)
         pl["colour"], pl["count"] = colour, pl["count"] + count
@@ -428,16 +430,23 @@ MIDDLE = ["factories", "centre"]
 
 def wall_pop(p, row, col, n):
     x, y = R.wall_xy(p, row, col)
-    return (x, y - R.T / 2, f"+{n}")
+    return (x, y, f"+{n}", "tile")
+
+
+def row_pop(p, row, n):
+    """'+N' just right of a wall row (keeps the counted tiles visible)."""
+    x0, y0, x1, y1 = R.wall_row_box(p, row)
+    return (x1 + 62, (y0 + y1) / 2, f"+{n}", "at")
 
 
 def minus(n):
     return f"−{abs(n)}"
 
 
-def floor_pop(p, n):
-    x, y = floor_mid(p)
-    return (x, y, minus(n))
+def floor_pop(p, pen):
+    """'−N' (pen from engine.floor_penalty) just right of the floor line."""
+    x, y = R.floor_xy(p, E.FLOOR_SPACES - 1)
+    return (x + 150, y, minus(pen), "at")
 
 
 def demo_factories(D):
@@ -470,7 +479,7 @@ def ep_what_is_this_game():
                cap_pos="bottom", focus=[R.board_box(0)]))
     S.append(T("The grid on the right is her wall. Her goal is to decorate it with tiles.", s0,
                cam=cam_wall(0), show=BOARDS, cap="The wall", focus=[R.wall_box(0)]))
-    S.append(T("In the middle of the table, tiles wait on round discs. The next video gives them a name.",
+    S.append(T("In the middle of the table, tiles wait on small discs. The next video gives them a name.",
                s0, cam=CAM_FACTORIES, show=ALL, fade_from=BOARDS, cap="Tiles to collect",
                cap_pos="bottom"))
     pre = D.snap()
@@ -521,7 +530,7 @@ def ep_getting_ready():
     S.append(T("Put your score marker on zero. The score marker is a small black cube.", s0,
                cam=cam_board(0), show=BOARDS, cap="2. Score marker on 0", cap_pos="bottom",
                arrows=[arrow((x0, y0 + 8), "Score marker", "down")]))
-    S.append(card_seg("Next, the factory displays. These round discs hold the tiles that players take.",
+    S.append(card_seg("Next, the factory displays. These cardboard discs hold the tiles that players take.",
                       R.factories_card(), fade=True, pause=TEACH_PAUSE))
     S.append(card_seg(f"Two players use {num(nf[2])}. Three players use {num(nf[3])}. "
                       f"Four players use {num(nf[4])}.", R.factories_card(hl=2),
@@ -652,7 +661,7 @@ def ep_pattern_lines():
     s0 = D.snap()
     S = [title(4, "Where your tiles wait",
                "You took some tiles. Where do they go? Onto your pattern lines.")]
-    S.append(T("Look at the left side of Ana's board. These five rows of spaces are her pattern lines.",
+    S.append(T("Look at the left side of Ana's board. These five lines of spaces are her pattern lines.",
                s0, cam=cam_wall(0), cap="Pattern lines", focus=[R.lines_box(0)]))
     S.append(T("Line one has one space. Line two has two spaces. And line five has five.", s0,
                cam=cam_wall(0), cap="1 to 5 spaces",
@@ -695,15 +704,13 @@ def ep_pattern_lines():
     S.append(T(f"Next, Ana takes {num(info['taken'])} red tiles. She picks line two, which has two spaces.",
                s4, pre, cam=FULL, say_after=True, cap="3 red, but only 2 spaces",
                hl={"lines": {0: [1]}}))
-    fx, fy = R.floor_xy(0, 0)
     S.append(T("Two tiles fill the line. The extra one falls to the floor line. "
                "The floor line is the seven spaces at the bottom.", s4, cam=cam_floor(0),
-               cap=("Too many?", "extras fall to the floor line"),
-               arrows=[arrow((fx, fy + R.T / 2), "Floor line", "down")]))
+               cap=("Too many?", "extras fall to the floor line"), focus=[R.floor_box(0)]))
     S.append(T("You may also put all your tiles straight on the floor line.", s4, cam=cam_floor(0),
                cap="Or all on the floor line", focus=[R.floor_box(0)]))
     S.append(recap(4, ["Fill a pattern line from right to left.",
-                       "One colour per line. Not a colour already in that wall row.",
+                       "One colour per line, not one in its wall row.",
                        "Extra tiles fall to the floor line."],
                    "Remember. Fill a pattern line from right to left. Each line holds one colour, "
                    "and never a colour already in its wall row. Extra tiles fall to the floor line. "
@@ -780,7 +787,7 @@ def ep_the_floor_line():
                cam=cam_floor(0), cap=f"Full floor line: {minus(pen7)}", pops=[floor_pop(0, pen7)],
                sfx=["minus"], claim={"floor": pen7}))
     S.append(T("The last tile didn't fit. Extra tiles go in the box lid. They cost nothing more.", s3,
-               cam=CAM_LID, cap="Extras: box lid, no cost", focus=[R.LID_BOX]))
+               cam=CAM_LID, cap="Extras: box lid, no cost", cap_pos="bottom", focus=[R.LID_BOX]))
     before = D.st["boards"][0]["score"]
     pre = D.snap()
     D.score_floor(0)
@@ -835,8 +842,8 @@ def ep_moving_tiles_to_the_wall():
     pre = D.snap()
     pts2, col2 = D.tile_line(0, 1)
     s2 = D.snap()
-    S.append(T("Line two is complete too. Its rightmost tile moves to the red space. "
-               "The other red tile goes in the box lid.", s2, pre, cam=FULL, say_after=True,
+    S.append(T(f"Line two is complete too. Its rightmost tile moves to the red space, for "
+               f"{points(pts2)}. The other red tile goes in the box lid.", s2, pre, cam=FULL, say_after=True,
                cap=("One tile to the wall", "the rest to the box lid"),
                pops=[wall_pop(0, 1, col2, pts2)], focus=[R.board_box(0), R.LID_BOX],
                claim={0: pts2}))
@@ -845,7 +852,8 @@ def ep_moving_tiles_to_the_wall():
     pre = D.snap()
     pts3, col3 = D.tile_line(0, 3)
     s3 = D.snap()
-    S.append(T("Line four is complete. One blue tile moves over. The other three go in the box lid.",
+    S.append(T(f"Line four is complete. One blue tile moves over, for {points(pts3)}. "
+               "The other three go in the box lid.",
                s3, pre, cam=FULL, say_after=True, cap=("One tile to the wall", "the rest to the box lid"),
                pops=[wall_pop(0, 3, col3, pts3)], focus=[R.board_box(0), R.LID_BOX], claim={0: pts3}))
     S.append(T("Line five is empty, so nothing happens there.", s3, cam=cam_wall(0),
@@ -947,13 +955,13 @@ def ep_scoring_a_wall_tile():
                src_xy=src, say_after=True, cap="No neighbours"))
     S.append(T(f"A neighbour is a tile right beside it: left, right, above or below. "
                f"No neighbours? It scores {points(pts)}.", post, cam=cam,
-               cap=f"No neighbours: {pts} point", pops=[wall_pop(0, r, c, pts)], claim={0: pts}))
+               cap=f"No neighbours: {pts} point", pops=[row_pop(0, r, pts)], claim={0: pts}))
     # 2. corner only
     pre2, post2, pts2, b, na, nd = scoring_example(*SCORING["corner"])
     r2, c2 = SCORING["corner"][1]
     S.append(T(f"This tile touches the first one only at a corner. Corners don't count. "
                f"So it scores {points(pts2)} again.", post2, pre2, cam=cam, src_xy=R.line_xy(0, r2, 0),
-               say_after=True, cap="Corners don't count", pops=[wall_pop(0, r2, c2, pts2)],
+               say_after=True, cap="Corners don't count", pops=[row_pop(0, r2, pts2)],
                claim={0: pts2}))
     # 3. across
     pre3, post3, pts3, b3, na, nd = scoring_example(*SCORING["across"])
@@ -964,7 +972,7 @@ def ep_scoring_a_wall_tile():
                f"{tiles_word(na)}.", post3, pre3, cam=cam, src_xy=R.line_xy(0, r3, 0), say_after=True,
                cap="Count across", badges=b3))
     S.append(T(f"So it scores {points(pts3)}. Unbroken means no empty space in between.", post3,
-               cam=cam, cap=f"{na} across: {pts3} points", badges=b3, pops=[wall_pop(0, r3, c3, pts3)],
+               cam=cam, cap=f"{na} across: {pts3} points", badges=b3, pops=[row_pop(0, r3, pts3)],
                claim={0: pts3}))
     # 4. down
     pre4, post4, pts4, b4, na, nd = scoring_example(*SCORING["down"])
@@ -972,7 +980,7 @@ def ep_scoring_a_wall_tile():
     S.append(T(f"New wall. This time, the new tile lands right below a tile. Count down: "
                f"{tiles_word(nd)}. {cap1(points(pts4))}.", post4, pre4, cam=cam,
                src_xy=R.line_xy(0, r4, 0), say_after=True, cap=f"{nd} down: {pts4} points",
-               badges=b4, pops=[wall_pop(0, r4, c4, pts4)], claim={0: pts4}))
+               badges=b4, pops=[row_pop(0, r4, pts4)], claim={0: pts4}))
     # 5. a gap stops the count
     pre5, post5, pts5, b5, na, nd = scoring_example(*SCORING["gap"])
     r5, c5 = SCORING["gap"][1]
@@ -981,7 +989,7 @@ def ep_scoring_a_wall_tile():
     S.append(T(f"The new tile lands at the left end. An empty space stops the count. "
                f"Only {num(na)} tiles count: {points(pts5)}.", post5, pre5, cam=cam,
                src_xy=R.line_xy(0, r5, 0), say_after=True, cap="A gap stops the count", badges=b5,
-               pops=[wall_pop(0, r5, c5, pts5)], claim={0: pts5}))
+               pops=[row_pop(0, r5, pts5)], claim={0: pts5}))
     # 6. across and down
     pre6, post6, pts6, b6, na, nd = scoring_example(*SCORING["cross"])
     r6, c6 = SCORING["cross"][1]
@@ -991,12 +999,12 @@ def ep_scoring_a_wall_tile():
                src_xy=R.line_xy(0, r6, 0), say_after=True, cap=f"{na} across + {nd} down", badges=b6))
     S.append(T(f"Add them: {num(na)} plus {num(nd)}. {cap1(points(pts6))}! "
                "The new tile counts in both lines.", post6, cam=cam,
-               cap=f"{na} + {nd} = {pts6} points", badges=b6, pops=[wall_pop(0, r6, c6, pts6)],
+               cap=f"{na} + {nd} = {pts6} points", badges=b6, pops=[row_pop(0, r6, pts6)],
                sfx=["chime"], claim={0: pts6}))
     S.append(T("Tip: tiles next to other tiles score more. So build your wall in groups.", post6,
                cam=cam, cap="Tip: build in groups", focus=[R.wall_box(0)]))
     S.append(recap(7, ["No neighbours: 1 point.",
-                       "Otherwise count the unbroken line across, and down.",
+                       "Otherwise: count across, and count down.",
                        "Add both counts together."],
                    "Remember. A tile with no neighbours scores one point. Otherwise, count the "
                    "unbroken line across, and the unbroken line down. Add them together. "
@@ -1007,7 +1015,7 @@ def ep_scoring_a_wall_tile():
 # ============================================================ 8 next round
 def next_round_demo():
     D = Demo(holder=0)
-    D.wall(0, "B....", ".B...", "K....")
+    D.wall(0, "B....", ".B...", "....R")
     D.wall(1, "..R..", "...R.", "....R")
     D.line(0, 2, K, 2).line(1, 3, Y, 1)
     D.score(0, 7).score(1, 9)
@@ -1057,7 +1065,7 @@ def ep_the_next_round():
     S.append(T("The box lid is only emptied when the bag runs out. Never at any other time.", s4,
                cam=CAM_LID, cap="Only when the bag is empty", cap_pos="bottom", focus=[R.LID_BOX]))
     S.append(T("Very rarely, the bag and the box lid are both empty. Then start the round anyway.", s4,
-               cam=CAM_BAG, cap=("Both empty?", "start anyway"), cap_pos="bottom"))
+               cam=FULL, cap=("Both empty?", "start the round anyway"), cap_pos="mid"))
     S.append(T("Look at Ana's line three. Its tiles stayed from last round. She can still finish it.",
                s4, cam=cam_wall(0), cap="Unfinished lines carry on", focus=[R.line_box(0, 2)]))
     pre = D.snap()
@@ -1082,15 +1090,16 @@ def ep_end_of_the_game():
     D = Demo(holder=None)
     D.wall(0, "B....", "WB.RK", "K.B..", "R..B.", "....B")
     D.line(0, 1, Y, 2)
-    D.wall(1, "BY...", ".B...", "..B..", "...B.", "....B")
+    D.wall(1, "BY...", "WB...", "K.B..", "R..B.", "Y...B")      # a full column, no full row
     D.score(0, 41).score(1, 47)
     pre = D.snap()
     pts, col = D.tile_line(0, 1)
     s1 = D.snap()
     assert E.complete_rows(D.st["boards"][0]["wall"]) == 1
+    assert E.complete_columns(D.st["boards"][1]["wall"]) == 1 and not E.complete_rows(D.st["boards"][1]["wall"])
     S = [title(9, "Full rows, bonuses and the winner",
                "How does the game end? And who wins? Let's find out.")]
-    S.append(T("Ana's yellow tile fills the last space in row two of her wall.", s1, pre,
+    S.append(T(f"Ana's yellow tile fills the last space in row two. It scores {points(pts)}.", s1, pre,
                cam=cam_wall(0), say_after=True, cap="Row 2 is full!",
                pops=[wall_pop(0, 1, col, pts)], claim={0: pts}))
     S.append(T("That's five tiles across. It's called a complete row.", s1, cam=cam_wall(0),
@@ -1100,7 +1109,7 @@ def ep_end_of_the_game():
     S.append(T("Then the game is over. No new round starts.", s1, cam=FULL,
                cap="Then the game is over", cap_pos="mid"))
     S.append(T("A full column does not end the game. Only a full row does.", s1, cam=cam_wall(1),
-               cap="Columns don't end the game", focus=[R.wall_box(1)]))
+               cap="Columns don't end the game", focus=[R.wall_col_box(1, 0)]))
     # bonus example: engine breakdown
     Bd = Demo(holder=None)
     Bd.wall(0, *BONUS_WALL)
@@ -1115,12 +1124,13 @@ def ep_end_of_the_game():
     S.append(T(f"Each complete row: plus {num(E.ROW_BONUS)} points. Ana has {num(bb['rows'])}.", pre_b,
                cam=cam_wall(0), cap=f"Complete row: +{E.ROW_BONUS}",
                focus=[R.wall_row_box(0, r) for r in rows],
-               pops=[(R.wall_box(0)[2] - 20, R.wall_row_box(0, rows[0])[1], f"+{bb['row_points']}")],
+               pops=[(R.wall_box(0)[2] + 70, (R.wall_row_box(0, rows[0])[1] + R.wall_row_box(0, rows[0])[3]) / 2,
+                      f"+{bb['row_points']}", "at")],
                claim={"bonus_rows": bb["row_points"]}))
     S.append(T(f"Each complete column: plus {num(E.COLUMN_BONUS)} points. Ana has {num(bb['columns'])}. "
                f"That's {num(bb['column_points'])}.", pre_b, cam=cam_wall(0),
                cap=f"Complete column: +{E.COLUMN_BONUS}", focus=[R.wall_col_box(0, c) for c in cols],
-               pops=[(R.wall_xy(0, 0, c)[0], R.wall_box(0)[1], f"+{E.COLUMN_BONUS}") for c in cols],
+               pops=[(R.wall_xy(0, 4, c)[0], R.wall_box(0)[3] + 44, f"+{E.COLUMN_BONUS}", "at") for c in cols],
                claim={"bonus_columns": bb["column_points"]}))
     S.append(T(f"Each colour with all five tiles on your wall: plus {num(E.COLOUR_BONUS)} points. "
                "Ana has all five blue tiles.", pre_b, cam=cam_wall(0),
@@ -1133,7 +1143,7 @@ def ep_end_of_the_game():
              + [num(E.COLOUR_BONUS)] * bb["colours"])
     S.append(T(f"Ana's bonus: {' plus '.join(parts)}. That's {points(bb['total'])}!", post_b, pre_b,
                cam=cam_board(0), xfade=True, cap=f"Bonus: +{bb['total']}", cap_pos="bottom",
-               hl={"score": 0}, pops=[(score_xy(0)[0], score_xy(0)[1] + 10, f"+{bb['total']}")],
+               hl={"score": 0}, pops=[(score_xy(0)[0] - 60, score_xy(0)[1] + 100, f"+{bb['total']}", "at")],
                sfx=["chime"], claim={0: bb["total"]}))
     S.append(T("The player with the most points wins.", post_b, cam=CAM_BOARDS, cap="Most points wins!",
                sfx=["win"], focus=[R.score_box(0), R.score_box(1)], pause=0.6))
@@ -1178,7 +1188,7 @@ def ep_grey_wall_variant():
     pts, col = D.tile_line(0, 0, col=ok[0])
     s1 = D.snap()
     S.append(T(f"She picks the left one. It scores like normal: {points(pts)}.", s1, pre, cam=cam_wall(0),
-               say_after=True, cap="Scoring is the same", pops=[wall_pop(0, 0, col, pts)], claim={0: pts}))
+               say_after=True, cap="Scoring is the same", pops=[row_pop(0, 0, pts)], claim={0: pts}))
     S.append(T("Each row still holds each colour only once, too.", s1, cam=cam_wall(0),
                cap="Once per row, too", focus=[R.wall_row_box(0, 1)], pause=0.6))
     S.append(T("Now look at line two. It's complete, with red. But red is already in both free columns.",
@@ -1194,7 +1204,7 @@ def ep_grey_wall_variant():
                cam=FULL, cap="Everything else: the same", cap_pos="mid"))
     S.append(recap(10, ["Grey side: choose any empty space in the row.",
                         "Each colour once per row and once per column.",
-                        "No allowed space? The whole line goes to the floor."],
+                        "No allowed space? The line goes to the floor."],
                    "Remember. On the grey side, you choose any empty space in the row. Each colour "
                    "appears once per row and once per column. If no space is allowed, the whole line "
                    "goes to the floor line. Next: watch a whole game."))
@@ -1350,12 +1360,17 @@ def sample_game():
                     b["score"] -= bb["total"]
             rnd = e["round"]
             label = f"Round {rnd} · wall-tiling"
-            pops = []
+            pops, close = [], {}
             for res in e["results"]:
-                for x in res["placements"]:
-                    pops.append(wall_pop(res["player"], x["row"], x["col"], x["points"]))
+                p = res["player"]
+                tot = sum(x["points"] for x in res["placements"])
+                if tot:
+                    pops.append((score_xy(p)[0] - 60, score_xy(p)[1] + 100, f"+{tot}", "at"))
+                close[p] = [(*R.wall_xy(p, x["row"], x["col"]), f"+{x['points']}", "at")
+                            for x in res["placements"]]
                 if res["floor_items"]:
-                    pops.append(floor_pop(res["player"], res["floor_penalty"]))
+                    pops.append(floor_pop(p, res["floor_penalty"]))
+                    close[p].append(floor_pop(p, res["floor_penalty"]))
             ended = any(E.complete_rows(b["wall"]) for b in st["boards"])
             intro = "All tiles are taken. Time to move tiles to the walls." if rnd == 1 else \
                 "Wall-tiling time."
@@ -1364,9 +1379,10 @@ def sample_game():
             for res in e["results"]:
                 p = res["player"]
                 S.append(seg(tiling_words(res, detail=(rnd == 1 and p == 0)), st, cam=cam_board(p), ticker=True,
-                             bar=label, pops=[x for x in pops if (x[0] >= R.BOARD_X[1]) == (p == 1)],
+                             bar=label, pops=close[p],
                              claim={p: sum(x["points"] for x in res["placements"]),
-                                    "floor": res["floor_penalty"]}, pause=0.4))
+                                    **({"floor": res["floor_penalty"]} if res["floor_items"] else {})},
+                             pause=0.4))
             if ended:
                 who = [NAMES[i] for i, b in enumerate(st["boards"]) if E.complete_rows(b["wall"])]
                 S.append(seg(("Both players" if len(who) == 2 else who[0]) +
@@ -1392,7 +1408,7 @@ def sample_game():
                 cur = copy.deepcopy(prev)
                 cur["boards"][p]["score"] = end["boards"][p]["score"]
                 S.append(seg(say, cur, prev, cam=cam_board(p), ticker=True, bar="End bonuses",
-                             xfade=True, pops=[(score_xy(p)[0], score_xy(p)[1] + 10, f"+{bb['total']}")]
+                             xfade=True, pops=[(score_xy(p)[0] - 60, score_xy(p)[1] + 100, f"+{bb['total']}", "at")]
                              if bb["total"] else None, claim={p: bb["total"]}, hl={"score": p}))
                 prev = cur
             sc = e["scores"]

@@ -1,0 +1,143 @@
+1
+00:00:00,200 --> 00:00:01,586
+Welcome to Azul!
+
+2
+00:00:01,906 --> 00:00:04,871
+This first short video shows what the game is about.
+
+3
+00:00:05,900 --> 00:00:08,481
+Azul is a game for two to four players.
+
+4
+00:00:08,801 --> 00:00:11,788
+In these videos, two friends play: Ana and Ben.
+
+5
+00:00:12,899 --> 00:00:14,115
+They take turns.
+
+6
+00:00:14,435 --> 00:00:15,865
+First, Ana plays.
+
+7
+00:00:16,966 --> 00:00:18,161
+Then Ben plays.
+
+8
+00:00:18,481 --> 00:00:20,337
+Then Ana again, and so on.
+
+9
+00:00:20,657 --> 00:00:22,235
+Each go is called a turn.
+
+10
+00:00:23,366 --> 00:00:25,542
+The game uses small square pieces.
+
+11
+00:00:25,862 --> 00:00:27,163
+They are called tiles.
+
+12
+00:00:27,483 --> 00:00:31,153
+There are five colours: blue, yellow, red, black and white.
+
+13
+00:00:32,266 --> 00:00:34,997
+Each colour also has its own mark and letter.
+
+14
+00:00:35,317 --> 00:00:37,088
+So you never need colour alone.
+
+15
+00:00:38,200 --> 00:00:40,482
+Each player has their own player board.
+
+16
+00:00:40,802 --> 00:00:42,850
+Look at Ana's board, on the left.
+
+17
+00:00:43,966 --> 00:00:45,972
+The grid on the right is her wall.
+
+18
+00:00:46,292 --> 00:00:48,532
+Her goal is to decorate it with tiles.
+
+19
+00:00:49,633 --> 00:00:52,726
+In the middle of the table, tiles wait on small discs.
+
+20
+00:00:53,046 --> 00:00:55,009
+The next video gives them a name.
+
+21
+00:00:57,349 --> 00:00:59,653
+On her turn, Ana takes some tiles.
+
+22
+00:00:59,973 --> 00:01:02,021
+They wait on the left side of her board.
+
+23
+00:01:04,349 --> 00:01:06,739
+Later, one tile moves onto her wall.
+
+24
+00:01:07,059 --> 00:01:08,915
+Tiles on the wall score points.
+
+25
+00:01:09,235 --> 00:01:10,920
+This one scores one point.
+
+26
+00:01:12,033 --> 00:01:14,444
+Her points are shown at the top of her board.
+
+27
+00:01:15,566 --> 00:01:18,638
+Players collect tiles, then move them to their walls.
+
+28
+00:01:18,958 --> 00:01:20,686
+That cycle is called a round.
+
+29
+00:01:21,006 --> 00:01:22,649
+A game has several rounds.
+
+30
+00:01:23,766 --> 00:01:26,902
+When the game ends, the player with the most points wins.
+
+31
+00:01:27,222 --> 00:01:28,758
+That player is the winner.
+
+32
+00:01:29,866 --> 00:01:30,762
+Remember.
+
+33
+00:01:31,082 --> 00:01:33,258
+Players take turns collecting tiles.
+
+34
+00:01:33,578 --> 00:01:35,434
+Tiles on your wall score points.
+
+35
+00:01:35,754 --> 00:01:37,738
+And the most points at the end wins.
+
+36
+00:01:38,058 --> 00:01:40,085
+Next up: getting the game ready.

@@ -1,0 +1,151 @@
+1
+00:00:00,200 --> 00:00:01,714
+What do you do on your turn?
+
+2
+00:00:02,034 --> 00:00:03,250
+You take tiles.
+
+3
+00:00:03,570 --> 00:00:04,530
+Here's how.
+
+4
+00:00:06,283 --> 00:00:10,166
+At the start of a round, the starting player puts the marker in the centre.
+
+5
+00:00:11,266 --> 00:00:13,549
+Then the starting player takes the first turn.
+
+6
+00:00:13,869 --> 00:00:15,127
+Here, that's Ana.
+
+7
+00:00:16,233 --> 00:00:17,683
+Turns go clockwise.
+
+8
+00:00:18,003 --> 00:00:21,203
+Clockwise means the next player is the one on your left.
+
+9
+00:00:21,523 --> 00:00:23,614
+With two players, they simply swap.
+
+10
+00:00:24,733 --> 00:00:26,823
+On your turn, you must take tiles.
+
+11
+00:00:27,143 --> 00:00:28,551
+You have two choices.
+
+12
+00:00:29,666 --> 00:00:31,885
+Choice one: pick a factory display.
+
+13
+00:00:32,205 --> 00:00:33,826
+Then pick one colour on it.
+
+14
+00:00:36,149 --> 00:00:37,963
+Ana takes both blue tiles.
+
+15
+00:00:38,283 --> 00:00:40,651
+You always take every tile of that colour.
+
+16
+00:00:42,650 --> 00:00:46,810
+The other two tiles on that display slide into the centre of the table.
+
+17
+00:00:47,130 --> 00:00:48,943
+Now that display is empty.
+
+18
+00:00:50,066 --> 00:00:52,392
+You can't take only some tiles of a colour.
+
+19
+00:00:52,712 --> 00:00:54,440
+And you can't take two colours.
+
+20
+00:00:56,783 --> 00:00:58,212
+Now it's Ben's turn.
+
+21
+00:00:58,532 --> 00:01:01,199
+He takes all three red tiles from a display.
+
+22
+00:01:03,050 --> 00:01:05,140
+The white one slides into the centre.
+
+23
+00:01:05,966 --> 00:01:09,209
+Choice two: take one colour from the centre of the table.
+
+24
+00:01:11,083 --> 00:01:13,472
+Ana takes the yellow tile from the centre.
+
+25
+00:01:13,792 --> 00:01:15,371
+The other tiles stay there.
+
+26
+00:01:17,250 --> 00:01:20,130
+She is the first to take from the centre this round.
+
+27
+00:01:20,450 --> 00:01:22,946
+So she also takes the starting player marker.
+
+28
+00:01:24,066 --> 00:01:25,986
+It goes at the bottom of her board.
+
+29
+00:01:26,306 --> 00:01:27,778
+It costs her one point.
+
+30
+00:01:28,098 --> 00:01:30,189
+But she will go first next round.
+
+31
+00:01:32,050 --> 00:01:34,290
+Later, Ben takes from the centre too.
+
+32
+00:01:34,610 --> 00:01:37,831
+The marker is already gone, so he takes only tiles.
+
+33
+00:01:38,933 --> 00:01:43,434
+Players keep taking turns, until every display and the centre are empty.
+
+34
+00:01:44,566 --> 00:01:45,462
+Remember.
+
+35
+00:01:45,782 --> 00:01:47,681
+Take all the tiles of one colour.
+
+36
+00:01:48,001 --> 00:01:51,009
+From a factory display, the rest go to the centre.
+
+37
+00:01:51,329 --> 00:01:55,020
+The first player to take from the centre also takes the marker.
+
+38
+00:01:55,340 --> 00:01:56,854
+Next: pattern lines.

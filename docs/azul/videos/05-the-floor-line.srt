@@ -1,0 +1,159 @@
+1
+00:00:00,200 --> 00:00:02,696
+Tiles you can't use don't just disappear.
+
+2
+00:00:03,016 --> 00:00:05,511
+They fall to your floor line, and cost points.
+
+3
+00:00:06,533 --> 00:00:08,112
+This is Ana's floor line.
+
+4
+00:00:08,432 --> 00:00:09,989
+It has seven spaces.
+
+5
+00:00:11,099 --> 00:00:13,489
+Under each space is a minus number.
+
+6
+00:00:13,809 --> 00:00:15,537
+Minus means points you lose.
+
+7
+00:00:16,666 --> 00:00:18,522
+The first two say minus one.
+
+8
+00:00:18,842 --> 00:00:20,634
+The next three say minus two.
+
+9
+00:00:20,954 --> 00:00:22,746
+The last two say minus three.
+
+10
+00:00:25,083 --> 00:00:26,981
+Ana takes three black tiles.
+
+11
+00:00:27,301 --> 00:00:29,200
+None of her lines can take black.
+
+12
+00:00:29,520 --> 00:00:31,184
+So they go to the floor line.
+
+13
+00:00:32,299 --> 00:00:34,859
+Tiles fill the floor line from left to right.
+
+14
+00:00:35,966 --> 00:00:39,209
+When the round ends, add up the numbers under your tiles.
+
+15
+00:00:39,529 --> 00:00:41,086
+You lose that many points.
+
+16
+00:00:42,199 --> 00:00:45,399
+So these three tiles cost one, plus one, plus two.
+
+17
+00:00:45,719 --> 00:00:46,935
+That's four points.
+
+18
+00:00:48,949 --> 00:00:51,872
+Later, Ana is the first to take from the centre.
+
+19
+00:00:52,192 --> 00:00:55,072
+The starting player marker joins her floor line.
+
+20
+00:00:56,199 --> 00:00:58,781
+The marker takes a space, just like a tile.
+
+21
+00:00:59,101 --> 00:01:01,746
+Three tiles and the marker cost six points.
+
+22
+00:01:04,083 --> 00:01:05,896
+Then she takes four blue tiles.
+
+23
+00:01:06,216 --> 00:01:08,221
+Again, no line can take them.
+
+24
+00:01:08,933 --> 00:01:10,405
+The floor line is full.
+
+25
+00:01:10,725 --> 00:01:13,263
+All seven spaces cost fourteen points.
+
+26
+00:01:13,583 --> 00:01:14,373
+Ouch!
+
+27
+00:01:15,499 --> 00:01:17,121
+The last tile didn't fit.
+
+28
+00:01:17,441 --> 00:01:19,531
+Extra tiles go in the box lid.
+
+29
+00:01:19,851 --> 00:01:21,366
+They cost nothing more.
+
+30
+00:01:24,549 --> 00:01:26,085
+Ana had five points.
+
+31
+00:01:26,405 --> 00:01:29,008
+She loses fourteen, but stops at zero.
+
+32
+00:01:29,328 --> 00:01:31,504
+Your score never goes below zero.
+
+33
+00:01:32,633 --> 00:01:35,598
+After scoring, floor tiles go in the box lid.
+
+34
+00:01:35,918 --> 00:01:37,433
+Ana keeps the marker.
+
+35
+00:01:37,753 --> 00:01:39,331
+She starts the next round.
+
+36
+00:01:40,433 --> 00:01:41,329
+Remember.
+
+37
+00:01:41,649 --> 00:01:44,038
+Each floor space costs the number under it.
+
+38
+00:01:44,358 --> 00:01:46,470
+The starting player marker counts too.
+
+39
+00:01:46,790 --> 00:01:49,137
+And your score never goes below zero.
+
+40
+00:01:49,457 --> 00:01:51,483
+Next: moving tiles to the wall.

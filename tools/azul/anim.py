@@ -365,21 +365,45 @@ def _draw_focus(rects, rect):
     return layer
 
 
-def _draw_pops(pops, rect):
-    """Point pop-ups ('+3', '−2') above table points, big at any zoom."""
+def _pop_font(n):
+    """Big pop-ups; a little smaller when several share the screen."""
+    return (R.F["h1"], 86) if n <= 2 else (R.F["h2"], 62)
+
+
+def pop_box(pop, rect, avoid=None, n=1):
+    """Screen box of a point pop-up. pop = (x, y, text, mode): mode 'tile' = (x, y) is a
+    tile centre, the pill sits above the tile, or below it if `avoid` (a caption box)
+    is in the way; mode 'at' = the pill is centred on (x, y)."""
+    x, y, s, mode = pop
+    sx, sy = _screen(rect, x, y)
+    d = R.SDraw(Image.new("RGBA", (8, 8)), 1)
+    f, bh = _pop_font(n)
+    bw = d.textlength(s, f) + (48 if bh > 70 else 32)
+    half = R.T / 2 * R.W / rect[2]
+    bx0 = max(12, min(R.W - bw - 12, sx - bw / 2))
+    if mode == "at":
+        by0 = sy - bh / 2
+    else:
+        by0 = sy - half - 10 - bh
+        if by0 < 12 or (avoid and by0 < avoid[3] and by0 + bh > avoid[1]
+                        and bx0 < avoid[2] and bx0 + bw > avoid[0]):
+            by0 = sy + half + 10
+    by0 = max(12, min(R.H - bh - 12, by0))
+    return (bx0, by0, bx0 + bw, by0 + bh)
+
+
+def _draw_pops(pops, rect, avoid=None):
+    """Point pop-ups ('+3', '−2'), big at any zoom."""
     layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
     d = R.SDraw(layer, 1)
-    f = R.F["h1"]
-    for x, y, s in pops:
-        sx, sy = _screen(rect, x, y)
-        tw = d.textlength(s, f)
-        bw, bh = tw + 48, 86
-        bx0 = max(12, min(R.W - bw - 12, sx - bw / 2))
-        by0 = max(12, min(R.H - bh - 12, sy - bh - 34))
+    f, bh = _pop_font(len(pops))
+    for pop in pops:
+        s = pop[2]
+        bx0, by0, bx1, by1 = pop_box(pop, rect, avoid, len(pops))
         neg = s.startswith("−") or s.startswith("-")
-        _pill(d, (bx0, by0, bx0 + bw, by0 + bh), (R.HL if neg else R.GOLD) + (255,),
+        _pill(d, (bx0, by0, bx1, by1), (R.HL if neg else R.GOLD) + (255,),
               outline=(60, 30, 0, 255), width=3)
-        d.text((bx0 + 24, by0 + 4), s, font=f, fill=(30, 20, 0))
+        d.text((bx0 + (24 if bh > 70 else 16), by0 + 4), s, font=f, fill=(30, 20, 0))
     return layer
 
 
@@ -388,7 +412,7 @@ def _draw_badges(badges, rect):
     layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
     d = R.SDraw(layer, 1)
     k = R.W / rect[2]
-    rad = max(20, 15 * k)
+    rad = max(22, 17 * k)
     f = R.font(int(rad * 1.15), "Bold")
     for x, y, s, kind in badges:
         sx, sy = _screen(rect, x, y)
@@ -429,7 +453,7 @@ def overlay(im, ov, rect, fade=None):
     if ov.get("arrows"):
         parts.append(("arrows", _draw_arrows(ov["arrows"], rect)))
     if ov.get("pops"):
-        parts.append(("pops", _draw_pops(ov["pops"], rect)))
+        parts.append(("pops", _draw_pops(ov["pops"], rect, caption_box(ov) if ov.get("cap") else None)))
     if ov.get("cap"):
         parts.append(("cap", _draw_caption(ov)))
     for k, layer in parts:
