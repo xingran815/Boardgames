@@ -57,6 +57,33 @@ class TestTileStyle:
             hexs = "#%02X%02X%02X" % rgb
             assert hexs in style, (c, hexs)
 
+    def test_theme_is_light_and_text_is_readable(self):
+        """Warm, light table (docs/azul/STYLE.md); every text colour meets WCAG 4.5:1 on its ground."""
+        def lum(c):
+            f = [(v / 255) / 12.92 if v <= 10 else ((v / 255 + 0.055) / 1.055) ** 2.4 for v in c]
+            return 0.2126 * f[0] + 0.7152 * f[1] + 0.0722 * f[2]
+
+        def ratio(a, b):
+            la, lb = sorted((lum(a), lum(b)))
+            return (lb + 0.05) / (la + 0.05)
+        assert lum(R.BG) > 0.7 and lum(R.PAPER) > 0.8
+        assert R.BG[0] > R.BG[2] and R.PAPER[0] > R.PAPER[2]          # warm, not blue-grey
+        pairs = [(R.INK, R.BG), (R.INK, R.PAPER), (R.MUTED, R.BG), (R.MUTED, R.PAPER),
+                 (R.RED, R.PAPER), (R.MINUS, R.PAPER), (R.NAVY, R.PAPER), (R.SKY, R.NAVY),
+                 (R.GOLD_LIGHT, R.NAVY), (R.PAPER, R.NAVY), (R.PAPER, R.HL)]
+        for fg, bg in pairs:
+            assert ratio(fg, bg) >= 4.5, (fg, bg, ratio(fg, bg))
+        for c in E.COLOURS:                                            # tile letters
+            assert ratio(R.LETTER_INK[c], R.FILL[c]) >= 4.0, c
+
+    def test_fonts_are_bundled_small_and_licensed(self):
+        fonts = AZUL / "fonts"
+        assert (fonts / "OFL.txt").read_text().count("SIL Open Font License") >= 1
+        for f in ("Cinzel-Bold.ttf", "Caladea-Regular.ttf", "Caladea-Bold.ttf"):
+            assert (fonts / f).stat().st_size < 100_000, f
+        for k in ("h0", "big", "b", "xsb"):
+            assert Path(R.F[k].path).parent == fonts, k
+
     def test_every_engine_colour_has_a_design(self):
         assert set(R.FILL) == set(E.COLOURS) == set(R.EDGE) == set(R.MARK_INK)
 

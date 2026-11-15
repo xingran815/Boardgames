@@ -295,12 +295,23 @@ def _alpha(layer, a):
     return layer
 
 
-def caption_box(ov):
-    """Screen-space box (x0, y0, x1, y1) of the key-word caption."""
+def _cap_fonts(ov):
+    """Caption fonts: the key word in the display serif, the sub-line in the body serif;
+    both shrink a little if a long caption would not fit the screen."""
     cap = ov["cap"]
     title, sub = (cap, None) if isinstance(cap, str) else cap
     d = R.SDraw(Image.new("RGBA", (8, 8)), 1)
-    w = max(d.textlength(title, R.F["big"]), d.textlength(sub, R.F["mid"]) if sub else 0) + 110
+    maxw = R.W - 200
+    ft = R.fit_font(d, title, R.display, R.F["big"].size, maxw, 48)
+    fs = R.fit_font(d, sub, lambda z: R.font(z, "Bold"), R.F["mid"].size, maxw, 30) if sub else None
+    return title, sub, ft, fs
+
+
+def caption_box(ov):
+    """Screen-space box (x0, y0, x1, y1) of the key-word caption."""
+    title, sub, ft, fs = _cap_fonts(ov)
+    d = R.SDraw(Image.new("RGBA", (8, 8)), 1)
+    w = max(d.textlength(title, ft), d.textlength(sub, fs) if sub else 0) + 120
     h = 120 + (64 if sub else 0)
     pos = ov.get("cap_pos", "top")
     y0 = 28 if pos == "top" else (R.H - h) / 2 - 20 if pos == "mid" else R.H - h - 34
@@ -311,22 +322,28 @@ def caption_box(ov):
 
 
 def _draw_caption(ov):
-    cap = ov["cap"]
-    title, sub = (cap, None) if isinstance(cap, str) else cap
+    """A cream plaque in a deep-blue frame with a gold inner line (the cards' style)."""
+    title, sub, ft, fs = _cap_fonts(ov)
     layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
     d = R.SDraw(layer, 1)
     x0, y0, x1, y1 = caption_box(ov)
-    _pill(d, (x0, y0, x1, y1), (8, 14, 36, 232), outline=R.GOLD + (255,), width=4, r=34)
-    R.text_center(d, (R.W / 2, y0 + 12), title, R.F["big"], fill=R.GOLD)
+    d.rounded_rectangle((x0 + 4, y0 + 6, x1 + 4, y1 + 6), 30, fill=(60, 40, 20, 70))
+    R.frame(d, (x0, y0, x1, y1), 30, fill=R.PAPER + (246,), edge=R.NAVY + (255,),
+            line=R.GOLD + (255,), width=6)
+    R.text_mid(d, R.W / 2, y0 + 62, title, ft, fill=R.NAVY, anchor="m")
     if sub:
-        R.text_center(d, (R.W / 2, y0 + 112), sub, R.F["mid"], fill=R.INK)
+        R.text_mid(d, R.W / 2, y0 + 140, sub, fs, fill=R.RED, anchor="m")
     return layer
+
+
+ARROW = R.HL                  # rulebook-style dark red arrows
 
 
 def _draw_arrows(arrows, rect):
     layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
     d = R.SDraw(layer, 1)
     f = R.F["mid"]
+    halo, ink = R.PAPER + (255,), ARROW + (255,)
     for x, y, label, side in arrows:
         tx, ty = _screen(rect, x, y)
         dx, dy = {"up": (0, -1), "down": (0, 1), "left": (-1, 0), "right": (1, 0)}[side]
@@ -340,19 +357,24 @@ def _draw_arrows(arrows, rect):
         sx = bx0 + bw / 2 if dx == 0 else (bx0 if dx > 0 else bx0 + bw)
         sy = by0 + bh / 2 if dy == 0 else (by0 if dy > 0 else by0 + bh)
         ex, ey = tx + dx * 26, ty + dy * 26
-        d.line((sx, sy, ex, ey), fill=R.GOLD + (255,), width=9)
         ang = math.atan2(ey - sy, ex - sx)
         hx, hy = tx + dx * 8, ty + dy * 8
         pts = [(hx, hy)] + [(hx - 40 * math.cos(ang + s), hy - 40 * math.sin(ang + s)) for s in (0.5, -0.5)]
-        d.polygon(pts, fill=R.GOLD + (255,))
-        _pill(d, (bx0, by0, bx0 + bw, by0 + bh), R.GOLD + (255,), outline=(60, 40, 0, 255), width=3)
-        d.text((bx0 + 28, by0 + 10), label, font=f, fill=(30, 20, 0))
+        # a cream halo first, so the arrow reads on tiles and on parchment alike
+        d.line((sx, sy, ex, ey), fill=halo, width=17)
+        hp = [(hx + 7 * math.cos(ang), hy + 7 * math.sin(ang))] + [
+            (hx - 50 * math.cos(ang + s), hy - 50 * math.sin(ang + s)) for s in (0.56, -0.56)]
+        d.polygon(hp, fill=halo)
+        d.line((sx, sy, ex, ey), fill=ink, width=9)
+        d.polygon(pts, fill=ink)
+        _pill(d, (bx0, by0, bx0 + bw, by0 + bh), ink, outline=halo, width=4)
+        R.text_mid(d, bx0 + bw / 2, by0 + bh / 2, label, f, fill=R.PAPER, anchor="m")
     return layer
 
 
 def _draw_focus(rects, rect):
-    """Dim everything except the given table-space rectangles."""
-    layer = Image.new("RGBA", (R.W, R.H), (4, 8, 22, 165))
+    """Spotlight: wash everything else with pale parchment; frame the focus in dark red."""
+    layer = Image.new("RGBA", (R.W, R.H), R.PAPER + (178,))
     d = ImageDraw.Draw(layer)
     boxes = []
     for x0, y0, x1, y1 in rects:
@@ -361,13 +383,16 @@ def _draw_focus(rects, rect):
         boxes.append((a, b, c, e))
         d.rounded_rectangle((a, b, c, e), 18, fill=(0, 0, 0, 0))
     for box in boxes:
-        d.rounded_rectangle(box, 18, outline=R.GOLD + (255,), width=5)
+        d.rounded_rectangle(box, 18, outline=R.HL + (255,), width=6)
     return layer
 
 
 def _pop_font(n):
     """Big pop-ups; a little smaller when several share the screen."""
-    return (R.F["h1"], 86) if n <= 2 else (R.F["h2"], 62)
+    return (_POP_BIG, 86) if n <= 2 else (_POP_SMALL, 62)
+
+
+_POP_BIG, _POP_SMALL = R.font(68, "Bold"), R.font(48, "Bold")
 
 
 def pop_box(pop, rect, avoid=None, n=1):
@@ -392,6 +417,10 @@ def pop_box(pop, rect, avoid=None, n=1):
     return (bx0, by0, bx0 + bw, by0 + bh)
 
 
+POP_PLUS = (0xF1, 0xB8, 0x52)  # ochre, like the score track's number plaques
+POP_INK = (0x3A, 0x22, 0x08)
+
+
 def _draw_pops(pops, rect, avoid=None):
     """Point pop-ups ('+3', '−2'), big at any zoom."""
     layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
@@ -401,9 +430,11 @@ def _draw_pops(pops, rect, avoid=None):
         s = pop[2]
         bx0, by0, bx1, by1 = pop_box(pop, rect, avoid, len(pops))
         neg = s.startswith("−") or s.startswith("-")
-        _pill(d, (bx0, by0, bx1, by1), (R.HL if neg else R.GOLD) + (255,),
-              outline=(60, 30, 0, 255), width=3)
-        d.text((bx0 + (24 if bh > 70 else 16), by0 + 4), s, font=f, fill=(30, 20, 0))
+        d.rounded_rectangle((bx0 + 3, by0 + 5, bx1 + 3, by1 + 5), bh / 2, fill=(60, 40, 20, 80))
+        _pill(d, (bx0, by0, bx1, by1), (R.HL if neg else POP_PLUS) + (255,),
+              outline=(R.PAPER if neg else R.NAVY) + (255,), width=4)
+        R.text_mid(d, (bx0 + bx1) / 2, (by0 + by1) / 2, s, f,
+                   fill=R.PAPER if neg else POP_INK, anchor="m")
     return layer
 
 
@@ -413,26 +444,27 @@ def _draw_badges(badges, rect):
     d = R.SDraw(layer, 1)
     k = R.W / rect[2]
     rad = max(22, 17 * k)
-    f = R.font(int(rad * 1.15), "Bold")
+    f = R.font(int(rad * 1.25), "Bold")
     for x, y, s, kind in badges:
         sx, sy = _screen(rect, x, y)
-        fill = (255, 205, 90, 255) if kind == "across" else (120, 220, 255, 255)
-        d.ellipse((sx - rad, sy - rad, sx + rad, sy + rad), fill=fill, outline=(20, 20, 30, 255), width=3)
-        tw = d.textlength(s, f)
-        d.text((sx - tw / 2, sy - rad * 0.72), s, font=f, fill=(20, 20, 30))
+        fill = POP_PLUS + (255,) if kind == "across" else R.SKY + (255,)
+        d.ellipse((sx - rad, sy - rad, sx + rad, sy + rad), fill=fill, outline=R.NAVY + (255,), width=3)
+        R.text_mid(d, sx, sy, s, f, fill=R.INK, anchor="m")
     return layer
 
 
 def _draw_bar(ov):
+    """Bottom bar in deep azulejo blue with a gold edge."""
     layer = Image.new("RGBA", (R.W, R.H), (0, 0, 0, 0))
     d = R.SDraw(layer, 1)
     y = R.H - 78
-    d.rectangle((0, y, R.W, R.H), fill=(6, 10, 26, 225))
+    d.rectangle((0, y, R.W, R.H), fill=R.NAVY + (240,))
+    d.line((0, y + 2, R.W, y + 2), fill=R.GOLD + (255,), width=4)
     f = R.F["cap"]
     if ov.get("bar"):
-        d.text((48, y + 18), ov["bar"], font=f, fill=R.GOLD)
+        R.text_mid(d, 48, y + 41, ov["bar"], f, fill=R.GOLD_LIGHT)
     if ov.get("score"):
-        d.text((R.W - 48 - d.textlength(ov["score"], f), y + 18), ov["score"], font=f, fill=R.INK)
+        R.text_mid(d, R.W - 48, y + 41, ov["score"], f, fill=R.PAPER, anchor="r")
     return layer
 
 
