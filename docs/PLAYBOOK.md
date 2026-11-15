@@ -87,6 +87,10 @@ The audience is someone who has **never played a board game**. A dense, single "
 - Speak numbers that come from the engine. Never hand-type point values.
 
 **Visuals**
+- **The theme must fit the game's own design style.** Study photos of the box, board, components and rulebook. Then match the overall palette, materials and mood: backgrounds, panels, title cards, captions and component colours.
+  - A generic dark "app" theme was rejected for Azul, whose look is warm parchment, azulejo blues and gold.
+  - Write the theme down in `docs/<game>/STYLE.md` so the PDF, HTML and videos stay consistent.
+  - Still draw your own original artwork; never trace or copy the printed art or logo.
 - Introduce one thing at a time. Build the table piece by piece with fades instead of showing everything at once.
 - Zoom the camera on the part being explained. Draw at 2× so zooms stay sharp.
 - Captions, arrows, spotlights and the score bar are drawn **after** the camera crop, so they stay large at any zoom.
