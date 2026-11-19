@@ -1,12 +1,18 @@
 // Playwright run-through of docs/azul/learn.html.
 // usage: node test.js [width] [height] [light|dark] [reduce|no-preference] [shots]
+// env: AZUL_LEARN_HTML (page to test, default docs/azul/learn.html),
+//      AZUL_LEARN_OUT (where wrapped.html and shots/ go, default a temp dir, never the repo),
+//      AZUL_FONTS=local (answer Google Fonts requests with the bundled tools/azul/fonts files, for screenshots).
 const { chromium } = require("/opt/node22/lib/node_modules/playwright");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
-const DIR = __dirname;
+const REPO = path.resolve(__dirname, "../../..");
+const DIR = process.env.AZUL_LEARN_OUT || path.join(os.tmpdir(), "azul-learn-test");
+fs.mkdirSync(DIR, { recursive: true });
 const [W = 1280, H = 800, SCHEME = "light", MOTION = "reduce", SHOTS = ""] = process.argv.slice(2);
 const tag = `${W}-${SCHEME}`;
-const src = fs.readFileSync("/home/user/Boardgames/docs/azul/learn.html", "utf8");
+const src = fs.readFileSync(process.env.AZUL_LEARN_HTML || path.join(REPO, "docs/azul/learn.html"), "utf8");
 // Same skeleton the artifact host wraps around the page.
 const wrapped = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><style>:root{color-scheme:light;padding-top:env(safe-area-inset-top);padding-bottom:env(safe-area-inset-bottom)}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style></head><body>${src}</body></html>`;
 fs.writeFileSync(path.join(DIR, "wrapped.html"), wrapped);
@@ -19,7 +25,16 @@ const shotDir = path.join(DIR, "shots"); fs.mkdirSync(shotDir, { recursive: true
   const errors = [];
   page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
   page.on("console", (m) => { if (m.type() === "error" && !/fonts\.g|ERR_FAILED|net::/.test(m.text())) errors.push("console: " + m.text()); });
-  await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  if (process.env.AZUL_FONTS === "local") {
+    // Same faces the page asks Google Fonts for, served from the files the videos bundle.
+    const FD = path.join(REPO, "tools/azul/fonts");
+    const face = (fam, w, file) => `@font-face{font-family:"${fam}";font-weight:${w};font-style:normal;src:url(https://fonts.gstatic.com/local/${file}) format("truetype")}`;
+    const css = [face("Cinzel", 700, "Cinzel-Bold.ttf"), face("Cinzel", 600, "Cinzel-Bold.ttf"), face("Caladea", 400, "Caladea-Regular.ttf"), face("Caladea", 700, "Caladea-Bold.ttf")].join("\n");
+    await page.route(/fonts\.googleapis\.com/, (r) => r.fulfill({ status: 200, contentType: "text/css", headers: { "access-control-allow-origin": "*" }, body: css }));
+    await page.route(/fonts\.gstatic\.com\/local\//, (r) => r.fulfill({ status: 200, contentType: "font/ttf", headers: { "access-control-allow-origin": "*" }, body: fs.readFileSync(path.join(FD, r.request().url().split("/").pop())) }));
+  } else {
+    await page.route(/fonts\.(googleapis|gstatic)\.com/, (r) => r.abort());
+  }
   await page.goto("file://" + path.join(DIR, "wrapped.html"));
   await page.evaluate(() => { try { localStorage.clear(); } catch (e) {} });
   await page.reload();

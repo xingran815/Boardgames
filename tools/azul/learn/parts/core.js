@@ -166,7 +166,7 @@
       var hl = o.hlLines && o.hlLines.indexOf(i) >= 0 ? " hl" : "";
       if (o.linesActive) linesH += '<button type="button" class="pline' + hl + '" data-act="line" data-line="' + i + '" aria-label="' + lineLabel(b, i) + '">' + cells + "</button>";
       else linesH += '<div class="pline' + hl + '" role="img" aria-label="' + lineLabel(b, i) + '">' + cells + "</div>";
-      numsH += '<span class="lno" style="height:var(--cell);display:flex;align-items:center;font:600 12px/1 var(--font-display);color:var(--ink-2)" aria-hidden="true">' + (i + 1) + "</span>";
+      numsH += '<span class="lno" style="height:var(--cell);display:flex;align-items:center;font:700 13px/1 var(--font-body);color:var(--ink-2)" aria-hidden="true">' + (i + 1) + "</span>";
     }
     var wallH = "";
     for (r = 0; r < 5; r++) for (c = 0; c < 5; c++) {
