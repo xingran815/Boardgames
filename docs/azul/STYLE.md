@@ -86,8 +86,12 @@ floor line, box lid, starting player marker, score track).
 
 ## Status
 
-The videos (`tools/azul/render.py`, `anim.py`) follow this file. The colour PDF
-(`tools/build_azul_color_manual.py`) and the practice page (`docs/azul/learn.html`) still use the
-earlier flat tile palette (blue #2F6FB5, yellow #E8B730, red #C8423A, black #2A2D34, white #EEF1F4 with
-circle / four-point star / diamond / plus / square-ring marks); update them to this style when they are
-next rebuilt.
+The videos (`tools/azul/render.py`, `anim.py`) and the colour PDF (`tools/build_azul_color_manual.py`)
+follow this file. So does the practice page (`docs/azul/learn.html`, built from
+`tools/azul/learn/parts/`). Its dark mode is the same table at night: deep azulejo blue #0F1F44 with
+cream text #F3EBDB, gold-on-blue headings, and the tiles, factory displays, bag and box lid unchanged.
+
+The colour PDF keeps the look print-friendly: very light cream pages (#FFFDF8) with a thin deep-blue
+and gold page frame and small azulejo corner tiles, light tinted panels, thin azulejo bands on the
+cover only, Cinzel dark-red headings and Caladea body text (fonts embedded from `tools/azul/fonts`).
+"Counted" tiles in scoring pictures are shaded gold; new tiles get a highlight-red ring.

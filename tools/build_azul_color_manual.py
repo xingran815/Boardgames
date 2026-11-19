@@ -4,8 +4,9 @@
     python3 tools/build_azul_color_manual.py
 
 * Every picture (tiles, walls, pattern lines, factory displays, boards) is
-  drawn as inline SVG by this script, with original flat tile designs from
-  docs/azul/STYLE.md. No image files are needed.
+  drawn as inline SVG by this script, with the original tile designs, colours
+  and component styling of docs/azul/STYLE.md (as in tools/azul/render.py).
+  No image files are needed.
 * Every number is computed with tools/azul/engine.py (loaded by path, because
   tests/conftest.py maps the name `engine` to Spirits of the Wild) and the
   script asserts that each figure agrees with the text next to it.
@@ -15,10 +16,12 @@
   their box are reported as warnings (the build exits non-zero if any).
 
 Content follows docs/azul/manual.md and docs/azul/quick-reference.md.
-Requires node + playwright (Chromium) and the Inter font.
+Requires node + playwright (Chromium). Fonts: Cinzel and Caladea from tools/azul/fonts
+(SIL OFL), embedded with @font-face.
 """
 from __future__ import annotations
 
+import base64
 import importlib.util
 import json
 import math
@@ -38,15 +41,27 @@ E = importlib.util.module_from_spec(_spec)
 sys.modules["azul_engine"] = E
 _spec.loader.exec_module(E)
 
+# ================================================================ palette (docs/azul/STYLE.md)
+PARCH, CREAM, SAND, TRAY = "#EFE4CF", "#FAF5EA", "#EAD9BE", "#E6D6B8"
+NAVY, COBALT, SKY = "#1E3A72", "#2C5AA8", "#9CC0E3"
+GOLD, GOLD_LT, OCHRE = "#C08A2E", "#F4CD78", "#F1B852"
+RED, HL = "#9E2A22", "#B32A1E"
+INK, BROWN = "#1B2A4E", "#68543C"
+SLOT, RIM = "#BE9C68", "#B05E34"          # gold-tan slot edge, terracotta factory rim
+LIGHT = "#F6EEDD"                          # light parchment (centre of the table, table area)
+GREY_SPACE, GREY_EDGE = "#C4BEB4", "#9E968A"
+SERIF = "Caladea, 'DejaVu Serif', 'DejaVu Sans', serif"
+DISPLAY = "Cinzel, 'DejaVu Serif', serif"
+
 # ================================================================ tiles
-FILL = {"B": "#2F6FB5", "Y": "#E8B730", "R": "#C8423A", "K": "#2A2D34", "W": "#EEF1F4"}
+FILL = {"B": "#2F62AC", "Y": "#E9A238", "R": "#D2492F", "K": "#24272F", "W": "#F4EFE2"}
+EDGE = {"B": "#1A3A6E", "Y": "#9C6214", "R": "#822819", "K": "#0C0E12", "W": "#8FA8C4"}
+MARK_INK = {"B": "#B4D4F2", "Y": "#C23E1E", "R": "#F8DCC4", "K": "#6CACCC", "W": "#5E9ACE"}
+LETTER_INK = {"B": "#FFFFFF", "Y": "#5A2C00", "R": "#FFFFFF", "K": "#E8EEF4", "W": NAVY}
 NAME = {"B": "blue", "Y": "yellow", "R": "red", "K": "black", "W": "white"}
 LET = {v: k for k, v in NAME.items()}          # colour name -> letter
-INK_ON = {"B": "#fff", "Y": "#2A2D34", "R": "#fff", "K": "#fff", "W": "#4a5563"}
 LETTERS = "BYRKW"
 assert [E.LETTERS[c] for c in E.COLOURS] == list(LETTERS)
-TAN, TAN_RIM = "#D9B38C", "#A98150"
-DARK = "#2A2D34"
 
 
 def L(c):
@@ -54,72 +69,115 @@ def L(c):
     return LET.get(c, c)
 
 
-def mark(cx, cy, s, c):
-    """Centred original mark for each colour."""
-    col = INK_ON[c]
-    if c == "B":
-        return f'<circle cx="{cx}" cy="{cy}" r="{s*.17:.2f}" fill="{col}"/>'
-    if c == "Y":
-        o, i = s * .27, s * .08
-        pts = [(0, -o), (i, -i), (o, 0), (i, i), (0, o), (-i, i), (-o, 0), (-i, -i)]
-        return ('<polygon fill="%s" points="%s"/>' %
-                (col, " ".join(f"{cx+x:.2f},{cy+y:.2f}" for x, y in pts)))
-    if c == "R":
-        r = s * .21
-        return f'<polygon fill="{col}" points="{cx},{cy-r} {cx+r},{cy} {cx},{cy+r} {cx-r},{cy}"/>'
-    if c == "K":
-        t, a = s * .09, s * .21
-        return (f'<rect x="{cx-t/2}" y="{cy-a}" width="{t}" height="{2*a}" fill="{col}"/>'
-                f'<rect x="{cx-a}" y="{cy-t/2}" width="{2*a}" height="{t}" fill="{col}"/>')
-    a = s * .17
-    return (f'<rect x="{cx-a}" y="{cy-a}" width="{2*a}" height="{2*a}" fill="none" stroke="{col}" '
-            f'stroke-width="{s*.065:.2f}"/>')
+def mix(a, b, t):
+    """Blend hex colour a towards b by t (0 = a, 1 = b)."""
+    pa = [int(a[i:i + 2], 16) for i in (1, 3, 5)]
+    pb = [int(b[i:i + 2], 16) for i in (1, 3, 5)]
+    return "#" + "".join(f"{round(x + (y - x) * t):02X}" for x, y in zip(pa, pb))
 
 
-def tile(x, y, s, c, faint=False, letter=True):
-    """One tile (or, when faint, an untiled wall space showing its colour)."""
+def _pts(pts):
+    return " ".join(f"{x:.2f},{y:.2f}" for x, y in pts)
+
+
+def diamond(cx, cy, r, fill):
+    return f'<polygon fill="{fill}" points="{_pts([(cx, cy - r), (cx + r, cy), (cx, cy + r), (cx - r, cy)])}"/>'
+
+
+def star8(cx, cy, ro, ri, fill, rot=0.0):
+    pts = [(cx + (ro if i % 2 == 0 else ri) * math.cos(rot - math.pi / 2 + i * math.pi / 8),
+            cy + (ro if i % 2 == 0 else ri) * math.sin(rot - math.pi / 2 + i * math.pi / 8)) for i in range(16)]
+    return f'<polygon fill="{fill}" points="{_pts(pts)}"/>'
+
+
+def mark(cx, cy, s, c, ink, bg):
+    """Original geometric motif of each colour (as in tools/azul/render.py)."""
+    if c == "B":       # ring with a centre dot
+        return (f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{s*.19:.2f}" fill="none" stroke="{ink}" stroke-width="{s*.065:.2f}"/>'
+                f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{s*.065:.2f}" fill="{ink}"/>')
+    if c == "Y":       # four-petal rosette with four dots
+        o, r, q, rr = s * .13, s * .105, s * .17, s * .035
+        g = "".join(f'<circle cx="{cx+dx*o:.2f}" cy="{cy+dy*o:.2f}" r="{r:.2f}" fill="{ink}"/>'
+                    for dx, dy in ((0, -1), (1, 0), (0, 1), (-1, 0)))
+        g += "".join(f'<circle cx="{cx+dx*q:.2f}" cy="{cy+dy*q:.2f}" r="{rr:.2f}" fill="{ink}"/>'
+                     for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)))
+        return g + f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{s*.055:.2f}" fill="{bg}"/>'
+    if c == "R":       # diamond with a diamond window
+        return diamond(cx, cy, s * .23, ink) + diamond(cx, cy, s * .09, bg)
+    if c == "K":       # lattice: plus sign and four small diamonds
+        a, t = s * .22, s * .05
+        g = (f'<rect x="{cx-a:.2f}" y="{cy-t:.2f}" width="{2*a:.2f}" height="{2*t:.2f}" fill="{ink}"/>'
+             f'<rect x="{cx-t:.2f}" y="{cy-a:.2f}" width="{2*t:.2f}" height="{2*a:.2f}" fill="{ink}"/>')
+        return g + "".join(diamond(cx + dx * s * .17, cy + dy * s * .17, s * .055, ink)
+                           for dx, dy in ((1, 1), (1, -1), (-1, 1), (-1, -1)))
+    # W: eight-ray star of slim rhombi
+    ro, hw, g = s * .31, s * .06, []
+    for i in range(8):
+        a = i * math.pi / 4
+        ux, uy = math.cos(a), math.sin(a)
+        px, py = -uy, ux
+        mx, my = cx + ux * ro * .5, cy + uy * ro * .5
+        g.append(f'<polygon fill="{ink}" points="{_pts([(cx + ux*s*.05, cy + uy*s*.05), (mx + px*hw, my + py*hw), (cx + ux*ro, cy + uy*ro), (mx - px*hw, my - py*hw)])}"/>')
+    return "".join(g) + f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{s*.05:.2f}" fill="{ink}"/>'
+
+
+def tile(x, y, s, c, faint=False, letter=True, base=TRAY):
+    """One tile with its top-left corner at (x, y), side s. faint=True: an untiled wall
+    space (the colour at about 35% strength on `base`, same motif)."""
     c = L(c)
-    stroke = "#9AA4B1" if c == "W" else "none"
+    rad = s * .12
+    fill, edge, ink = FILL[c], EDGE[c], MARK_INK[c]
+    cx, cy = x + s / 2, y + s / 2
     if faint:
-        g = (f'<rect x="{x}" y="{y}" width="{s}" height="{s}" rx="{s*.14:.1f}" fill="{FILL[c]}" '
-             f'fill-opacity=".22" stroke="{FILL[c] if c != "W" else "#9AA4B1"}" stroke-opacity=".5" '
-             f'stroke-width="{s*.03:.2f}"/>')
-        g += f'<g opacity=".35">{mark(x+s/2, y+s/2, s, c)}</g>'
+        fill = mix(base, fill, .36)
+        ink = mix(base, NAVY if c == "W" else ink, .4)
+        edge = mix(base, edge, .45)
+        g = (f'<rect x="{x:.2f}" y="{y:.2f}" width="{s:.2f}" height="{s:.2f}" rx="{rad:.2f}" fill="{fill}" '
+             f'stroke="{edge}" stroke-width="{s*.03:.2f}"/>')
+        g += mark(cx, cy, s, c, ink, fill)
         if letter:
-            g += (f'<text x="{x+s*.14}" y="{y+s*.34}" font-size="{s*.28:.1f}" font-weight="800" '
-                  f'fill="#59616e" fill-opacity=".8">{c}</text>')
+            g += (f'<text x="{x+s*.09:.2f}" y="{y+s*.9:.2f}" font-size="{s*.24:.2f}" font-weight="700" '
+                  f'fill="{mix(base, BROWN, .7)}">{c}</text>')
         return g
-    g = (f'<rect x="{x}" y="{y}" width="{s}" height="{s}" rx="{s*.14:.1f}" fill="{FILL[c]}" '
-         f'stroke="{stroke}" stroke-width="{s*.04:.2f}"/>')
-    g += mark(x + s / 2, y + s / 2 + (s * .04 if letter else 0), s, c)
+    g = (f'<rect x="{x:.2f}" y="{y:.2f}" width="{s:.2f}" height="{s:.2f}" rx="{rad:.2f}" fill="{fill}" '
+         f'stroke="{edge}" stroke-width="{s*.045:.2f}"/>'
+         f'<rect x="{x+s*.1:.2f}" y="{y+s*.07:.2f}" width="{s*.8:.2f}" height="{s*.08:.2f}" rx="{s*.04:.2f}" '
+         f'fill="{mix(fill, "#FFFFFF", .22)}"/>'
+         f'<rect x="{cx-s*.36:.2f}" y="{cy-s*.36:.2f}" width="{s*.72:.2f}" height="{s*.72:.2f}" rx="{s*.05:.2f}" '
+         f'fill="none" stroke="{mix(fill, ink, .45)}" stroke-width="{s*.022:.2f}"/>')
+    g += mark(cx, cy, s, c, ink, fill)
     if letter:
-        g += (f'<text x="{x+s*.14}" y="{y+s*.34}" font-size="{s*.28:.1f}" font-weight="800" '
-              f'fill="{INK_ON[c]}">{c}</text>')
+        g += (f'<text x="{x+s*.09:.2f}" y="{y+s*.92:.2f}" font-size="{s*.24:.2f}" font-weight="700" '
+              f'fill="{LETTER_INK[c]}">{c}</text>')
     return g
 
 
 def marker(x, y, s):
-    return (f'<rect x="{x}" y="{y}" width="{s}" height="{s}" rx="{s*.14:.1f}" fill="#F6F1E3" '
-            f'stroke="#8a8f99" stroke-width="{s*.05:.2f}"/>'
-            f'<text x="{x+s/2}" y="{y+s*.72}" font-size="{s*.62:.1f}" font-weight="800" '
-            f'text-anchor="middle" fill="{DARK}">1</text>')
+    """Starting player marker: a cream tile in a deep-blue frame with the numeral 1."""
+    return (f'<rect x="{x:.2f}" y="{y:.2f}" width="{s:.2f}" height="{s:.2f}" rx="{s*.12:.2f}" fill="#FBF8EF" '
+            f'stroke="{NAVY}" stroke-width="{s*.07:.2f}"/>'
+            f'<rect x="{x+s*.15:.2f}" y="{y+s*.15:.2f}" width="{s*.7:.2f}" height="{s*.7:.2f}" rx="{s*.08:.2f}" '
+            f'fill="none" stroke="{COBALT}" stroke-width="{s*.03:.2f}"/>'
+            f'<text x="{x+s/2:.2f}" y="{y+s*.69:.2f}" font-size="{s*.5:.2f}" font-family="{DISPLAY}" font-weight="700" '
+            f'text-anchor="middle" fill="{NAVY}">1</text>')
 
 
-def hole(x, y, s):
-    return (f'<rect x="{x}" y="{y}" width="{s}" height="{s}" rx="{s*.14:.1f}" fill="#fff" '
-            f'stroke="#9aa3b2" stroke-width="{s*.04:.2f}"/>')
+def hole(x, y, s, floor=False):
+    """Empty pattern-line slot (sand, gold-tan edge) or floor-line slot (cobalt edge)."""
+    return (f'<rect x="{x:.2f}" y="{y:.2f}" width="{s:.2f}" height="{s:.2f}" rx="{s*.12:.2f}" '
+            f'fill="{"#EEE6D6" if floor else SAND}" stroke="{COBALT if floor else SLOT}" stroke-width="{s*.05:.2f}"/>')
 
 
 def item(x, y, s, it):
-    """Floor-line style item: a tile letter, the marker ("1") or an empty space."""
+    """Floor-line item: a tile letter, the marker ("1") or an empty floor space."""
     if it == "1":
         return marker(x, y, s)
-    return tile(x, y, s, it) if it else hole(x, y, s)
+    return tile(x, y, s, it) if it else hole(x, y, s, floor=True)
 
 
 def svg(w, h, body, cls="fig"):
     return (f'<svg class="{cls}" viewBox="0 0 {w:.1f} {h:.1f}" xmlns="http://www.w3.org/2000/svg" '
-            f'font-family="Inter, DejaVu Sans, sans-serif">{body}</svg>')
+            f'font-family="{SERIF}">{body}</svg>')
 
 
 def T(c, cls="it"):
@@ -131,51 +189,97 @@ def Ts(s):
     return "".join(T(c) for c in s)
 
 
-def txt(x, y, s, size=14, fill="#1d2433", weight=700, anchor="start"):
-    return (f'<text x="{x}" y="{y}" font-size="{size}" font-weight="{weight}" fill="{fill}" '
-            f'text-anchor="{anchor}">{s}</text>')
+def txt(x, y, s, size=14, fill=INK, weight=700, anchor="start", font=None):
+    fam = f' font-family="{DISPLAY}"' if font == "display" else ""
+    return (f'<text x="{x:.1f}" y="{y:.1f}" font-size="{size:.1f}" font-weight="{weight}" fill="{fill}" '
+            f'text-anchor="{anchor}"{fam}>{s}</text>')
 
 
-def badge(x, y, n, r=13, fill="#1f4e79"):
-    return (f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="#fff" stroke-width="2"/>'
-            f'<text x="{x}" y="{y+r*.38:.1f}" font-size="{r*1.15:.1f}" font-weight="800" fill="#fff" '
+def badge(x, y, n, r=13, fill=NAVY):
+    return (f'<circle cx="{x}" cy="{y}" r="{r}" fill="{fill}" stroke="{GOLD_LT}" stroke-width="2"/>'
+            f'<text x="{x}" y="{y+r*.4:.1f}" font-size="{r*1.2:.1f}" font-weight="700" fill="#FFFFFF" '
             f'text-anchor="middle">{n}</text>')
 
 
 def ring(x, y, s, w=.11):
-    return (f'<rect x="{x-s*.1}" y="{y-s*.1}" width="{s*1.2}" height="{s*1.2}" rx="{s*.2}" '
-            f'fill="none" stroke="#111" stroke-width="{s*w}"/>')
+    """Highlight-red frame around a tile (like the rulebook's red frames)."""
+    return (f'<rect x="{x-s*.1:.2f}" y="{y-s*.1:.2f}" width="{s*1.2:.2f}" height="{s*1.2:.2f}" rx="{s*.2:.2f}" '
+            f'fill="none" stroke="{HL}" stroke-width="{s*w:.2f}"/>')
+
+
+def frame(x0, y0, x1, y1, r=10, w=2.2, fill=CREAM):
+    """Cream panel in a deep-blue frame with a thin ochre-gold inner line."""
+    g = w + 2.2
+    return (f'<rect x="{x0:.1f}" y="{y0:.1f}" width="{x1-x0:.1f}" height="{y1-y0:.1f}" rx="{r}" fill="{fill}" '
+            f'stroke="{NAVY}" stroke-width="{w}"/>'
+            f'<rect x="{x0+g:.1f}" y="{y0+g:.1f}" width="{x1-x0-2*g:.1f}" height="{y1-y0-2*g:.1f}" rx="{max(2, r-g):.1f}" '
+            f'fill="none" stroke="{GOLD}" stroke-width="{w*.45:.2f}"/>')
+
+
+def azulejo(cx, cy, s, kind, bg=SKY, ink=NAVY):
+    """One small decorative wall tile (original geometric patterns) for borders."""
+    x0, y0 = cx - s / 2, cy - s / 2
+    g = f'<rect x="{x0:.2f}" y="{y0:.2f}" width="{s:.2f}" height="{s:.2f}" fill="{bg}"/>'
+    if kind == 0:
+        g += star8(cx, cy, s * .42, s * .2, ink) + f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{s*.08:.2f}" fill="{bg}"/>'
+    elif kind == 1:
+        q, x1, y1 = s * .32, x0 + s, y0 + s
+        for (x, y), (sx, sy) in (((x0, y0), (1, 1)), ((x1, y0), (-1, 1)), ((x0, y1), (1, -1)), ((x1, y1), (-1, -1))):
+            g += f'<polygon fill="{ink}" points="{_pts([(x, y), (x + sx*q, y), (x, y + sy*q)])}"/>'
+        g += diamond(cx, cy, s * .22, ink)
+    else:
+        r = s * .13
+        g += "".join(f'<circle cx="{cx+dx*s*.2:.2f}" cy="{cy+dy*s*.2:.2f}" r="{r:.2f}" fill="{ink}"/>'
+                     for dx, dy in ((0, -1), (1, 0), (0, 1), (-1, 0)))
+        g += f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{r*.6:.2f}" fill="{bg}"/>'
+    return g
+
+
+def azulejo_band(n, s=20):
+    """A light strip of n small azulejo tiles between thin gold rules (print-friendly)."""
+    b = []
+    for i in range(n):
+        bg, ink = (CREAM, COBALT) if i % 2 else (SKY, NAVY)
+        b.append(azulejo(i * s + s / 2, s / 2 + 2, s - 1, i % 3, bg=bg, ink=ink))
+    b.append(f'<line x1="0" y1="1" x2="{n*s}" y2="1" stroke="{GOLD}" stroke-width="1.2"/>'
+             f'<line x1="0" y1="{s+3}" x2="{n*s}" y2="{s+3}" stroke="{GOLD}" stroke-width="1.2"/>')
+    return svg(n * s, s + 4, "".join(b), "band")
 
 
 # ================================================================ drawings
 GAP = 0.12  # gap between cells, as a fraction of the cell size
 
 
-def wall_cells(wall, c, x, y, hl=None, grey=False, options=()):
-    """SVG body for the 5x5 wall; returns (body, size)."""
+def wall_cells(wall, c, x, y, hl=None, grey=False, options=(), tray=True):
+    """SVG body for the 5x5 wall on its stone tray; returns (body, size)."""
     st = c * (1 + GAP)
     hl = hl or {}
+    size = 5 * st - c * GAP
     b = []
+    if tray:
+        m = c * .08
+        b.append(f'<rect x="{x-m:.2f}" y="{y-m:.2f}" width="{size+2*m:.2f}" height="{size+2*m:.2f}" rx="{c*.2:.2f}" '
+                 f'fill="{TRAY}" stroke="{GOLD}" stroke-width="{c*.03:.2f}"/>')
     for r in range(5):
         for k in range(5):
             xx, yy = x + k * st, y + r * st
             if hl.get((r, k)) == "run":
-                b.append(f'<rect x="{xx-c*.07}" y="{yy-c*.07}" width="{c*1.14}" height="{c*1.14}" '
-                         f'rx="{c*.2}" fill="#ffe08a"/>')
+                b.append(f'<rect x="{xx-c*.11:.2f}" y="{yy-c*.11:.2f}" width="{c*1.22:.2f}" height="{c*1.22:.2f}" '
+                         f'rx="{c*.2:.2f}" fill="{GOLD}"/>')
             t = wall[r][k]
             if t:
                 b.append(tile(xx, yy, c, t))
             elif grey:
-                b.append(f'<rect x="{xx}" y="{yy}" width="{c}" height="{c}" rx="{c*.14}" fill="#e3e6eb" '
-                         f'stroke="#aab1bd" stroke-width="{c*.04}"/>')
+                b.append(f'<rect x="{xx:.2f}" y="{yy:.2f}" width="{c}" height="{c}" rx="{c*.12:.2f}" fill="{GREY_SPACE}" '
+                         f'stroke="{GREY_EDGE}" stroke-width="{c*.04:.2f}"/>')
             else:
                 b.append(tile(xx, yy, c, E.LETTERS[E.wall_colour(r, k)], faint=True))
             if (r, k) in options:
-                b.append(f'<rect x="{xx-c*.05}" y="{yy-c*.05}" width="{c*1.1}" height="{c*1.1}" rx="{c*.18}" '
-                         f'fill="none" stroke="#2f7d4f" stroke-width="{c*.1}" stroke-dasharray="{c*.2} {c*.12}"/>')
+                b.append(f'<rect x="{xx-c*.05:.2f}" y="{yy-c*.05:.2f}" width="{c*1.1:.2f}" height="{c*1.1:.2f}" rx="{c*.18:.2f}" '
+                         f'fill="none" stroke="{NAVY}" stroke-width="{c*.1:.2f}" stroke-dasharray="{c*.2:.2f} {c*.12:.2f}"/>')
             if hl.get((r, k)) == "new":
-                b.append(ring(xx, yy, c, .11).replace(f'x="{xx-c*.1}"', f'x="{xx-c*.08}"'))
-    return "".join(b), 5 * st - c * GAP
+                b.append(ring(xx, yy, c, .11))
+    return "".join(b), size
 
 
 def board(x, y, c, lines=(), wall=None, floor=(), hl=None, grey=False, marks=None):
@@ -194,21 +298,20 @@ def board(x, y, c, lines=(), wall=None, floor=(), hl=None, grey=False, marks=Non
     px = x + c * 0.9
     for i in range(5):
         yy = y + i * st
-        b.append(txt(x + c * .25, yy + c * .68, i + 1, c * .5, "#566079", 800, "middle"))
+        b.append(txt(x + c * .25, yy + c * .68, i + 1, c * .5, BROWN, 700, "middle"))
         if marks and i in marks:
             ok = marks[i] == "ok"
-            cx, cy = x - c * .3, yy + c / 2
-            b.append(f'<circle cx="{cx}" cy="{cy}" r="{c*.3}" fill="{"#2f7d4f" if ok else "#b3261e"}"/>'
-                     + txt(cx, cy + c * .15, "&#10003;" if ok else "&#10007;", c * .42, "#fff", 800, "middle"))
+            cx, cy = x - c * .85, yy + c / 2
+            b.append(f'<circle cx="{cx:.2f}" cy="{cy:.2f}" r="{c*.3:.2f}" fill="{NAVY if ok else HL}"/>'
+                     + txt(cx, cy + c * .15, "&#10003;" if ok else "&#10007;", c * .42, "#FFFFFF", 700, "middle"))
         col, n = lines[i] if i < len(lines) else (None, 0)
         for j in range(i + 1):
             xx = px + (4 - j) * st
             b.append(tile(xx, yy, c, col) if j < n else hole(xx, yy, c))
-    ax = px + 5 * st + c * .05
+    ax = px + 5 * st + c * .1
     for i in range(5):
         yy = y + i * st + c / 2
-        b.append(f'<path d="M{ax} {yy} h{c*.45} m-{c*.17} -{c*.15} l{c*.17} {c*.15} l-{c*.17} {c*.15}" '
-                 f'fill="none" stroke="#7b8497" stroke-width="{c*.06}"/>')
+        b.append(f'<polygon fill="{NAVY}" points="{_pts([(ax, yy - c*.2), (ax + c*.36, yy), (ax, yy + c*.2)])}"/>')
     wx = px + 5 * st + c * .65
     wb, _ = wall_cells(wall, c, wx, y, hl, grey)
     b.append(wb)
@@ -216,8 +319,45 @@ def board(x, y, c, lines=(), wall=None, floor=(), hl=None, grey=False, marks=Non
     for k in range(7):
         xx = px + k * st
         b.append(item(xx, fy, c, floor[k] if k < len(floor) else None))
-        b.append(txt(xx + c / 2, fy + c * 1.42, f"&minus;{abs(E.FLOOR_VALUES[k])}", c * .46, "#8a2a24", 800, "middle"))
+        b.append(txt(xx + c / 2, fy + c * 1.42, f"&minus;{abs(E.FLOOR_VALUES[k])}", c * .46, RED, 700, "middle"))
     return "".join(b), (wx + 5 * st) - x, (fy + c * 1.7) - y
+
+
+def board_panel(x, y, c, name=None, score=0, pad=None, **kw):
+    """A board in its frame: cream surface, deep-blue frame with a gold inner line and, when
+    `name` is given, a deep-blue header band with the name and the 0-100 score track.
+    (x, y) is the top-left of the frame. Returns (body, width, height, extra) where extra
+    holds the positions of the parts (for numbered badges)."""
+    pad = c * .55 if pad is None else pad
+    hdr = c * 1.05 if name else 0
+    inner, w, h = board(x + pad, y + pad + hdr, c, **kw)
+    W, H = w + 2 * pad - c * GAP, h + 2 * pad + hdr - c * .2
+    b = [frame(x, y, x + W, y + H, r=c * .35, w=max(1.6, c * .07))]
+    info = {"lines": (x + pad, y + pad + hdr), "floor_y": y + pad + hdr + 5 * c * (1 + GAP) + c * .35}
+    if name:
+        bw = max(1.6, c * .07)
+        b.append(f'<path d="M{x+bw/2:.1f} {y+hdr+bw/2:.1f} V{y+c*.35:.1f} q0 {-c*.35+bw/2:.1f} {c*.35:.1f} {-c*.35+bw/2:.1f} '
+                 f'H{x+W-c*.35:.1f} q{c*.35-bw/2:.1f} 0 {c*.35-bw/2:.1f} {c*.35:.1f} V{y+hdr+bw/2:.1f} Z" fill="{NAVY}"/>')
+        b.append(f'<line x1="{x+bw/2:.1f}" y1="{y+hdr+bw/2:.1f}" x2="{x+W-bw/2:.1f}" y2="{y+hdr+bw/2:.1f}" '
+                 f'stroke="{GOLD}" stroke-width="{bw*.6:.2f}"/>')
+        b.append(txt(x + pad, y + hdr * .68, name, c * .5, CREAM, 700, font="display"))
+        tx0, tx1, ty = x + W * .38, x + W - c * 2.4, y + hdr * .5
+        b.append(f'<rect x="{tx0:.1f}" y="{ty-c*.12:.1f}" width="{tx1-tx0:.1f}" height="{c*.24:.1f}" rx="{c*.12:.1f}" '
+                 f'fill="#3A5C96" stroke="{SKY}" stroke-width="{c*.04:.2f}"/>')
+        for v in range(0, 101, 10):
+            t = tx0 + (tx1 - tx0) * v / 100
+            b.append(f'<line x1="{t:.1f}" y1="{ty-c*.08:.1f}" x2="{t:.1f}" y2="{ty+c*.08:.1f}" stroke="{SKY}" stroke-width="{c*.04:.2f}"/>')
+        b.append(txt(tx0 - c * .2, ty + c * .14, "0", c * .38, SKY, 700, "end"))
+        b.append(txt(tx1 + c * .15, ty + c * .14, "100", c * .38, SKY, 700))
+        mx = tx0 + (tx1 - tx0) * min(score, 100) / 100
+        b.append(f'<rect x="{mx-c*.2:.1f}" y="{ty-c*.2:.1f}" width="{c*.4:.1f}" height="{c*.4:.1f}" fill="#121216" '
+                 f'stroke="{CREAM}" stroke-width="{c*.04:.2f}"/>')
+        b.append(f'<rect x="{x+W-c*1.25:.1f}" y="{y+hdr*.14:.1f}" width="{c*.95:.1f}" height="{hdr*.72:.1f}" rx="{c*.15:.1f}" '
+                 f'fill="{OCHRE}" stroke="{GOLD_LT}" stroke-width="{c*.04:.2f}"/>')
+        b.append(txt(x + W - c * .775, y + hdr * .68, score, c * .5, INK, 700, "middle"))
+        info.update(track=((tx0 + tx1) / 2, ty), cube=(mx, ty))
+    b.append(inner)
+    return "".join(b), W, H, info
 
 
 def run_cells(wall, r, k):
@@ -232,9 +372,26 @@ def run_cells(wall, r, k):
 
 
 def factory(cx, cy, r, tiles=(), hl=()):
-    """Factory display: a tan disc with up to 4 tiles in a 2x2 block."""
-    b = [f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="{TAN}" stroke="{TAN_RIM}" stroke-width="{r*.07}"/>']
-    ts = r * .62
+    """Factory display: terracotta rim, cream ring with deep-blue beads, a gold ring and a
+    cobalt centre with light rays; up to 4 tiles in a 2x2 block on top."""
+    b = [f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r:.1f}" fill="{RIM}" stroke="{mix(RIM, "#3C140A", .35)}" stroke-width="{r*.03:.2f}"/>',
+         f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r*.88:.1f}" fill="#F2E6D0"/>']
+    for i in range(16):
+        a = i * math.pi / 8
+        bx_, by_ = cx + r * .72 * math.cos(a), cy + r * .72 * math.sin(a)
+        if i % 2:
+            b.append(f'<circle cx="{bx_:.2f}" cy="{by_:.2f}" r="{r*.055:.2f}" fill="{NAVY}"/>')
+        else:
+            b.append(f'<circle cx="{bx_:.2f}" cy="{by_:.2f}" r="{r*.075:.2f}" fill="none" stroke="{NAVY}" stroke-width="{r*.025:.2f}"/>')
+    b.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r*.56:.2f}" fill="{GOLD}"/>'
+             f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r*.5:.2f}" fill="{NAVY}"/>'
+             f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r*.44:.2f}" fill="{COBALT}"/>')
+    for i in range(24):
+        a = i * math.pi / 12
+        b.append(f'<line x1="{cx+r*.1*math.cos(a):.2f}" y1="{cy+r*.1*math.sin(a):.2f}" x2="{cx+r*.42*math.cos(a):.2f}" '
+                 f'y2="{cy+r*.42*math.sin(a):.2f}" stroke="{SKY}" stroke-width="{r*.018:.2f}"/>')
+    b.append(f'<circle cx="{cx:.1f}" cy="{cy:.1f}" r="{r*.09:.2f}" fill="#F2E6D0" stroke="{GOLD}" stroke-width="{r*.02:.2f}"/>')
+    ts = r * .6
     g = ts * .08
     pos = [(-ts - g / 2, -ts - g / 2), (g / 2, -ts - g / 2), (-ts - g / 2, g / 2), (g / 2, g / 2)]
     for i, t in enumerate(tiles):
@@ -243,6 +400,12 @@ def factory(cx, cy, r, tiles=(), hl=()):
             b.append(ring(px, py, ts))
         b.append(tile(px, py, ts, t))
     return "".join(b)
+
+
+def centre_area(x, y, w, h):
+    """The centre of the table: a lighter parchment area with a thin gold-tan edge."""
+    return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="{LIGHT}" '
+            f'stroke="{SLOT}" stroke-width="1.6"/>')
 
 
 def centre_tiles(x, y, w, tiles, ts, hl=(), marker_first=False):
@@ -260,13 +423,52 @@ def centre_tiles(x, y, w, tiles, ts, hl=(), marker_first=False):
     return "".join(b)
 
 
-def arrow(x1, y1, x2, y2, col="#566079", w=3):
+def bag(cx, top, w):
+    """Cloth bag: washed cotton blue with a cream print of small stars and diamonds, a cream
+    drawstring and a cream label plaque. Returns (body, (label_x, label_y))."""
+    blue, prt = "#4F7CBE", "#E4EAF0"
+    ex0, ex1, ey0, ey1 = cx - w / 2, cx + w / 2, top + w * .27, top + w * 1.15
+    ecx, ecy, rx, ry = cx, (ey0 + ey1) / 2, w / 2, (ey1 - ey0) / 2
+    b = [f'<polygon fill="{blue}" points="{_pts([(cx - w*.27, top + w*.36), (cx - w*.17, top + w*.18), (cx + w*.17, top + w*.18), (cx + w*.27, top + w*.36)])}"/>']
+    b += [f'<circle cx="{cx + k*w*.042:.1f}" cy="{top + w*.17:.1f}" r="{w*.035:.1f}" fill="{blue}"/>' for k in range(-4, 5)]
+    b.append(f'<ellipse cx="{ecx:.1f}" cy="{ecy:.1f}" rx="{rx:.1f}" ry="{ry:.1f}" fill="{blue}" stroke="{mix(blue, NAVY, .5)}" stroke-width="1.5"/>')
+    for j in range(-4, 5):
+        for i in range(-5, 6):
+            px, py = ecx + i * w * .12 + (w * .06 if j % 2 else 0), ecy + j * w * .11
+            if ((px - ecx) / (rx - 10)) ** 2 + ((py - ecy) / (ry - 10)) ** 2 > 1:
+                continue
+            b.append(star8(px, py, w * .034, w * .015, prt) if (i + j) % 2 else diamond(px, py, w * .018, prt))
+    for k in (-2, -1, 1, 2):
+        b.append(f'<line x1="{cx + k*w*.05:.1f}" y1="{top + w*.2:.1f}" x2="{cx + k*w*.085:.1f}" y2="{top + w*.35:.1f}" '
+                 f'stroke="{mix(blue, NAVY, .45)}" stroke-width="1.5"/>')
+    b.append(f'<rect x="{cx - w*.2:.1f}" y="{top + w*.24:.1f}" width="{w*.4:.1f}" height="{w*.04:.1f}" rx="2" fill="{prt}"/>')
+    for sx in (-1, 1):
+        b.append(f'<ellipse cx="{cx + sx*w*.09:.1f}" cy="{top + w*.26:.1f}" rx="{w*.055:.1f}" ry="{w*.045:.1f}" '
+                 f'fill="none" stroke="{prt}" stroke-width="3"/>')
+    b.append(f'<path d="M{cx-2:.1f} {top + w*.27:.1f} l{-w*.05:.1f} {w*.11:.1f} M{cx+2:.1f} {top + w*.27:.1f} l{w*.06:.1f} {w*.1:.1f}" '
+             f'stroke="{prt}" stroke-width="3" fill="none"/>')
+    ly = ecy - w * .12
+    b.append(frame(cx - w * .32, ly - w * .17, cx + w * .32, ly + w * .2, r=7, w=2))
+    return "".join(b), (cx, ly)
+
+
+def box_lid(x, y, w, h):
+    """Box lid: deep blue with a light-blue inner line and a sand well for the tiles."""
+    return (f'<rect x="{x}" y="{y}" width="{w}" height="{h}" rx="12" fill="{NAVY}"/>'
+            f'<rect x="{x+4}" y="{y+4}" width="{w-8}" height="{h-8}" rx="9" fill="none" stroke="{SKY}" stroke-width="1.5"/>'
+            f'<rect x="{x+10}" y="{y+h*.45}" width="{w-20}" height="{h*.55-10}" rx="8" fill="{SAND}" stroke="{GOLD}" stroke-width="1.5"/>')
+
+
+def arrow(x1, y1, x2, y2, col=HL, w=3):
+    """Highlight-red arrow with a cream halo, like the rulebook's arrows."""
     a = math.atan2(y2 - y1, x2 - x1)
     hx, hy = x2 - 11 * math.cos(a), y2 - 11 * math.sin(a)
-    return (f'<line x1="{x1}" y1="{y1}" x2="{hx:.1f}" y2="{hy:.1f}" stroke="{col}" stroke-width="{w}" '
-            f'stroke-linecap="round"/><polygon points="{x2},{y2} '
-            f'{x2-13*math.cos(a-.45):.1f},{y2-13*math.sin(a-.45):.1f} '
-            f'{x2-13*math.cos(a+.45):.1f},{y2-13*math.sin(a+.45):.1f}" fill="{col}"/>')
+    head = (f'{x2},{y2} {x2-14*math.cos(a-.45):.1f},{y2-14*math.sin(a-.45):.1f} '
+            f'{x2-14*math.cos(a+.45):.1f},{y2-14*math.sin(a+.45):.1f}')
+    return (f'<line x1="{x1}" y1="{y1}" x2="{hx:.1f}" y2="{hy:.1f}" stroke="{CREAM}" stroke-width="{w+4}" stroke-linecap="round"/>'
+            f'<polygon points="{head}" fill="{CREAM}" stroke="{CREAM}" stroke-width="4" stroke-linejoin="round"/>'
+            f'<line x1="{x1}" y1="{y1}" x2="{hx:.1f}" y2="{hy:.1f}" stroke="{col}" stroke-width="{w}" stroke-linecap="round"/>'
+            f'<polygon points="{head}" fill="{col}"/>')
 
 
 # ================================================================ worked data (all from the engine)
@@ -369,73 +571,61 @@ assert FACT_N == {2: (5, 20), 3: (7, 28), 4: (9, 36)} and E.TOTAL_TILES == 100
 def img_cover():
     c = 62
     wall = E.wall_from_rows(["BYRKW", "WBYR.", "KWB..", "RK.B.", "Y...."])
-    body, w = wall_cells(wall, c, 0, 0)
-    return svg(w, w, body, "cover-art")
+    body, w = wall_cells(wall, c, 8, 8)
+    return svg(w + 16, w + 16, frame(1, 1, w + 15, w + 15, r=14, w=2) + body, "cover-art")
 
 
 def img_board_anatomy():
     c = 34
-    wall = E.wall_from_rows(["B....", "..Y..", ".....", ".....", "....."])
-    body, w, h = board(30, 56, c, lines=[("R", 1), ("B", 2), (None, 0), ("K", 2), ("W", 3)],
-                       wall=wall, floor=["B", "1"])
+    body, W, H, inf = board_panel(4, 4, c, name="Your board", score=0,
+                                  lines=[("R", 1), ("B", 2), (None, 0), ("K", 2), ("W", 3)],
+                                  wall=E.wall_from_rows(["B....", "..Y..", ".....", ".....", "....."]), floor=["B", "1"])
     st = c * (1 + GAP)
-    tr = [f'<rect x="30" y="6" width="{w}" height="30" rx="6" fill="#f2efe6" stroke="#9aa3b2" stroke-width="1.5"/>']
-    n = 21
-    for i in range(n):
-        xx = 30 + 8 + i * ((w - 16) / (n - 1))
-        tr.append(f'<line x1="{xx}" y1="28" x2="{xx}" y2="35" stroke="#8a8f99" stroke-width="1.5"/>')
-        if i % 4 == 0:
-            tr.append(txt(xx, 24, i * 5, 11, "#566079", 700, "middle"))
-    tr.append(f'<rect x="33" y="9" width="10" height="10" fill="{DARK}"/>')
-    px = 30 + c * .9
-    wx = px + 5 * st + c * .65
-    lab = [badge(w + 48, 21, 1), badge(px - 2, 56 + 5 * st + 6, 2),
-           badge(wx + 5 * st + 10, 56 + 2.5 * st, 3), badge(px + 7 * st + 14, 56 + 5 * st + c * .35 + c / 2, 4)]
-    return svg(w + 90, h + 66, "".join(tr) + body + "".join(lab))
+    lx, ly = inf["lines"]
+    px = lx + c * .9
+    wy = ly + 2.5 * st
+    lab = [badge(W + 22, 4 + c * .52, 1), badge(lx + c * 1.4, ly + c * .5, 2),
+           badge(W + 22, wy, 3), badge(px + 7 * st + c * .45, inf["floor_y"] + c / 2, 4)]
+    return svg(W + 42, H + 8, body + "".join(lab))
 
 
 def img_setup():
     W, H = 1000, 790
-    b = [f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="20" fill="#fbf8f1" stroke="#d6cdb8" stroke-width="2"/>']
-    c, bx = 22, 360
-    for (by, lab, ly, ty) in [(52, "Player 2", 46, 26), (566, "Player 1", 560, 762)]:
-        body, bw, bh = board(bx, by, c)
-        b.append(f'<rect x="{bx-16}" y="{by-14}" width="{bw+30}" height="{bh+24}" rx="10" fill="#fff" '
-                 f'stroke="#9aa3b2" stroke-width="2"/>')
+    b = [f'<rect x="1" y="1" width="{W-2}" height="{H-2}" rx="18" fill="#FBF6EC" stroke="{SLOT}" stroke-width="1.6"/>']
+    c, bx = 22, 349
+    pos = {}
+    for (by, lab) in [(10, "Player 2"), (569, "Player 1")]:
+        body, bw, bh, inf = board_panel(bx, by, c, name=lab)
         b.append(body)
-        b.append(txt(bx - 6, ly, lab, 15, "#566079", 800))
-        b.append(f'<rect x="{bx}" y="{ty-14}" width="{bw}" height="20" rx="5" fill="#f2efe6" stroke="#9aa3b2" stroke-width="1.5"/>')
-        b.append(txt(bx + bw / 2 + 28, ty, "score track 0 &hellip; 100", 11, "#566079", 700, "middle"))
-        b.append(f'<rect x="{bx+5}" y="{ty-10}" width="12" height="12" fill="{DARK}"/>')
+        pos[lab] = (by, bw, bh, inf)
     cx, cy, R = 500, 402, 112
+    b.append(f'<circle cx="{cx}" cy="{cy}" r="58" fill="{LIGHT}" stroke="{SLOT}" stroke-width="1.6"/>')
     rnd = random.Random(7)
     pool = list(LETTERS) * 4
     rnd.shuffle(pool)
     for i in range(5):
         a = -math.pi / 2 + i * 2 * math.pi / 5
         b.append(factory(cx + R * math.cos(a), cy + R * math.sin(a), 46, pool[i * 4:i * 4 + 4]))
-    b.append(txt(cx, cy + 2, "centre of", 14, "#8a7a5c", 700, "middle"))
-    b.append(txt(cx, cy + 19, "the table", 14, "#8a7a5c", 700, "middle"))
-    b.append('<path d="M70 330 q-20 60 -6 130 q70 24 140 0 q14 -70 -6 -130 q-20 -18 -64 -18 q-44 0 -64 18z" '
-             'fill="#c9b28c" stroke="#8a7650" stroke-width="3"/>')
-    b.append('<path d="M96 322 q38 14 80 0" fill="none" stroke="#8a7650" stroke-width="3"/>')
-    b.append(txt(135, 402, "BAG", 20, "#fff", 800, "middle"))
-    b.append(txt(135, 426, f"{E.TOTAL_TILES} tiles", 13, "#fff", 700, "middle"))
-    b.append('<rect x="790" y="350" width="170" height="110" rx="10" fill="#e9e5dc" stroke="#9aa3b2" '
-             'stroke-width="3" stroke-dasharray="9 6"/>')
-    b.append(txt(875, 400, "BOX LID", 18, "#566079", 800, "middle"))
-    b.append(txt(875, 422, "(empty)", 13, "#566079", 700, "middle"))
-    b.append(marker(690, 600, 40))
-    b.append(txt(710, 662, "starting player marker", 12, "#566079", 700, "middle"))
-    for (x, y, n, r) in [(338, 650, 1, 13), (364, 744, 2, 12), (655, 338, 3, 13), (60, 330, 4, 13),
-                         (738, 598, 5, 13), (528, 254, 6, 12), (780, 358, 7, 13)]:
+    b.append(txt(cx, cy - 2, "centre of", 14, BROWN, 700, "middle"))
+    b.append(txt(cx, cy + 15, "the table", 14, BROWN, 700, "middle"))
+    bag_body, (lx, ly) = bag(140, 290, 150)
+    b.append(bag_body)
+    b.append(txt(lx, ly - 2, "BAG", 17, NAVY, 700, "middle", font="display"))
+    b.append(txt(lx, ly + 17, f"{E.TOTAL_TILES} tiles", 13, INK, 700, "middle"))
+    b.append(box_lid(790, 340, 170, 130))
+    b.append(txt(875, 370, "BOX LID", 18, CREAM, 700, "middle", font="display"))
+    b.append(txt(875, 391, "(empty)", 13, GOLD_LT, 700, "middle"))
+    b.append(marker(700, 640, 40))
+    b.append(txt(720, 702, "starting player marker", 12.5, BROWN, 700, "middle"))
+    p1y, _, _, p1 = pos["Player 1"]
+    for (x, y, n, r) in [(bx - 14, p1y + 60, 1, 13), (p1["cube"][0], p1y - 15, 2, 12), (655, 330, 3, 13), (74, 322, 4, 13),
+                         (754, 638, 5, 13), (528, 254, 6, 12), (790, 340, 7, 13)]:
         b.append(badge(x, y, n, r))
     return svg(W, H, "".join(b))
 
 
 def panel(x, w, h, title):
-    return (f'<rect x="{x}" y="4" width="{w}" height="{h-8}" rx="14" fill="#fff" stroke="#c9cfdb" stroke-width="2"/>'
-            + txt(x + 16, 30, title, 16, "#1f4e79", 800))
+    return frame(x, 4, x + w, h - 4, r=12, w=1.8, fill="#FFFDF8") + txt(x + 16, 32, title, 15, RED, 700, font="display")
 
 
 def img_turn_a():
@@ -445,27 +635,26 @@ def img_turn_a():
     b = [panel(4, 470, H, "Before")]
     b.append(factory(90, 125, 66, A, hl=[0, 1]))
     b.append(factory(250, 125, 66, Bf))
-    b.append(txt(90, 220, "Factory display A", 13, "#566079", 700, "middle"))
-    b.append(txt(250, 220, "Factory display B", 13, "#566079", 700, "middle"))
-    b.append('<rect x="330" y="71" width="130" height="108" rx="12" fill="#f4f0e6" stroke="#cfc6b0" stroke-width="2" stroke-dasharray="7 5"/>')
+    b.append(txt(90, 220, "Factory display A", 13.5, BROWN, 700, "middle"))
+    b.append(txt(250, 220, "Factory display B", 13.5, BROWN, 700, "middle"))
+    b.append(centre_area(330, 71, 130, 108))
     b.append(centre_tiles(344, 87, 110, ["K", "W"], 40))
-    b.append(txt(395, 220, "centre of the table", 13, "#566079", 700, "middle"))
-    b.append(txt(240, 262, "Take both red tiles from A (ringed).", 13.5, "#111", 800, "middle"))
-    b.append(txt(240, 282, "Yellow and white go to the centre.", 13, "#566079", 700, "middle"))
-    b.append(arrow(480, 160, 526, 160, "#1f4e79", 5))
+    b.append(txt(395, 220, "centre of the table", 13.5, BROWN, 700, "middle"))
+    b.append(txt(240, 262, "Take both red tiles from A (ringed).", 14, INK, 700, "middle"))
+    b.append(txt(240, 282, "Yellow and white go to the centre.", 13.5, BROWN, 700, "middle"))
+    b.append(arrow(480, 160, 526, 160, HL, 5))
     b.append(panel(530, 466, H, "After"))
     b.append(factory(612, 125, 66, []))
-    b.append(txt(612, 220, "A is now empty", 13, "#566079", 700, "middle"))
+    b.append(txt(612, 220, "A is now empty", 13.5, BROWN, 700, "middle"))
     b.append(factory(762, 125, 66, Bf))
-    b.append(txt(762, 220, "B unchanged", 13, "#566079", 700, "middle"))
-    b.append('<rect x="842" y="71" width="140" height="108" rx="12" fill="#f4f0e6" stroke="#cfc6b0" stroke-width="2" stroke-dasharray="7 5"/>')
+    b.append(txt(762, 220, "B unchanged", 13.5, BROWN, 700, "middle"))
+    b.append(centre_area(842, 71, 140, 108))
     b.append(centre_tiles(852, 81, 122, ["K", "W", "Y", "W"], 40))
-    b.append(txt(912, 220, "centre: 4 tiles", 13, "#566079", 700, "middle"))
-    b.append(txt(548, 258, "Your board:", 13, "#566079", 700))
-    for j in range(2):
-        b.append(tile(670 - j * 29, 241, 26, "R"))
-    b.append(txt(710, 259, "line 2 gets both red tiles", 13, "#111", 800))
-    b.append(txt(548, 290, "", 10))
+    b.append(txt(912, 220, "centre: 4 tiles", 13.5, BROWN, 700, "middle"))
+    b.append(txt(548, 262, "Your board:", 13.5, BROWN, 700))
+    for j in range(3):
+        b.append(tile(680 - j * 29, 243, 26, "R") if j < 2 else hole(680 - j * 29, 243, 26))
+    b.append(txt(720, 262, "line 2 gets both red tiles", 14, INK, 700))
     return svg(W, H, "".join(b))
 
 
@@ -473,35 +662,34 @@ def img_turn_b():
     """Option 2: take a colour from the centre; the first taker also takes the marker."""
     W, H = 1000, 250
     b = [panel(4, 470, H, "Before: centre of the table")]
-    b.append('<rect x="30" y="52" width="420" height="96" rx="12" fill="#f4f0e6" stroke="#cfc6b0" stroke-width="2" stroke-dasharray="7 5"/>')
+    b.append(centre_area(30, 52, 420, 96))
     b.append(centre_tiles(44, 66, 400, ["K", "W", "Y", "W"], 56, hl=(2, 4), marker_first=True))
-    b.append(txt(240, 186, "Take both white tiles (ringed). You are the first", 13, "#111", 800, "middle"))
-    b.append(txt(240, 206, "to take from the centre: take the marker too.", 13, "#111", 800, "middle"))
-    b.append(arrow(480, 105, 526, 105, "#1f4e79", 5))
+    b.append(txt(240, 186, "Take both white tiles (ringed). You are the first", 14, INK, 700, "middle"))
+    b.append(txt(240, 206, "to take from the centre: take the marker too.", 14, INK, 700, "middle"))
+    b.append(arrow(480, 105, 526, 105, HL, 5))
     b.append(panel(530, 466, H, "After: your floor line and line 5"))
-    # a compact pattern-line / floor picture
     c = 30
     for j in range(5):
-        b.append(tile(556 + (4 - j) * c * 1.12, 50, c, "W") if j < 2 else hole(556 + (4 - j) * c * 1.12, 50, c))
-    b.append(txt(556, 44, "pattern line 5: two white tiles", 12, "#566079", 700))
+        b.append(tile(556 + (4 - j) * c * 1.12, 56, c, "W") if j < 2 else hole(556 + (4 - j) * c * 1.12, 56, c))
+    b.append(txt(556, 50, "pattern line 5: two white tiles", 12.5, BROWN, 700))
     for k in range(7):
-        b.append(item(556 + k * c * 1.12, 128, c, "1" if k == 0 else None))
-        b.append(txt(556 + k * c * 1.12 + c / 2, 128 + c + 17, f"&minus;{abs(E.FLOOR_VALUES[k])}", 14, "#8a2a24", 800, "middle"))
-    b.append(txt(556, 122, "floor line: the marker in the leftmost space", 12, "#566079", 700))
-    b.append(txt(880, 232, "The centre keeps: K Y", 13, "#566079", 700, "middle"))
+        b.append(item(556 + k * c * 1.12, 130, c, "1" if k == 0 else None))
+        b.append(txt(556 + k * c * 1.12 + c / 2, 130 + c + 17, f"&minus;{abs(E.FLOOR_VALUES[k])}", 14, RED, 700, "middle"))
+    b.append(txt(556, 124, "floor line: the marker in the leftmost space", 12.5, BROWN, 700))
+    b.append(txt(880, 232, "The centre keeps: K Y", 13.5, BROWN, 700, "middle"))
     return svg(W, H, "".join(b))
 
 
 def img_andrea():
     c = 40
-    body, w, h = board(46, 12, c, lines=[(None, 0), (None, 0), (None, 0), ("B", 1), (None, 0)],
-                       wall=AND_WALL, marks={0: "ok", 1: "no", 2: "no", 3: "no", 4: "ok"})
-    return svg(w + 66, h + 24, body)
+    body, W, H, _ = board_panel(c * .65 + 2, 4, c, lines=[(None, 0), (None, 0), (None, 0), ("B", 1), (None, 0)],
+                                wall=AND_WALL, marks={0: "ok", 1: "no", 2: "no", 3: "no", 4: "ok"})
+    return svg(W + c * .65 + 6, H + 8, body)
 
 
 def floor_row(items, c, width_cls="fig"):
     body = "".join(item(10 + k * c * (1 + GAP), 8, c, items[k] if k < len(items) else None) for k in range(7))
-    body += "".join(txt(10 + k * c * (1 + GAP) + c / 2, 8 + c + 21, f"&minus;{abs(E.FLOOR_VALUES[k])}", 20, "#8a2a24", 800, "middle")
+    body += "".join(txt(10 + k * c * (1 + GAP) + c / 2, 8 + c + 21, f"&minus;{abs(E.FLOOR_VALUES[k])}", 20, RED, 700, "middle")
                     for k in range(7))
     return svg(10 + 7 * c * (1 + GAP), 8 + c + 30, body, width_cls)
 
@@ -509,19 +697,20 @@ def floor_row(items, c, width_cls="fig"):
 def img_score_ex(ex, c=34):
     hl = {cell: "run" for cell in ex["run"]}
     hl[ex["cell"]] = "new"
-    body, w = wall_cells(ex["wall"], c, 4, 4, hl)
-    return svg(w + 8, w + 8, body)
+    body, w = wall_cells(ex["wall"], c, 6, 6, hl)
+    return svg(w + 12, w + 12, body)
 
 
 def img_final_board():
     c = 34
-    body, w, h = board(30, 14, c, lines=[(a, n) for a, n in FW_LINES], wall=FW_BEFORE, floor=FW_FLOOR)
-    return svg(w + 40, h + 24, body)
+    body, W, H, _ = board_panel(4, 4, c, name="Ana", score=FW_START, lines=[(a, n) for a, n in FW_LINES],
+                                wall=FW_BEFORE, floor=FW_FLOOR)
+    return svg(W + 8, H + 8, body)
 
 
 def img_final_wall_after():
-    body, w = wall_cells(ANA, 34, 4, 4, {cell: "new" for cell in FINAL_NEW})
-    return svg(w + 8, w + 8, body)
+    body, w = wall_cells(ANA, 34, 6, 6, {cell: "new" for cell in FINAL_NEW})
+    return svg(w + 12, w + 12, body)
 
 
 def img_bonus():
@@ -529,103 +718,142 @@ def img_bonus():
     hl = {(r, k): "run" for r in range(5) for k in (0, 1)}
     hl.update({(0, k): "run" for k in range(5)})
     hl.update({(i, i): "new" for i in range(5)})
-    body, w = wall_cells(ANA, c, 4, 4, hl)
-    return svg(w + 8, w + 8, body)
+    body, w = wall_cells(ANA, c, 6, 6, hl)
+    return svg(w + 12, w + 12, body)
 
 
 def img_grey(wall, opts=(), cross=()):
     c = 34
-    body, w = wall_cells(wall, c, 4, 4, grey=True, options={(2, k) for k in opts})
+    body, w = wall_cells(wall, c, 6, 6, grey=True, options={(2, k) for k in opts})
     st = c * (1 + GAP)
-    body += "".join(txt(4 + k * st + c / 2, 4 + 4 * st + c * .72, "&#10007;", c * .62, "#b3261e", 800, "middle")
+    body += "".join(txt(6 + k * st + c / 2, 6 + 4 * st + c * .72, "&#10007;", c * .62, HL, 700, "middle")
                     for k in cross)
-    return svg(w + 8, w + 8, body)
+    return svg(w + 12, w + 12, body)
 
 
 # ================================================================ HTML helpers
+FONT_DIR = ROOT / "tools" / "azul" / "fonts"     # SIL OFL, see OFL.txt there
+
+
+def font_faces():
+    """@font-face rules for the bundled fonts, embedded as data URIs."""
+    out = []
+    for fam, file, weight in (("Cinzel", "Cinzel-Bold.ttf", 700), ("Caladea", "Caladea-Regular.ttf", 400),
+                              ("Caladea", "Caladea-Bold.ttf", 700)):
+        data = base64.b64encode((FONT_DIR / file).read_bytes()).decode()
+        out.append(f'@font-face {{ font-family: "{fam}"; font-weight: {weight}; font-style: normal; '
+                   f'src: url(data:font/ttf;base64,{data}) format("truetype"); }}')
+    return "\n".join(out)
+
+
 CSS = r"""
 @page { size: A4; margin: 0; }
 :root {
-  --ink: #1d2433; --muted: #566079; --rule: #c9cfdb; --paper: #ffffff;
-  --navy: #1f4e79; --navy-t: #eaf1f8; --tan: #8a5a1f; --tan-t: #f8f0e3;
-  --green: #2f7d4f; --green-t: #eaf4ee; --red: #8a2a24; --red-t: #fbecea;
-  --grey-t: #f0f1f4; --plum: #6b3f87; --plum-t: #f3edf8;
+  --ink: #1B2A4E; --muted: #68543C; --rule: #C9B28C; --paper: #FFFDF8;
+  --navy: #1E3A72; --cobalt: #2C5AA8; --sky: #9CC0E3; --gold: #C08A2E; --red: #9E2A22; --hl: #B32A1E;
+  --terra: #B05E34;
+  --navy-t: #EEF3FA; --navy-b: #B9CDE6; --tan-t: #FBF4E6; --tan-b: #DCC59C;
+  --par-t: #F6EEDD; --par-b: #D3BE96; --red-t: #FBEEEA; --red-b: #E4BDB5; --grey-t: #F3F0EA; --grey-b: #D3CCC0;
 }
 * { box-sizing: border-box; }
-html, body { margin: 0; padding: 0; background: #fff; }
-body { font-family: "Inter", "DejaVu Sans", sans-serif; color: var(--ink); font-size: 9.4pt;
-       line-height: 1.38; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; background: #fff;
+html, body { margin: 0; padding: 0; background: var(--paper); }
+body { font-family: Caladea, "DejaVu Serif", "DejaVu Sans", serif; color: var(--ink); font-size: 10pt;
+       line-height: 1.34; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; background: var(--paper);
         page-break-after: always; break-after: page; padding: 13mm 14mm 17mm 19mm; }
 .page.even { padding: 13mm 19mm 17mm 14mm; }
-.content { height: 100%; overflow: hidden; display: flex; flex-direction: column; }
-footer { position: absolute; bottom: 8.5mm; left: 19mm; right: 14mm; display: flex;
-         justify-content: space-between; align-items: center; font-size: 7.6pt; color: var(--muted);
-         flex-direction: row-reverse; border-top: 0.6pt solid var(--rule); padding-top: 1.6mm; }
+.page::before { content: ""; position: absolute; inset: 6mm; border: 0.7pt solid var(--navy);
+                border-radius: 2.5mm; pointer-events: none; }
+.page::after { content: ""; position: absolute; inset: 7.1mm; border: 0.35pt solid var(--gold);
+               border-radius: 1.8mm; pointer-events: none; }
+.corner { position: absolute; width: 4.2mm; height: 4.2mm; z-index: 1; }
+.corner.tl { top: 4.4mm; left: 4.4mm; } .corner.tr { top: 4.4mm; right: 4.4mm; }
+.corner.bl { bottom: 4.4mm; left: 4.4mm; } .corner.br { bottom: 4.4mm; right: 4.4mm; }
+.content { height: 100%; overflow: hidden; display: flex; flex-direction: column; position: relative; z-index: 2; }
+footer { position: absolute; bottom: 9.2mm; left: 19mm; right: 14mm; display: flex; z-index: 2;
+         justify-content: space-between; align-items: center; font-size: 8pt; color: var(--muted);
+         flex-direction: row-reverse; border-top: 0.5pt solid var(--gold); padding-top: 1.2mm; }
 .even footer { left: 14mm; right: 19mm; flex-direction: row; }
-footer .pn { font-weight: 800; font-size: 10pt; color: var(--navy); }
-h1, h2, h3, h4 { font-family: "Inter Display", "Inter", sans-serif; margin: 0; line-height: 1.15; }
-h1.pt { font-size: 22pt; font-weight: 800; color: var(--navy); margin-bottom: 1mm; }
-.kick { font-size: 8pt; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; color: var(--muted); }
-.lead { font-size: 10.4pt; margin: 1mm 0 3mm; }
-h2 { font-size: 13pt; font-weight: 800; color: var(--navy); margin: 3.5mm 0 2mm; padding-bottom: 1mm;
-     border-bottom: 1.2pt solid var(--navy); }
-h3 { font-size: 10.8pt; font-weight: 800; margin: 0 0 1.2mm; }
+footer .pn { font-family: Cinzel, "DejaVu Serif", serif; font-weight: 700; font-size: 10pt; color: var(--navy); }
+footer .pn::before, footer .pn::after { content: "\25C6"; font-size: 5pt; color: var(--cobalt); margin: 0 1.4mm;
+                                         vertical-align: .25em; }
+h1, h2, h3, h4 { margin: 0; line-height: 1.15; }
+h1, h2, h3 { font-family: Cinzel, "DejaVu Serif", serif; font-weight: 700; color: var(--red); }
+h1.pt { font-size: 21pt; margin-bottom: 1mm; letter-spacing: .01em; }
+.kick { font-size: 8.4pt; font-weight: 700; letter-spacing: .16em; text-transform: uppercase; color: var(--cobalt); }
+.lead { font-size: 11pt; margin: 1mm 0 3mm; }
+h2 { font-size: 12.6pt; margin: 3.5mm 0 2mm; padding-bottom: 1mm; border-bottom: 0.8pt solid var(--cobalt);
+     position: relative; }
+h2::after { content: "\25C6"; position: absolute; right: -.6mm; bottom: -1.2mm; font-size: 6.5pt; line-height: 1;
+            color: var(--cobalt); background: var(--paper); padding: 0 .6mm; }
+h3 { font-size: 10pt; margin: 0 0 1.2mm; letter-spacing: .01em; }
+h4 { font-weight: 700; }
 p { margin: 0 0 2mm; }
 ul, ol { margin: 0 0 2mm; padding-left: 5mm; }
 li { margin: 0 0 1mm; }
+ul li::marker { color: var(--cobalt); }
+ol li::marker { color: var(--navy); font-weight: 700; }
 b, strong { font-weight: 700; }
-code { font-size: 8pt; }
+code { font-size: 8.4pt; font-family: "DejaVu Sans Mono", monospace; }
 .it { height: 1.3em; width: 1.3em; vertical-align: -0.3em; margin: 0 .04em; }
 .itl { height: 1.7em; width: 1.7em; vertical-align: -0.5em; }
-.box { border: 0.8pt solid var(--rule); border-radius: 3mm; padding: 3mm 3.5mm; background: #fff; break-inside: avoid; }
-.tint-n { background: var(--navy-t); border-color: #bcd0e6; }
-.tint-t { background: var(--tan-t); border-color: #e6d3b3; }
-.tint-g { background: var(--green-t); border-color: #b8d9c6; }
-.tint-r { background: var(--red-t); border-color: #ecc4c0; }
-.tint-k { background: var(--grey-t); border-color: #d2d6df; }
+.box { border: 0.7pt solid var(--navy-b); border-radius: 2.5mm; padding: 3mm 3.5mm; background: #fff; break-inside: avoid; }
+.tint-n { background: var(--navy-t); border-color: var(--navy-b); }
+.tint-t { background: var(--tan-t); border-color: var(--tan-b); }
+.tint-g { background: var(--par-t); border-color: var(--par-b); }
+.tint-r { background: var(--red-t); border-color: var(--red-b); }
+.tint-k { background: var(--grey-t); border-color: var(--grey-b); }
 .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3.5mm; }
 .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm; }
-.tag { display: inline-block; font-size: 7pt; font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
-       border: 0.8pt solid currentColor; border-radius: 1.2mm; padding: .2mm 1.4mm; vertical-align: .1em; }
-.tag.house { color: var(--plum); background: var(--plum-t); }
-.tag.ed { color: var(--tan); background: var(--tan-t); }
-.tag.tip { color: var(--green); background: var(--green-t); }
-.need { font-size: 8.4pt; color: var(--muted); }
+.tag { display: inline-block; font-size: 7.4pt; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+       border: 0.7pt solid currentColor; border-radius: 1.2mm; padding: 0 1.4mm; vertical-align: .1em; }
+.tag.house { color: var(--red); background: var(--red-t); }
+.tag.ed { color: var(--muted); background: var(--tan-t); }
+.tag.tip { color: var(--cobalt); background: var(--navy-t); }
+.need { font-size: 8.8pt; color: var(--muted); }
 svg.fig { display: block; width: 100%; height: auto; }
-.cap { font-size: 8pt; color: var(--muted); margin-top: 1.2mm; }
+svg.band { display: block; width: 100%; height: auto; }
+.cap { font-size: 8.4pt; color: var(--muted); margin-top: 1.2mm; }
 table { border-collapse: collapse; }
-table.pts { margin: 1.5mm 0 1mm; font-size: 9pt; }
-table.pts th, table.pts td { border: 0.8pt solid #9aa3b5; padding: .8mm 2.4mm; text-align: center; }
-table.pts th { background: #eef0f5; font-weight: 700; text-align: left; }
-table.data { width: 100%; font-size: 8.8pt; }
-table.data th, table.data td { border: 0.8pt solid #aeb6c6; padding: 1mm 2mm; text-align: left; vertical-align: top; }
-table.data th { background: #e9eef5; font-weight: 700; }
+table.pts { margin: 1.5mm 0 1mm; font-size: 9.4pt; }
+table.pts th, table.pts td { border: 0.7pt solid #9DB0CC; padding: .7mm 2.4mm; text-align: center; }
+table.pts th { background: var(--navy-t); color: var(--navy); font-weight: 700; text-align: left; }
+table.data { width: 100%; font-size: 9.2pt; }
+table.data th, table.data td { border: 0.7pt solid #A9B9D2; padding: .9mm 2mm; text-align: left; vertical-align: top; }
+table.data th { background: var(--navy-t); color: var(--navy); font-weight: 700; }
 .num { display: inline-flex; width: 6mm; height: 6mm; border-radius: 50%; background: var(--navy); color: #fff;
-       font-weight: 800; align-items: center; justify-content: center; font-size: 9pt; flex: none; }
-.num.s { width: 5mm; height: 5mm; font-size: 8pt; }
+       font-weight: 700; align-items: center; justify-content: center; font-size: 9.4pt; flex: none;
+       box-shadow: 0 0 0 0.5pt var(--gold); }
+.num.s { width: 5mm; height: 5mm; font-size: 8.4pt; }
 .steps { list-style: none; padding: 0; margin: 0 0 2mm; }
 .steps li { display: flex; gap: 2.5mm; align-items: flex-start; margin-bottom: 1.8mm; }
 .spacer { flex: 1; }
-.pts-big { font-size: 15pt; font-weight: 800; color: var(--navy); }
+.pts-big { font-family: Cinzel, "DejaVu Serif", serif; font-size: 15pt; font-weight: 700; color: var(--navy); }
 .phase { display: flex; gap: 3mm; align-items: flex-start; margin-bottom: 2.2mm; }
 .phase .ph { flex: none; width: 9mm; height: 9mm; border-radius: 2mm; background: var(--navy); color: #fff;
-             font-weight: 800; font-size: 13pt; display: flex; align-items: center; justify-content: center; }
-.cover-art { display: block; width: 100%; max-width: 112mm; margin: 0 auto; height: auto; }
+             font-family: Cinzel, "DejaVu Serif", serif; font-weight: 700; font-size: 13pt; display: flex; align-items: center;
+             justify-content: center; box-shadow: 0 0 0 0.6pt var(--gold); }
+.cover-art { display: block; width: 100%; max-width: 110mm; margin: 0 auto; height: auto; }
 .sw { display: flex; align-items: center; gap: 2.5mm; }
 .sw svg { width: 11mm; height: 11mm; flex: none; }
-.sheet { width: 100%; font-size: 7.4pt; border: 0.9pt solid #8d96a8; }
-.sheet th, .sheet td { border: 0.6pt solid #aeb6c6; padding: 0 1mm; height: 6mm; text-align: left; }
-.sheet th { background: #eef0f5; font-weight: 700; }
+.sheet { width: 100%; font-size: 8pt; border: 0.9pt solid var(--navy); }
+.sheet th, .sheet td { border: 0.6pt solid #A9B9D2; padding: 0 1mm; height: 6mm; text-align: left; }
+.sheet th { background: var(--navy-t); color: var(--navy); font-weight: 700; }
 .sheet td { text-align: center; }
-.sheet tr.g th { background: var(--navy); color: #fff; font-size: 8pt; }
-.cb { display: inline-block; width: 2.8mm; height: 2.8mm; border: 0.8pt solid #444; vertical-align: -0.4mm; }
-.fq h4 { font-size: 9.2pt; font-weight: 800; margin: 0 0 .4mm; }
-.fq p { font-size: 8.8pt; margin: 0 0 2mm; line-height: 1.3; }
-.qr { font-size: 8.4pt; line-height: 1.32; }
-.qr h3 { font-size: 9.6pt; color: var(--navy); margin: 0 0 1mm; }
+.sheet tr.g th { background: var(--navy); color: #fff; font-family: Cinzel, "DejaVu Serif", serif; font-size: 8.4pt; letter-spacing: .04em; }
+.cb { display: inline-block; width: 2.8mm; height: 2.8mm; border: 0.8pt solid var(--navy); vertical-align: -0.4mm; }
+.fq h4 { font-size: 9.6pt; color: var(--navy); margin: 0 0 .4mm; }
+.fq p { font-size: 9.2pt; margin: 0 0 2mm; line-height: 1.28; }
+.qr { font-size: 8.8pt; line-height: 1.3; }
+.qr h3 { font-size: 9.4pt; margin: 0 0 1mm; }
 .qr p, .qr li { margin-bottom: .8mm; }
+.ok { color: var(--navy); } .no { color: var(--hl); }
 """
+
+# small azulejo tiles on the corners of the thin page frame
+CORNERS = "".join(svg(20, 20, azulejo(10, 10, 19, 0, bg=COBALT, ink=CREAM)
+                      + f'<rect x=".5" y=".5" width="19" height="19" fill="none" stroke="{NAVY}" stroke-width="1"/>',
+                      f"corner {k}") for k in ("tl", "tr", "bl", "br"))
 
 FOOT = "Azul &middot; Player manual (unofficial)"
 
@@ -646,18 +874,21 @@ def letters_row(cls="itl"):
 # ================================================================ pages
 def page_cover():
     return f"""
-<div class="kick" style="margin-top:6mm">Illustrated rules &amp; table reference</div>
-<h1 style="font-size:58pt;font-weight:900;color:var(--navy);letter-spacing:.02em;margin:3mm 0 1mm">Azul</h1>
-<div style="font-size:14pt;font-weight:600;color:var(--tan)">2 to 4 players &nbsp;·&nbsp; about 30&ndash;45 minutes</div>
-<p class="lead" style="max-width:150mm;margin-top:4mm">Decorate the palace wall with glazed tiles. Collect
+{azulejo_band(20)}
+<div style="text-align:center;margin-top:5mm">
+<div class="kick">Illustrated rules &amp; table reference</div>
+<h1 style="font-size:54pt;color:var(--navy);letter-spacing:.06em;margin:2mm 0 0">Azul</h1>
+<div style="font-family:Cinzel,'DejaVu Serif',serif;font-weight:700;font-size:12.5pt;color:var(--red);letter-spacing:.04em">2 to 4 players &nbsp;&#9670;&nbsp; about 30&ndash;45 minutes</div>
+</div>
+<p class="lead" style="max-width:150mm;margin:4mm auto 0;text-align:center">Decorate the palace wall with glazed tiles. Collect
 tiles from the factory displays, fill your pattern lines, move tiles onto your wall for points and avoid
 dropping tiles on the floor line. This booklet explains every rule in plain words, with pictures, and ends with a
 score sheet and a one-page quick reference.</p>
-<div style="margin:4mm 0 4mm">{img_cover()}</div>
-<div style="display:flex;gap:5mm;justify-content:center;margin-bottom:4mm">{letters_row()}</div>
+<div style="margin:4mm 0 3mm">{img_cover()}</div>
+<div style="display:flex;gap:5mm;justify-content:center;margin-bottom:3mm">{letters_row()}</div>
 <div class="spacer"></div>
 <div class="box tint-n">
-  <h3 style="color:var(--navy)">Inside</h3>
+  <h3>Inside</h3>
   <div class="grid3" style="font-size:8.8pt;gap:.6mm 4mm">
     <div>2 &nbsp;Goal, components, words</div><div>7 &nbsp;Phase B: wall-tiling</div><div>11 &nbsp;Grey wall &amp; tips</div>
     <div>3 &nbsp;Setup</div><div>8 &nbsp;Floor line &amp; phase C</div><div>12 &nbsp;FAQ &amp; glossary</div>
@@ -670,11 +901,12 @@ score sheet and a one-page quick reference.</p>
 words with original tile designs; it does not reproduce the rulebook&rsquo;s text or artwork. <i>Azul</i> is a game by
 Michael Kiesling, published by Plan B Games / Next Move (German edition: Pegasus Spiele). Azul is a trademark of
 Plan B Games / Next Move Games. Every point value was checked with the rules engine in <code>tools/azul/engine.py</code>.</p>
+<div style="margin-top:3mm">{azulejo_band(20)}</div>
 """
 
 
 def page_goal():
-    LOOK = {"B": "circle", "Y": "star", "R": "diamond", "K": "plus", "W": "ring"}
+    LOOK = {"B": "ring", "Y": "rosette", "R": "diamond", "K": "lattice", "W": "star"}
     comp = [
         ("Tiles", "100", "Square plastic tiles, <b>20 in each of 5 colours</b>."),
         ("Bag", "1", "A cloth bag. Tiles are drawn from it at random."),
@@ -780,9 +1012,9 @@ Faint spaces are not yet tiled.</p>
 <p>Every round has three phases, always in this order:</p>
 <div class="box tint-n phase"><div class="ph">A</div><div><h3>Factory offer</h3>
 Players take turns collecting tiles and putting them on their pattern lines. <span class="need">(pages 5&ndash;6)</span></div></div>
-<div class="box tint-t phase"><div class="ph" style="background:var(--tan)">B</div><div><h3>Wall-tiling</h3>
+<div class="box tint-t phase"><div class="ph" style="background:var(--red)">B</div><div><h3>Wall-tiling</h3>
 Full pattern lines move one tile to the wall and score; the floor line costs points. <span class="need">(pages 7&ndash;8)</span></div></div>
-<div class="box tint-g phase"><div class="ph" style="background:var(--green)">C</div><div><h3>Preparing the next round</h3>
+<div class="box tint-g phase"><div class="ph" style="background:var(--terra)">C</div><div><h3>Preparing the next round</h3>
 Refill the factory displays. <span class="need">(page 8)</span></div></div>
 <p>Then a new round begins with phase A, <b>unless the game has ended</b> (page 10).</p>
 <div class="spacer"></div>
@@ -839,13 +1071,13 @@ def page_phase_a2():
 <div class="grid2" style="grid-template-columns:1fr 1fr;align-items:center">
 <div class="box" style="padding:2mm 2mm 1mm">{img_andrea()}</div>
 <div>
-<table class="data" style="font-size:8.4pt"><tr><th>Line</th><th></th><th>Why</th></tr>
-<tr><td>1</td><td><b style="color:var(--green)">&#10003; legal</b></td><td>1 yellow fills it; the 2nd yellow goes to the floor line.</td></tr>
-<tr><td>2</td><td><b style="color:#b3261e">&#10007; illegal</b></td><td>Yellow is already in wall row 2.</td></tr>
-<tr><td>3</td><td><b style="color:#b3261e">&#10007; illegal</b></td><td>Yellow is already in wall row 3.</td></tr>
-<tr><td>4</td><td><b style="color:#b3261e">&#10007; illegal</b></td><td>The line already holds blue.</td></tr>
-<tr><td>5</td><td><b style="color:var(--green)">&#10003; legal</b></td><td>Both yellow tiles go there; 3 spaces stay empty.</td></tr>
-<tr><td>Floor</td><td><b style="color:var(--green)">&#10003; legal</b></td><td>Both yellow tiles go on the floor line.</td></tr></table></div></div>
+<table class="data" style="font-size:8.6pt"><tr><th>Line</th><th style="white-space:nowrap"></th><th>Why</th></tr>
+<tr><td>1</td><td><b class="ok" style="white-space:nowrap">&#10003; legal</b></td><td>1 yellow fills it; the 2nd yellow goes to the floor line.</td></tr>
+<tr><td>2</td><td><b class="no" style="white-space:nowrap">&#10007; illegal</b></td><td>Yellow is already in wall row 2.</td></tr>
+<tr><td>3</td><td><b class="no" style="white-space:nowrap">&#10007; illegal</b></td><td>Yellow is already in wall row 3.</td></tr>
+<tr><td>4</td><td><b class="no" style="white-space:nowrap">&#10007; illegal</b></td><td>The line already holds blue.</td></tr>
+<tr><td>5</td><td><b class="ok" style="white-space:nowrap">&#10003; legal</b></td><td>Both yellow tiles go there; 3 spaces stay empty.</td></tr>
+<tr><td>Floor</td><td><b class="ok" style="white-space:nowrap">&#10003; legal</b></td><td>Both yellow tiles go on the floor line.</td></tr></table></div></div>
 <p class="cap" style="margin:0">The legality of each line was checked with the engine&rsquo;s <code>can_place</code>.</p>
 <h2>More pattern-line examples</h2>
 <div class="grid3" style="font-size:8.8pt">
@@ -894,7 +1126,7 @@ def page_phase_b():
 <p>An empty space stops the count. If a tile has neighbours both across and down, it scores both counts, so it counts itself twice.
 Move your score marker forward by the points right away.</p>
 <h2>Scoring examples</h2>
-<p class="need" style="margin-bottom:1.5mm">Ringed tile = the new tile. Shaded tiles = the tiles that are counted.</p>
+<p class="need" style="margin-bottom:1.5mm">Red ring = the new tile. Tiles shaded gold = the tiles that are counted.</p>
 <div class="grid2">{cards}</div>
 <p class="cap">All four totals were computed with the engine&rsquo;s <code>score_placement</code>.</p>
 <div class="box tint-t" style="margin-top:1.5mm"><b>Peter&rsquo;s round.</b> His complete lines are line 2 (2 red tiles) and line 4 (4 blue tiles). His wall is empty.
@@ -989,7 +1221,7 @@ A full <b>column</b> does not end the game.</p>
 <h2>Bonus example</h2>
 <div class="grid2" style="grid-template-columns:1fr 1.15fr;align-items:center;gap:5mm">
 <div class="box" style="padding:3mm"><div style="width:56mm;margin:auto">{img_bonus()}</div>
-<p class="cap" style="text-align:center">Ana&rsquo;s final wall. Shaded: the full row and the two full columns. Ringed: her five blue tiles.</p></div>
+<p class="cap" style="text-align:center">Ana&rsquo;s final wall. Shaded gold: the full row and the two full columns. Ringed in red: her five blue tiles.</p></div>
 <div><p>At the end, Ana&rsquo;s wall has <b>{ANA_BD['rows']} complete row</b>, <b>{ANA_BD['columns']} complete columns</b>, and <b>all 5 blue tiles</b> ({Ts("BBBBB")}).</p>
 <table class="pts" style="width:100%"><tr><th>Bonus</th><td>how many</td><td>points</td></tr>
 <tr><th>Rows &times; {E.ROW_BONUS}</th><td>{ANA_BD['rows']}</td><td>{ANA_BD['row_points']}</td></tr>
@@ -1173,9 +1405,9 @@ def build_html():
     for n, fn in enumerate(PAGES, 1):
         side = "odd" if n % 2 else "even"
         foot = "" if n == 1 else f'<footer><span class="pn">{n}</span><span>{FOOT}</span></footer>'
-        out.append(f'<section class="page {side}" id="p{n}"><div class="content">{fn()}</div>{foot}</section>')
+        out.append(f'<section class="page {side}" id="p{n}">{CORNERS}<div class="content">{fn()}</div>{foot}</section>')
     return ('<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Azul · Player manual</title>'
-            f'<style>{CSS}</style></head><body>{"".join(out)}</body></html>')
+            f'<style>{font_faces()}{CSS}</style></head><body>{"".join(out)}</body></html>')
 
 
 NODE = r"""
